@@ -7,5 +7,5 @@ h1. The Rules
 * 1 top-level directory per project
 * craziness encouraged
 * ...
-* PROFIT!
+* non-PROFIT!
 
