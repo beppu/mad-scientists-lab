@@ -1,0 +1,4 @@
+-swf recorder.swf
+-swf-version 9
+-main Recorder
+-swf-header 320:240:30:332222
