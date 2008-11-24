@@ -1,0 +1,11 @@
+h1. Mad Scientists Lab
+
+!http://www.teslasystems.com/images/gallery/tesla-coil-suit-1.jpg!
+
+h1. The Rules
+
+* 1 top-level directory per project
+* craziness encouraged
+* ...
+* PROFIT!
+
