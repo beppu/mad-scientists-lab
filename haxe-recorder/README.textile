@@ -1,0 +1,14 @@
+h1. prereq
+
+* Install haXe
+* Download haXeVideo
+* Handy to have thttpd around, too.
+
+h1. how to get things going
+
+* To build, type:  haxe recorder.hxml
+* Start up thttpd on an available port:  thttpd -p 9999
+* Go to haXeVideo and start it up:  neko server.n 
+
+"Visit the test page.":http://localhost:9999/test.html
+
