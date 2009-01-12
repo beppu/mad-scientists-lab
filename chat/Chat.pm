@@ -207,7 +207,7 @@ our @C = (
       my ($self, $channel_name) = @_;
       my $v = $self->v;
       $v->{channel} = $channels{$channel_name};
-      $v->{listen}  = "[ $channel_name ]";
+      $v->{listen}  = "[ '$channel_name' ]";
       $v->{messages} = [ $v->{channel}->read(8) ];
       $self->render('channel');
     },
