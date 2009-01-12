@@ -339,9 +339,12 @@ our @V = (
       my ($self, $v) = @_;
       div({id => 'main'},
         a({ href => R('Channel', 'lobby') }, 'lobby' ),
-        h2('starting and stopping the event loop from javascript'),
+        h2('starting the event loop from javascript'),
         pre(
           '$.ev.loop("/@event", [ 2, 4 ])'."\n",
+        ),
+        h2('stopping the event loop from javascript'),
+        pre(
           '$.ev.stop()'."\n",
         ),
         h2('for testing purposes, you can post a dummy event like this.'),
