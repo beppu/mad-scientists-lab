@@ -8,11 +8,13 @@
     verbose  : true,
 
     log: function() {
+      /*
       if (opera) {
         opera.postError(arguments);
       } else if (self.verbose && console) {
         console.log(arguments);
       }
+      */
     },
 
     run: function(events) {
