@@ -5,14 +5,19 @@ use Coro;
 use Coro::AnyEvent;
 use Coro::Signal;
 
-
+sub service {
+  my ($app, $c, @args) = @_;
+  my $v = $c->v;
+  $v->{listen} = 'null';
+  $app->next::method($c, @args);
+}
 
 # a slot-based object WITHOUT prototype-based inheritance
 #_____________________________________________________________________________
 package Object;
 use strict;
 no  warnings 'once';
-use JSON::XS;
+use JSON::XS ();
 use Clone;
 
 # $json
@@ -98,6 +103,9 @@ use Squatting ':controllers';
 use JSON::XS;
 use Coro;
 use Time::HiRes 'time';
+use Data::Dump 'pp';
+
+#### data
 
 # key   : channel name
 # value : channel object
@@ -117,7 +125,9 @@ our $channel = Object->new({
     my $size = $self->{size};
     my $m    = $self->{messages};
     for (@messages) {
-      $m->[$i++] = [time, $_];
+      $_->{time} = time;
+      warn ">> " . $_->{time};
+      $m->[$i++] = $_;
       $i = 0 if ($i >= $size);
     }
     # warn $i;
@@ -145,11 +155,21 @@ our $channel = Object->new({
     }
     @messages;
   },
+
+  read_since => sub {
+    my ($self, $last) = @_;
+    grep { defined && ($_->{time} > $last) } $self->read($self->size);
+  },
 });
 
+## channel setup
+for (qw(2 4 6 8 foo bar baz lobby)) {
+  $channels{$_} = $channel->clone({ name => $_ });
+}
 
-# helper
-sub channels {
+#### helpers
+
+sub channels_from_input {
   my ($channels) = @_;
   my @ch;
   if ($channels) {
@@ -159,14 +179,17 @@ sub channels {
       @ch = $channels;
     }
   }
-  @ch = keys %channels unless @ch;
+  @ch = keys our %channels unless @ch;
   @ch;
 }
 
-## channel setup
-for (qw(2 4 6 8 foo bar baz lobby)) {
-  $channels{$_} = $channel->clone({ name => $_ });
+sub channel {
+  my ($name) = @_;
+  $channels{$name} ||= $channel->clone({ name => $name });
 }
+
+
+#### controllers
 
 our @C = (
 
@@ -184,8 +207,17 @@ our @C = (
       my ($self, $channel_name) = @_;
       my $v = $self->v;
       $v->{channel} = $channels{$channel_name};
-      $v->{channel_name} = $channel_name;
+      $v->{listen}  = "[ $channel_name ]";
+      $v->{messages} = [ $v->{channel}->read(8) ];
       $self->render('channel');
+    },
+    post => sub {
+      my ($self, $channel_name) = @_;
+      my $v     = $self->v;
+      my $input = $self->input;
+      my $ch    = $channels{$channel_name};
+      $ch->write({ type => 'message', value => $input->{message} });
+      $self->redirect(R('Channel', $channel_name));
     }
   ),
 
@@ -196,14 +228,14 @@ our @C = (
       my ($self) = shift;
       my $input  = $self->input;
       my $cr     = $self->cr;
-      my @ch     = channels($input->{channels});
-      my $last   = time;
+      my @ch     = channels_from_input($input->{channels});
+      my $last   = 0;
       while (1) {
         # Output
         warn "top of loop";
         my @events = 
           grep { defined } 
-          map  { my $ch = $channels{$_}; $ch->read(4) } @ch;
+          map  { my $ch = $channels{$_}; $ch->read_since($last) } @ch;
         my $x = async {
           warn "printing...".encode_json(\@events);
           $cr->print(encode_json(\@events));
@@ -215,7 +247,7 @@ our @C = (
         $cr->next;
         $last = time;
         my $channels = [ $cr->param('channels') ];
-        @ch = channels($channels);
+        @ch = channels_from_input($channels);
 
         # Try starting up 1 coroutine per channel.
         # Each coroutine will have the same Coro::Signal object, $activity.
@@ -226,8 +258,8 @@ our @C = (
         } @ch;
 
         # The first one who sends a signal to $activity wins.
-        warn "waiting for activity on any of (@ch)";
-        $activity->timed_wait(20);
+        warn "waiting for activity on any of (@ch); last is $last";
+        $activity->wait;
 
         # Cancel the remaining coros.
         for (@coros) { $_->cancel }
@@ -263,6 +295,7 @@ use strict;
 use warnings;
 use Squatting ':views';
 use HTML::AsSubs;
+use Data::Dump 'pp';
 
 sub span  { HTML::AsSubs::_elem('span', @_) }
 sub thead { HTML::AsSubs::_elem('thead', @_) }
@@ -281,8 +314,19 @@ our @V = (
           style(x( $self->_css )),
           script({ src => 'jquery.js' }),
           script({ src => 'jquery.ev.js' }),
+          script({ src => 'chat.js' }),
+          script(x(qq|
+            \$chat = {
+              listen: $v->{listen}
+            };
+          |)),
         ),
         body(
+          div({ id => 'factory', style => 'display: none' },
+            ul(
+              li({ class => 'message' }, " "),
+            ),
+          ),
           x( $content )
         )
       )->as_HTML;
@@ -309,8 +353,21 @@ our @V = (
 
     channel => sub {
       my ($self, $v) = @_;
+      my $ch = $v->{channel};
       div(
-        h1("channel:  " . $v->{channel_name})
+        h1("channel:  " . $ch->name),
+        form({ id => 'chat', name => 'chat', method => 'post' },
+          div(
+            ul({ id => 'messages' },
+              map { li({ class => 'message' },  pp($_) ) } @{ $v->{messages} }
+            )
+          ),
+          div(
+            input({ class => 'name',    type => 'text', size => '10', name => 'name' }),
+            input({ class => 'message', type => 'text', size => '40', name => 'message' }),
+            input({ type => 'submit' }),
+          ),
+        )
       )->as_HTML;
     },
 

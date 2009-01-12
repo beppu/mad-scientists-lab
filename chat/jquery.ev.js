@@ -8,7 +8,11 @@
     verbose  : true,
 
     log: function() {
-      if (self.verbose && console) console.log(arguments);
+      if (opera) {
+        opera.postError(arguments);
+      } else if (self.verbose && console) {
+        console.log(arguments);
+      }
     },
 
     run: function(events) {
@@ -16,7 +20,7 @@
       for (i = 0; i < events.length; i++) {
         var e = events[i];
         if (!e) continue;
-        var h = this.handlers[e[1].type];
+        var h = this.handlers[e.type];
         if (h) h(e);
       }
     },
