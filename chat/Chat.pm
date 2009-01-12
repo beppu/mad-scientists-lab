@@ -114,7 +114,7 @@ our %channels;
 # generic channel object that you can clone
 our $channel = Object->new({
   i        => 0,
-  size     => 4,
+  size     => 8,
   messages => [],
   signal   => Coro::Signal->new,
 
@@ -208,7 +208,7 @@ our @C = (
       my $v = $self->v;
       $v->{channel} = $channels{$channel_name};
       $v->{listen}  = "[ '$channel_name' ]";
-      $v->{messages} = [ $v->{channel}->read(8) ];
+      $v->{messages} = [ $v->{channel}->read($v->{channel}->size) ];
       $self->render('channel');
     },
     post => sub {
