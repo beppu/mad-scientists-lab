@@ -205,10 +205,12 @@ our @C = (
     Channel => [ '/(\w+)' ],
     get => sub {
       my ($self, $channel_name) = @_;
-      my $v = $self->v;
-      $v->{channel} = $channels{$channel_name};
-      $v->{listen}  = "[ '$channel_name' ]";
+      my $v  = $self->v;
+      my $ch = $channels{$channel_name};
+      $v->{channel}  = $ch;
+      $v->{listen}   = "[ '$channel_name' ]";
       $v->{messages} = [ $v->{channel}->read($v->{channel}->size) ];
+      $ch->write({ type => 'enter' });
       $self->render('channel');
     },
     post => sub {
@@ -217,7 +219,11 @@ our @C = (
       my $input = $self->input;
       my $ch    = $channels{$channel_name};
       $ch->write({ type => 'message', value => $input->{message} });
-      $self->redirect(R('Channel', $channel_name));
+      if ($self->env->{'HTTP_X_REQUESTED_WITH'}) {
+        1;
+      } else {
+        $self->redirect(R('Channel', $channel_name));
+      }
     }
   ),
 
