@@ -338,10 +338,10 @@ our @V = (
         pre(
           '$.ev.stop()'."\n",
         ),
-        h2('for testing purposes, you can post a dummy event like this.'),
-        pre(
-          "curl http://localhost:4234/\@event --data-ascii channels=2\n",
-        )
+        #h2('for testing purposes, you can post a dummy event like this.'),
+        #pre(
+        #  "curl http://localhost:4234/\@event --data-ascii channels=2\n",
+        #)
       )->as_HTML;
     },
 
