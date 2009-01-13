@@ -241,11 +241,11 @@ our @C = (
           $cr->print(encode_json(\@events));
         };
         $x->join;
+        $last = time;
 
         # Hold for a brief moment until the next long poll request comes in.
         warn "waiting for next request";
         $cr->next;
-        $last = time;
         my $channels = [ $cr->param('channels') ];
         @ch = channels_from_input($channels);
 
