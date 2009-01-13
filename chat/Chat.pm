@@ -12,98 +12,17 @@ sub service {
   $app->next::method($c, @args);
 }
 
-# a slot-based object WITHOUT prototype-based inheritance
-#_____________________________________________________________________________
-package Object;
-use strict;
-no  warnings 'once';
-use JSON::XS ();
-use Clone;
-
-# $json
-our $json = JSON::XS->new;
-$json->utf8(1);
-$json->allow_blessed(1);
-$json->convert_blessed(1);
-
-our $AUTOLOAD;
-
-# Object->new(\%merge) -- constructor
-sub new {
-  my ($class, $opts) = @_;
-  $opts ||= {};
-  bless { %$opts } => $class;
-}
-
-# $object->merge(\%merge) -- merge keys and values of another hashref into $self
-sub merge {
-  my ($self, $merge) = @_;
-  for (keys %$merge) {
-    $self->{$_} = $merge->{$_};
-  }
-  $self;
-}
-                  
-# $object->clone(\%merge) -- copy constructor
-sub clone {
-  my ($self, $merge) = @_;
-  my $clone = Clone::clone($self);
-  $clone->merge($merge) if ($merge);
-  $clone;
-}
-
-# $object->keys -- keys of underlying hashref of $object
-sub keys {
-  CORE::keys(%{$_[0]})
-}
-
-# $object->as_hash -- unbless
-sub as_hash {
-  +{ %{$_[0]} };
-}
-*to_hash = \&as_hash;
-
-# $object->as_json -- serialize $object as json
-sub as_json {
-  my ($self) = @_;
-  if ($self->{to_json}) {
-    $self->{to_json}->($self);
-  } else {
-    $json->encode($self->to_hash);
-  }
-}
-*to_json = \&as_json;
-*TO_JSON = \&as_json;
-
-# $self->$method -- treat key values as methods
-sub AUTOLOAD {
-  my ($self, @args) = @_;
-  my $attr = $AUTOLOAD;
-  $attr =~ s/.*://;
-  if (ref($self->{$attr}) eq 'CODE') {
-    $self->{$attr}->($self, @args)
-  } else {
-    if (@args) {
-      $self->{$attr} = $args[0];
-    } else {
-      $self->{$attr};
-    }
-  }
-}
-
-sub DESTROY { }
-
-
-
 #_____________________________________________________________________________
 package Chat::Controllers;
 use strict;
 use warnings;
 use Squatting ':controllers';
+use Squatting::H;
 use JSON::XS;
 use Coro;
 use Time::HiRes 'time';
 use Data::Dump 'pp';
+use HTML::Entities;
 
 #### data
 
@@ -112,7 +31,7 @@ use Data::Dump 'pp';
 our %channels;
 
 # generic channel object that you can clone
-our $channel = Object->new({
+our $channel = Squatting::H->new({
   i        => 0,
   size     => 8,
   messages => [],
@@ -162,11 +81,6 @@ our $channel = Object->new({
   },
 });
 
-## channel setup
-for (qw(2 4 6 8 foo bar baz lobby)) {
-  $channels{$_} = $channel->clone({ name => $_ });
-}
-
 #### helpers
 
 sub channels_from_input {
@@ -197,32 +111,58 @@ our @C = (
     Home => [ '/' ],
     get => sub {
       my ($self) = @_;
+      my $v = $self->v;
+      $v->{channels} = [ sort keys %channels ];
       $self->render('home');
-    }
+    },
+    post => sub {
+      my ($self) = @_;
+      my $input = $self->input;
+      my $name = $input->{name};
+      if ($name =~ /^(\w+)$/) {
+        my $ch = channel($name);
+        $self->redirect(R('Channel', $name));
+      } else {
+        $self->redirect(R('Home'));
+      }
+    },
   ),
 
   C(
     Channel => [ '/(\w+)' ],
     get => sub {
-      my ($self, $channel_name) = @_;
+      my ($self, $name) = @_;
       my $v  = $self->v;
-      my $ch = $channels{$channel_name};
+      my $ch = channel($name);
+      $v->{my_name}  = $self->state->{name} || "anonymous";
       $v->{channel}  = $ch;
-      $v->{listen}   = "[ '$channel_name' ]";
+      $v->{listen}   = "[ '$name' ]";
       $v->{messages} = [ $v->{channel}->read($v->{channel}->size) ];
+      my $last_ch = $self->state->{last_ch};
+      if ($last_ch) {
+        $last_ch->write({ type => 'leave' });
+      }
       $ch->write({ type => 'enter' });
+      $self->state->{last_ch} = $ch;
       $self->render('channel');
     },
     post => sub {
-      my ($self, $channel_name) = @_;
+      my ($self, $name) = @_;
       my $v     = $self->v;
       my $input = $self->input;
-      my $ch    = $channels{$channel_name};
-      $ch->write({ type => 'message', value => $input->{message} });
+      my $ch    = channel($name);
+      my $handle  = encode_entities($input->{name});
+      my $message = encode_entities($input->{message});
+      $ch->write({ type => 'message', name => $handle, message => $message });
+      if ($input->{name}) {
+        $self->state->{name} = $input->{name};
+      }
       if ($self->env->{'HTTP_X_REQUESTED_WITH'}) {
+        # for ajax requests
         1;
       } else {
-        $self->redirect(R('Channel', $channel_name));
+        # for people w/o javascript
+        $self->redirect(R('Channel', $name));
       }
     }
   ),
@@ -255,39 +195,21 @@ our @C = (
         my $channels = [ $cr->param('channels') ];
         @ch = channels_from_input($channels);
 
-        # Try starting up 1 coroutine per channel.
-        # Each coroutine will have the same Coro::Signal object, $activity.
+        # Start 1 coro for each channel we're listening to.
+        # Each coro will have the same Coro::Signal object, $activity.
         my $activity = Coro::Signal->new;
         my @coros = map {
           my $ch = $channels{$_};
           async { $ch->signal->wait; $activity->broadcast };
         } @ch;
 
-        # The first one who sends a signal to $activity wins.
+        # The first coro that runs $activity->broadcast wins.
         warn "waiting for activity on any of (@ch); last is $last";
         $activity->wait;
 
         # Cancel the remaining coros.
         for (@coros) { $_->cancel }
       }
-    },
-
-    # The current POST action exists for debugging purposes, only.
-    # In practice, channel updates will happen ambiently 
-    # when model data changes.
-    # Hooks will be in place to facilitate this.
-    # 
-    # In the future, the POST action may be used as a notification
-    # to the server side that $.ev.stop() happened
-    # on the client side.
-    post => sub {
-      my ($self) = shift;
-      my $input  = $self->input;
-      my $ch = $channels{ $input->{channels} };
-      if ($ch) {
-        $ch->write({ type => 'time', value => scalar(localtime) });
-      }
-      1;
     },
     queue => { get => 'event' },
   ),
@@ -328,23 +250,86 @@ our @V = (
           |)),
         ),
         body(
+
           div({ id => 'factory', style => 'display: none' },
-            ul(
-              li({ class => 'message' }, " "),
+            table(
+              tbody(
+                &tr({ class => 'message' }, td({ class => 'name' }), td()),
+              ),
             ),
           ),
+
+          do {
+            if ($v->{channel}) {
+              my $ch = $v->{channel};
+              h1({ id => 'title' }, a({ href => R('Home') }, "Chat"), span(' : '), span('#'.$ch->name));
+            } else {
+              h1({ id => 'title' }, a({ href => R('Home') }, "Chat"));
+            }
+          },
+
           x( $content )
         )
       )->as_HTML;
     },
 
     _css => sub {qq|
+
+      body {
+        background: #112;
+        color: #eee;
+        font-family: "Trebuchet MS", Verdana, sans-serif;
+      }
+
+      #messages {
+        font-size: 9pt;
+      }
+
+      #title {
+        font-size: 36pt;
+        border-bottom: 2px solid #223;
+      }
+
+      #title a {
+        color: #ccf;
+        text-decoration: none;
+      }
+
+      #title a:hover {
+        color: #fff;
+      }
+
+      tr.message td.name {
+        width: 100px;
+        color: #fe4;
+        text-align: right;
+      }
+
+      input.name {
+        width: 100px;
+        text-align: right;
+      }
+
+      input.name,
+      input.message {
+        background: #dde;
+        color: #112;
+        border: 1px solid #223;
+      }
+
     |},
 
     home => sub {
       my ($self, $v) = @_;
       div({id => 'main'},
-        a({ href => R('Channel', 'lobby') }, 'lobby' ),
+        h1("Channels"),
+        form({ method => 'POST' },
+          ul(
+            (map { li(a({href=>R('Channel', $_)}, $_)) } @{$v->{channels}}),
+            li(input({ type => 'text', name => 'name', value => 'channel' }), input({ type => 'submit', value => 'Create Channel' })),
+          ),
+        ),
+        h1("For Hackers"),
         h2('starting the event loop from javascript'),
         pre(
           '$.ev.loop("/@event", [ 2, 4 ])'."\n",
@@ -364,17 +349,22 @@ our @V = (
       my ($self, $v) = @_;
       my $ch = $v->{channel};
       div(
-        h1("channel:  " . $ch->name),
         form({ id => 'chat', name => 'chat', method => 'post' },
-          div(
-            ul({ id => 'messages' },
-              map { li({ class => 'message' },  pp($_) ) } @{ $v->{messages} }
-            )
+          table(
+            tbody({ id => 'messages' },
+              map { 
+                if (defined $_ && $_->{type} eq 'message') {
+                  &tr({ class => 'message' }, td({ class => 'name' }, x($_->{name})), td(x($_->{message}))) 
+                } else {
+                  &tr({ class => 'message' }, td({ class => 'name' }, ""), td("")) 
+                }
+              } @{ $v->{messages} }
+            ),
           ),
           div(
-            input({ class => 'name',    type => 'text', size => '10', name => 'name' }),
+            input({ class => 'name',    type => 'text', size => '10', name => 'name', value => $v->{my_name} }),
             input({ class => 'message', type => 'text', size => '40', name => 'message' }),
-            input({ type => 'submit' }),
+            input({ type => 'submit', value => 'Say' }),
           ),
         )
       )->as_HTML;

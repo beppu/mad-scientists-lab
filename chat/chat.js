@@ -16,8 +16,10 @@ $(function(){
       });
     },
     print: function(name, message) {
-      var line = $('#factory li.message').clone().html(message);
-      $('#messages li:first').remove();
+      var line = $('#factory tr.message').clone();
+      $('td:first', line).html(name);
+      $('td:last',  line).html(message);
+      $('#messages tr:first').remove();
       $('#messages').append(line);
     }
   };
@@ -25,10 +27,10 @@ $(function(){
 
   // setup handlers
   $.ev.handlers.time = function(e){
-    cb.print(null, e.value);
+    cb.print(e.name, e.message);
   };
   $.ev.handlers.message = function(e){
-    cb.print(null, e.value);
+    cb.print(e.name, e.message);
   };
 
   // listen for events
