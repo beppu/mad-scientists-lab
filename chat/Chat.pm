@@ -290,12 +290,12 @@ our @V = (
         border-bottom: 2px solid #223;
       }
 
-      #title a {
+      a {
         color: #ccf;
         text-decoration: none;
       }
 
-      #title a:hover {
+      a:hover {
         color: #fff;
       }
 
