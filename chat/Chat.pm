@@ -168,7 +168,7 @@ our @C = (
   ),
 
   C(
-    Event => [ '/@event' ],
+    Event => [ '/@event/(\d+)' ],
     get => sub {
       warn "coro [$Coro::current]";
       my ($self) = shift;
@@ -211,7 +211,7 @@ our @C = (
         for (@coros) { $_->cancel }
       }
     },
-    queue => { get => 'event' },
+    continuity => 1,
   ),
 );
 

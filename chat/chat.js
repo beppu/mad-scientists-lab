@@ -35,7 +35,7 @@ $(function(){
 
   // listen for events
   if ($chat.listen) {
-    $.ev.loop('/@event', $chat.listen);
+    $.ev.loop('/@event/'+Date.now(), $chat.listen);
   }
 
 });
