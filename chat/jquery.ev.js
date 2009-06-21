@@ -7,16 +7,6 @@
     xhr      : null,
     verbose  : true,
 
-    log: function() {
-      /*
-      if (opera) {
-        opera.postError(arguments);
-      } else if (self.verbose && console) {
-        console.log(arguments);
-      }
-      */
-    },
-
     run: function(events) {
       var i;
       for (i = 0; i < events.length; i++) {
@@ -46,7 +36,7 @@
         url      : url,
         data     : { channels: channels },
         success  : function(events, status) {
-          self.log('success', events);
+          // self.log('success', events);
           self.run(events)
         },
         complete : function(xhr, status) {
@@ -54,7 +44,7 @@
           if (status == 'success') {
             delay = 100;
           } else {
-            self.log('status: ' + status, '; waiting before long-polling again...');
+            // self.log('status: ' + status, '; waiting before long-polling again...');
             delay = 5000;
           }
           window.setTimeout(function(){ 
