@@ -175,7 +175,7 @@ our @C = (
       my $input  = $self->input;
       my $cr     = $self->cr;
       my @ch     = channels_from_input($input->{channels});
-      my $last   = 0;
+      my $last   = time;
       while (1) {
         # Output
         warn "top of loop";
