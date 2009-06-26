@@ -1,0 +1,9 @@
+h1. Installing Prerequisites
+
+  sudo cpan Squatting
+
+h1. How to Run this App
+
+  squatting Chat
+
+
