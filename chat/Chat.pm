@@ -169,7 +169,7 @@ our @C = (
   ),
 
   C(
-    Event => [ '/@event/(\d+)' ],
+    Event => [ '/@event/(.*)' ],
     get => sub {
       warn "coro [$Coro::current]";
       my ($self) = shift;
