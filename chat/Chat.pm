@@ -20,6 +20,7 @@ use Squatting ':controllers';
 use Squatting::H;
 use JSON::XS;
 use Coro;
+use Coro::Timer;
 use Time::HiRes 'time';
 use Data::Dump 'pp';
 use HTML::Entities;
@@ -202,6 +203,17 @@ our @C = (
           my $ch = $channels{$_};
           async { $ch->signal->wait; $activity->broadcast };
         } @ch;
+
+        # when running this behind a reverse proxy,
+        # it's useful to timeout before your proxy kills the connection.
+        push @coros, async {
+          my $timeout = Coro::Timer::timeout 55;
+          while (not $timeout) {
+            Coro::schedule;
+          }
+          warn "timeout\n";
+          $activity->broadcast;
+        };
 
         # The first coro that runs $activity->broadcast wins.
         warn "waiting for activity on any of (@ch); last is $last";
