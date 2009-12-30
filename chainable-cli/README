@@ -1,0 +1,15 @@
+Chained "method calls" on the command line
+
+Examples:
+
+  env PATH=".:$PATH"    ./chain    .move .resize
+  env PATH=".:$PATH"    ./chain -v .move .resize
+  env PATH=".:$PATH"    ./chain -v .move .resize --width=80 --height=25
+                        ^       ^  ^     ^       ^-- params for chain-resize
+                        |       |  |     `---------- call chain-resize
+                        |       |  `---------------- call chain-move
+                        |       `------------------- global params for all
+                        `--------------------------- dispatch script
+
+
+

@@ -2,6 +2,7 @@
 
 use common::sense;
 use Getopt::Long;
+use File::Which 'which';
 use Data::Dump 'pp';
 
 # trim off every param before first "method call"
@@ -31,10 +32,14 @@ sub chains {
   @chains;
 }
 
+# dispatch to a "method"
 sub run {
   my ($argv) = @_;
-  local @ARGV = @$argv;
-  warn pp(\@ARGV);
+  my $command = shift(@$argv);
+  $command =~ s/^.//;
+  $command = "chain-$command";
+  my $bin = which $command;
+  system("$bin @$argv") if ($bin);
 }
 
 my @global_opts = global_opts;
