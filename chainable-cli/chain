@@ -1,0 +1,44 @@
+#!/usr/bin/env perl
+
+use common::sense;
+use Getopt::Long;
+use Data::Dump 'pp';
+
+# trim off every param before first "method call"
+sub global_opts {
+  my @global_opts;
+  while ($ARGV[0] !~ /^\.\w+/) {
+    warn $ARGV[0];
+    push @global_opts, shift(@ARGV);
+  }
+  @global_opts;
+}
+
+# split @ARGV into many ${argv}s
+sub chains {
+  my @chains;
+  my $i = 0;
+  while ($i < @ARGV) {
+    my $argv = [];
+    while (1) {
+      warn "# $ARGV[$i]";
+      push @$argv, $ARGV[$i++];
+      last if ($i == @ARGV);
+      last if ($ARGV[$i] =~ /^\./);
+    }
+    push @chains, $argv;
+  }
+  @chains;
+}
+
+sub run {
+  my ($argv) = @_;
+  local @ARGV = @$argv;
+  warn pp(\@ARGV);
+}
+
+my @global_opts = global_opts;
+for (chains) {
+  my $argv = [ @$_, @global_opts ];
+  run($argv);
+}
