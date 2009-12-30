@@ -32,8 +32,8 @@ sub chains {
   @chains;
 }
 
-# dispatch to a "method"
-sub run {
+# run a command
+sub command {
   my ($argv) = @_;
   my $command = shift(@$argv);
   $command =~ s/^.//;
@@ -49,5 +49,5 @@ sub run {
 my @global_opts = global_opts;
 for (chains) {
   my $argv = [ @$_, @global_opts ];
-  run($argv);
+  command($argv);
 }
