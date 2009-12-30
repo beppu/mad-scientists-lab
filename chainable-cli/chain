@@ -39,7 +39,11 @@ sub run {
   $command =~ s/^.//;
   $command = "chain-$command";
   my $bin = which $command;
-  system("$bin @$argv") if ($bin);
+  if ($bin) {
+    system("$bin @$argv")
+  } else {
+    die "$command not found";
+  }
 }
 
 my @global_opts = global_opts;
