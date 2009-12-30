@@ -12,4 +12,8 @@ Examples:
                         `--------------------------- dispatch script
 
 
+Limitation:
 
+  You can't have an argument that matches /^\.\w+/, because
+  that pattern is used to identify methods.  Maybe some kind
+  of escape mechanism can be added to get around this.
