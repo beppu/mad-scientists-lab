@@ -1,0 +1,36 @@
+h1. The Ratio between the DJIA and Gold Prices
+
+!http://www.sharelynx.com/charts/Dow-Gold-Ratio.gif!
+
+Historically, this seems to be a good indicator for exiting out of the
+gold market.  When the ratio gets dangerously close to 1, that's
+when you can maximize your profit.
+
+
+h2. Data Sources
+
+h3. DJIA
+
+"http://finance.yahoo.com/q/hp?s=^DJI":http://finance.yahoo.com/q/hp?s=^DJI
+
+Download the CSV version.
+
+h3. Gold
+
+"http://www.research.gold.org/prices/":http://www.research.gold.org/prices/
+
+Download the daily gold price Excel spreadsheet
+
+
+h2. Useful Queries
+
+h3. DJIA vs Gold Ratio
+
+    SELECT g.value as gold, 
+           d.value as djia, 
+           (d.value / g.value) as ratio,
+           d.day 
+      FROM price g, price d 
+     WHERE d.day = g.day 
+       AND g.symbol = 'XAU' and d.symbol = 'DJIA'
+
