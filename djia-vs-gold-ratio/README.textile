@@ -2,7 +2,7 @@ h1. The Ratio between the DJIA and Gold Prices
 
 !http://www.sunshineprofits.com/files/images/research/20081126/6_dow_gold_ratio.png!
 
-Historically, this seems to be a good indicator for exiting out of the gold market.  When the ratio gets dangerously close to 1, that's when you can maximize your profit.
+Historically, this seems to be a good indicator for exiting out of the gold market.  When the ratio gets dangerously close to 1, that's when you can maximize your profit by selling your gold.  We seem to be getting close to that time, now.
 
 
 h2. Data Sources
@@ -32,7 +32,7 @@ For the lazy and impatient ones, I checked in the SQLite database so that you ca
 
 h3. DJIA vs Gold Ratio
 
-bc.    SELECT g.value as gold, 
+bc.     SELECT g.value as gold, 
            d.value as djia, 
            (d.value / g.value) as ratio,
            d.day 
