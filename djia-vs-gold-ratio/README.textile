@@ -24,6 +24,10 @@ Download the daily gold price Excel spreadsheet
 
 h2. Useful Queries
 
+For the lazy and impatient ones, I checked in the SQLite database
+so that you can have some fun with queries right away.
+
+
 h3. DJIA vs Gold Ratio
 
     SELECT g.value as gold, 
