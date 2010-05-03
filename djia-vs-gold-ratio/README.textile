@@ -40,3 +40,20 @@ bc.     SELECT g.value as gold,
      WHERE d.day = g.day 
        AND g.symbol = 'XAU' and d.symbol = 'DJIA'
 
+h3. Monthly from 2000 to Now
+
+bc.     SELECT g.value as gold, 
+           d.value as djia, 
+           (d.value / g.value) as ratio,
+           d.day 
+      FROM price g, price d 
+     WHERE d.day = g.day 
+       AND g.symbol = 'XAU' and d.symbol = 'DJIA'
+       AND d.day in (
+            SELECT day 
+              FROM (SELECT min(day) as day, 
+                           strftime('%Y', day) as y, 
+                           strftime('%m', day) as m, 
+                           min(strftime('%d', day)) as d 
+                      FROM price 
+                     WHERE day > '1999-12-31' group by y, m))

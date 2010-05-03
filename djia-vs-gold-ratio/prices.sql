@@ -5,3 +5,4 @@ create table price (
   day date
 );
 
+create index price_day on price (day);
