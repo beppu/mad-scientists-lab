@@ -1,6 +1,6 @@
 h1. The Ratio between the DJIA and Gold Prices
 
-!http://www.sharelynx.com/charts/Dow-Gold-Ratio.gif!
+!http://www.sunshineprofits.com/files/images/research/20081126/6_dow_gold_ratio.png!
 
 Historically, this seems to be a good indicator for exiting out of the gold market.  When the ratio gets dangerously close to 1, that's when you can maximize your profit.
 
