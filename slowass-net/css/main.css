@@ -1,0 +1,50 @@
+body {
+  background: #fff url(/images/grady.jpg) repeat-x left top;
+  color: #777;
+}
+
+#header {
+}
+
+#main {
+  padding-bottom: 170px;
+}
+
+#footer {
+  background: #fff;
+  
+  /* We can over-ride default settings here instead of changing the original sticky-footer.css */
+  padding-top: 20px;
+  height: 150px;
+  margin-top: -170px;
+}
+
+@font-face {
+  font-family: 'junkostypewriterRegular';
+  src: url('fonts/junkos_typewriter-webfont.eot');
+  src: local('☺'), url('fonts/junkos_typewriter-webfont.woff') format('woff'), url('fonts/junkos_typewriter-webfont.ttf') format('truetype'), url('fonts/junkos_typewriter-webfont.svg#webfont') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+#header h1 {
+  font: 70px/78px 'junkostypewriterRegular', Arial, sans-serif;letter-spacing: 0;
+}
+
+#header h1 a {
+  color: #446;
+  text-decoration: none;
+}
+
+#header h2 {
+  color: #223;
+  font: 18px/20px 'junkostypewriterRegular', Arial, sans-serif;
+  letter-spacing: 0;
+  margin-top: -24px;
+}
+
+#footer h2 {
+  color: #223;
+  font: 30px/34px 'junkostypewriterRegular', Arial, sans-serif;
+  letter-spacing: 0;
+}
