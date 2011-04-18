@@ -1,4 +1,4 @@
-h1. The Ratio between the DJIA and Gold Prices
+h1. The Ratio between the Dow Jones Industrial Average and Gold Prices
 
 !http://www.sunshineprofits.com/files/images/research/20081126/6_dow_gold_ratio.png!
 
@@ -7,7 +7,7 @@ Historically, this seems to be a good indicator for exiting out of the gold mark
 
 h2. Data Sources
 
-h3. Historical DJIA Data
+h3. Historical Dow Jones Data
 
 "http://finance.yahoo.com/q/hp?s=^DJI":http://finance.yahoo.com/q/hp?s=^DJI
 
@@ -39,6 +39,7 @@ bc.     SELECT g.value as gold,
       FROM price g, price d 
      WHERE d.day = g.day 
        AND g.symbol = 'XAU' and d.symbol = 'DJIA'
+     ORDER BY d.day;
 
 h3. Monthly from 2000 to Now
 
@@ -57,3 +58,5 @@ bc.     SELECT g.value as gold,
                            min(strftime('%d', day)) as d 
                       FROM price 
                      WHERE day > '1999-12-31' group by y, m))
+     ORDER BY d.day;
+

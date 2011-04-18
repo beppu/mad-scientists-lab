@@ -6,8 +6,11 @@ use Coro;
 use Coro::AnyEvent;
 use Config;
 
+my $fsm = do 'fsm.pl';
+
 my $dev_input_event_file = shift || "/dev/input/event7";
 my $cv = AnyEvent->condvar;
+warn $dev_input_event_file;
 open(my $js1_fh, $dev_input_event_file) or die $!;
 my $struct_size = (
   ($Config{longsize} * 2) +   # input_event.time (struct timeval)
@@ -17,6 +20,7 @@ my $struct_size = (
 
 warn $struct_size;
 
+# Joystick Input
 my $js1; $js1 = AnyEvent::Handle->new(
   fh       => $js1_fh,
   on_error => sub {
@@ -33,7 +37,6 @@ my $js1; $js1 = AnyEvent::Handle->new(
       my ($hdl, $buffer) = @_;
       my ($sec, $usec, $type, $code, $value) =
         unpack('L!L!S!S!i!', $buffer);
-      warn $len;  
       warn "sec:$sec, usec:$usec, type:$type, code:$code, value:$value";
     });
   }

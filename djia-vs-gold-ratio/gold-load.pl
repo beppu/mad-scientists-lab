@@ -6,6 +6,8 @@ use Spreadsheet::ParseExcel;
 use DBI;
 use Data::Dump 'pp';
 
+require 'utils.pl';
+
 my %month_number = (
   Jan => '01',
   Feb => '02',
@@ -32,6 +34,7 @@ sub date {
 }
 
 my $dbh = DBI->connect("dbi:SQLite:dbname=prices.db", "", "") or die DBI->errstr;
+my $last_date = last_date($dbh, 'XAU');
 
 for (@ARGV) {
   my $parser = Spreadsheet::ParseExcel->new();
@@ -42,11 +45,13 @@ for (@ARGV) {
   for my $row ($min .. $max) {
     my $date_cell = $daily_gold->get_cell($row, 0);
     my $usd_cell  = $daily_gold->get_cell($row, 1);
+    my $date      = date($date_cell->value);
+    next unless $date gt $last_date;
     #print date($date_cell->value), " -- ", $usd_cell->value, "\n";
     $dbh->do(
       "INSERT INTO price (symbol, value, day) VALUES ('XAU', ?, ?)", {},
       $usd_cell->value,
-      date($date_cell->value)
+      $date
     );
   }
 }
