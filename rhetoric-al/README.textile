@@ -1,0 +1,7 @@
+h1. rhetoric.al welcome site
+
+let people sign up and make a blog
+
+h1. rhetoric.al site manager
+
+let people see a list of blogs they run on this system
