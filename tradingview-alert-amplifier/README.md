@@ -29,6 +29,12 @@ Second, create a reverse ssh-tunnel using [Serveo](https://serveo.net/) which is
 ssh -o ServerAliveInterval=60 -R 80:localhost:5000 serveo.net
 ```
 
+Alternatively, with [autossh](https://www.harding.motd.ca/autossh/):
+
+```sh
+autossh -M 0 -R 80:localhost:5000 serveo.net
+```
+
 Finally, when setting up alerts in TradingView, use the webhook URL:
 
 ```
