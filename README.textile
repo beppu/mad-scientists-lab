@@ -5,7 +5,6 @@ h1. Mad Scientists Lab
 h1. The Rules
 
 * 1 top-level directory per project
-* craziness encouraged
-* ...
-* non-PROFIT!
+* novelty is encouraged
+* must be Free software.
 
