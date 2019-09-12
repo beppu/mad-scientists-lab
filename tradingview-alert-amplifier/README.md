@@ -24,7 +24,7 @@ First, run the webhook server.
 Second, create a reverse ssh-tunnel using [Serveo](https://serveo.net/) which is a great free ssh tunneling service.
 
 ```sh
-ssh -R 80:localhost:5000 serveo.net
+ssh -o ServerAliveInterval=60 -R 80:localhost:5000 serveo.net
 ```
 
 Finally, when setting up alerts in TradingView, use the webhook URL:
