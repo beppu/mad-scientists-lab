@@ -1,0 +1,30 @@
+//@version=4
+study(title="別府 Multiple Moving Averages", shorttitle="別府 MAs", overlay=true)
+sma_1_period = input(defval=9, title="SMA 1", minval=1)
+sma_2_period = input(defval=277, title="SMA 2", minval=1)
+ema_1_period = input(defval=9, title="EMA 1", minval=1)
+ema_2_period = input(defval=277, title="EMA 2", minval=1)
+
+sma50  = sma(close, 50)
+sma100 = sma(close, 100)
+sma200 = sma(close, 200)
+sma_1  = sma(close, sma_1_period)
+sma_2  = sma(close, sma_2_period)
+ema50  = ema(close, 50)
+ema100 = ema(close, 100)
+ema200 = ema(close, 200)
+ema_1  = sma(close, ema_1_period)
+ema_2  = sma(close, ema_2_period)
+
+// #883677 #CA61C3 #EE85B5 #FF958C #56203D
+plot(series=sma50,  title="SMA 50",  color=#883677, linewidth=2, style=plot.style_line)
+plot(series=sma100, title="SMA 100", color=#CA61C3, linewidth=3, style=plot.style_line)
+plot(series=sma200, title="SMA 200", color=#EE85B5, linewidth=4, style=plot.style_line)
+plot(series=sma_1,  title="SMA #1",  color=#FF958C, linewidth=2, style=plot.style_line)
+plot(series=sma_2,  title="SMA #2",  color=#56203D, linewidth=2, style=plot.style_line)
+// #239023 #ABFF4F #08BDBD #898952 #B2945B
+plot(series=ema50,  title="EMA 50",  color=#239023, linewidth=2, style=plot.style_line)
+plot(series=ema100, title="EMA 100", color=#ABFF4F, linewidth=3, style=plot.style_line)
+plot(series=ema200, title="EMA 200", color=#08BDBD, linewidth=4, style=plot.style_line)
+plot(series=ema_1,  title="EMA #1",  color=#898952, linewidth=2, style=plot.style_line)
+plot(series=ema_2,  title="EMA #2",  color=#B2945B, linewidth=2, style=plot.style_line)
