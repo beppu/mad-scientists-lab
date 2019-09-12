@@ -15,6 +15,16 @@ Chrome deems the tab that it's in to be inactive.
 
 A webhook that plays a sound can solve this.
 
+## Installation
+
+```sh
+git clone https://github.com/beppu/mad-scientists-lab.git
+cd mad-scientists-lab/tradingview-alert-amplifier
+
+# This will install the prerequisites and download some audio files.
+./install
+```
+
 ## Usage
 
 First, run the webhook server.
@@ -44,13 +54,3 @@ http://$hostname.serveo.net/hooks/alert
 Replace `$hostname` with the subdomain that was assigned to you by serveo.net.  Also, if you have
 access to your own server, you can use that instead of serveo.net.
 
-## Sounds Not Included
-
-To hear anything, `sounds/default.wav` must exist.  You can download WAV files
-from sites like https://freesound.org/ and copy (or symlink) them into place.
-For convenience, I added a `download` script to get you started.
-
-```sh
-cd sounds
-./download
-```

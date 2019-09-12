@@ -1,0 +1,4 @@
+#!/bin/sh
+./prereqs
+cd sounds
+./download
