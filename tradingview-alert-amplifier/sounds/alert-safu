@@ -1,0 +1,2 @@
+#!/bin/bash
+mpg123 "${SOUNDS:-.}/Funds Are Safu-491930397.mp3"
