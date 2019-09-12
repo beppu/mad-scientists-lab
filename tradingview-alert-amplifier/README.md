@@ -48,3 +48,9 @@ access to your own server, you can use that instead of serveo.net.
 
 To hear anything, `sounds/default.wav` must exist.  You can download WAV files
 from sites like https://freesound.org/ and copy (or symlink) them into place.
+For convenience, I added a `download` script to get you started.
+
+```sh
+cd sounds
+./download
+```
