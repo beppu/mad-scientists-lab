@@ -33,3 +33,8 @@ http://$hostname.serveo.net/hooks/alert
 
 Replace `$hostname` with the subdomain that was assigned to you by serveo.net.  Also, if you have
 access to your own server, you can use that instead of serveo.net.
+
+## Sounds Not Included
+
+To hear anything, you have to add a `sounds/default.wav` must exist.  You can download such files
+from sites like https://freesound.org/ .
