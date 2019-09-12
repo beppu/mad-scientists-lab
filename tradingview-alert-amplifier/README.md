@@ -13,6 +13,8 @@ message notifications aren't intrusive enough, and even if you have a desktop
 browser with the TradingView chart open, the alert might not make a noise if
 Chrome deems the tab that it's in to be inactive.
 
+A webhook that plays a sound can solve this.
+
 ## Usage
 
 First, run the webhook server.
