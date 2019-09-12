@@ -1,0 +1,2 @@
+#!/bin/sh
+sudo apt install golang webhook alsa-utils mpg123
