@@ -8,3 +8,6 @@ h1. The Rules
 * novelty is encouraged
 * must be Free software.
 
+h1. Nostalgia
+
+It's really weird to see snapshots of myself from 10 years ago.  2019 vs 2009.
