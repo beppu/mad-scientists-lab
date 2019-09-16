@@ -38,7 +38,9 @@ sma 50 .gt 200       # same thing -- if command is omitted, previous command is 
 sma -i 1 50 .lt 200
 
 # A golden cross could then be expressed as
-sma -i 1 50 .lt 200 .and sma 50 .gt 200
+# -i is used to index the candles with the newest candle being 0 and 1 being the previous candle and 2 the candle before that.
+# -i will carry forward until explicitly reset
+sma -i 1 50 .lt 200 .and sma -i 0 50 .gt 200
 
 # What about providing a short-hand?
 golden-cross
@@ -48,6 +50,7 @@ golden-cross --ema # to use EMA 50/200 instead of SMA 50/200
 sma 50 < prices.json
 sma 200 < prices.csv
 
-# What about price?
-price .gt sma 50
+# Is the (closing) price greater than the 50 sma?
+price   .gt sma 50
+price.c .gt sma 50   # same thing
 ```
