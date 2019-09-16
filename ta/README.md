@@ -61,7 +61,6 @@ This may need a little evaluation engine. The expression from the command line
 needs to become an executable data structure. I need to turn infix into postfix.
 I need precedence rules. `.lt` needs to bind tighter than `.and`.  Gah.
 
-What have I gotten myself into? A supremely flexible CLI UI is nice, but I
-*fear* I don't have the time to do it. Easier to implement special purpose
-scripts would solve my immediate problem and require far less effort than this
-more clever approach.
+What have I gotten myself into? A supremely flexible CLI is nice, but I *fear* I
+don't have the time to do it. Special purpose scripts would solve my immediate
+problem and require far less effort than this more clever approach.
