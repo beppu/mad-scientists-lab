@@ -64,3 +64,16 @@ I need precedence rules. `.lt` needs to bind tighter than `.and`.  Gah.
 What have I gotten myself into? A supremely flexible CLI is nice, but I *fear* I
 don't have the time to do it. Special purpose scripts would solve my immediate
 problem and require far less effort than this more clever approach.
+
+## Imagine something dumber but easier to write
+
+```sh
+price --gt sma 200
+price --lt ema 200
+sma-aligned 50 100 200 # for the bullish posture
+sma-aligned 200 100 50 # for the bearish posture
+golden-cross
+```
+
+I think I'm going to go with the dumb but effective way.  I'm going to keep most of
+the same options and environment variables though.
