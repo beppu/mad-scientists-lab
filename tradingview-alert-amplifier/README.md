@@ -36,7 +36,7 @@ First, run the webhook server.
 Second, create a reverse ssh-tunnel using [Serveo](https://serveo.net/) which is a great free ssh tunneling service.
 
 ```sh
-ssh -o ServerAliveInterval=60 -R 80:localhost:5000 serveo.net
+ssh -o ServerAliveInterval=30 -R 80:localhost:5000 serveo.net
 ```
 
 Alternatively, with [autossh](https://www.harding.motd.ca/autossh/):
