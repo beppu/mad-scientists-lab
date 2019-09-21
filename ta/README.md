@@ -73,6 +73,8 @@ price --lt ema 200
 sma-aligned 50 100 200 # for the bullish posture
 sma-aligned 200 100 50 # for the bearish posture
 golden-cross
+bearish-divergence -t 1d ETH/BTC
+bullish-divergence -t 1d ETH/BTC
 ```
 
 I think I'm going to go with the dumb but effective way.  I'm going to keep most of
