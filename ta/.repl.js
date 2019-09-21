@@ -15,6 +15,7 @@ global.cl       = console.log
 // global.sprintf     = require('sprintf')
 // global.outdent     = require('outdent')
 global.ccxt        = require('ccxt')
+global.talib       = require('talib')
 
 global.ta = require('./index')
 
