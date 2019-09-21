@@ -7,7 +7,13 @@ const ccxt = require('ccxt');
  * @param {String} timeframe - Parameter description.
  * @returns {Array<Object>}    An array of candles
  */
-function loadCandles(exchange, market, timeframe) {
+async function loadCandles(exchange, market, timeframe) {
+  try {
+    const ex = new ccxt[exchange]()
+    const candles = await ex.fetchOHLCV(market, timeframe, undefined)
+  }
+  catch (err) {
+  }
 }
 
 /**
