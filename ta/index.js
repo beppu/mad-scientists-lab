@@ -1,6 +1,7 @@
 const ccxt  = require('ccxt')
 const talib = require('talib')
 const luxon = require('luxon')
+const DateTime = luxon.DateTime
 
 /**
  * Load candlestick data
@@ -10,7 +11,6 @@ const luxon = require('luxon')
  * @returns {Array<Object>}  - An array of candles
  */
 async function loadCandles(exchange, market, timeframe) {
-  console.log(exchange, ccxt[exchange])
   const ex = new ccxt[exchange]()
   const candles = await ex.fetchOHLCV(market, timeframe, undefined)
   return candles
@@ -23,7 +23,7 @@ async function loadCandles(exchange, market, timeframe) {
  * @returns {Object<Array<Number>>}  - An object that has arrays for open, high, low, close and volume
  */
 function marketDataFromCandles(candles) {
-  const initial = { open: [], high: [], low: [], close: [], volume: [] }
+  const initial = { timestamp: [], open: [], high: [], low: [], close: [], volume: [] }
   const marketData = candles.reduce(((m, a) => {
     m.timestamp.push(a[0])
     m.open.push(a[1])
@@ -63,6 +63,27 @@ function invertedAppend(invertedMarketData, key, data) {
     invertedMarketData[key].push(data[i])
   }
   return invertedMarketData
+}
+
+/**
+ * Return a list of candles based on the provided `indices`
+ * @param {Object<Array<Number>>} imd - invertedMarketData
+ * @param {Array<Number>} indices - A list of indices for series data within imd
+ * @returns {Array<Array<Number>>} - An array of candles
+ */
+function invertedCandles(imd, indices) {
+  return indices.reduce((m, a) => {
+    m.unshift([
+      imd.timestamp[a],
+      imd.open[a],
+      imd.high[a],
+      imd.low[a],
+      imd.close[a],
+      imd.volume[a],
+      DateTime.fromMillis(imd.timestamp[a]).toString()
+    ])
+    return m
+  }, [])
 }
 
 // Go one candle back in time by removing index 0 non-destructively from invertedMarketData and return the result.
@@ -126,6 +147,7 @@ module.exports = {
   marketDataFromCandles,
   invertedMarketData,
   invertedAppend,
+  invertedCandles,
   scan,
   id
 };
@@ -153,7 +175,7 @@ module.exports = {
   ta.invertedAppend(invertedMarketData, 'sma200', r.result.outReal)
 
   // how to just if price is currently greater than SMA 200
-  isPriceGtSMA200 = (imd) => imd.price[0] > imd.sma200[0]
+  isPriceGtSMA200 = (imd) => imd.close[0] > imd.sma200[0]
   r2 = isPriceGtSMA200(invertedMarketData) // r2 is a boolean
 
   // how to scan invertedMarketData for all candles where price was greater than SMA 200
