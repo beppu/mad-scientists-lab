@@ -2,81 +2,86 @@
 
 The Unix Philosophy meets Technical Analysis
 
-## Imagine this filesystem structure
+## Getting Started
 
 ```sh
-bin/ta
-bin/sma -> bin/ta
-bin/ema -> bin/ta
-bin/price -> bin/ta                # same as price.c for close
-bin/price.o -> bin/ta
-bin/price.h -> bin/ta
-bin/price.l -> bin/ta
-bin/price.c -> bin/ta
-bin/golden-cross -> bin/ta
+git clone https://github.com/beppu/mad-scientists-lab.git
+cd mad-scientists-lab/ta
+yarn
 ```
 
-bin/ta is the only actual script.
-argv[0] is introspected to find the actual command.
+## Utilities
 
-## Imagine this workflow
+This package provides command line utilities that can perform some simple but useful
+technical analysis.  They will all share a few environment variables and command line
+parameters in common to make them work together consistently.
+
+### Common Environment Variables
+
+`TA_EXCHANGE` - The name of the exchange to pull data from.
+
+`TA_MARKET` - The name of the market in the exchange to pull data from.
+
+`TA_TIMEFRAME` - The candlestick duration for the market data.
+
+### Common Command Line Options
+
+`-x, --exchange <NAME>`
+
+`-m, --market <SYMBOL>`
+
+`-t, --timeframe <INTERVAL>`
+
+These are the same as the above environment variables.  If the environment variable exists,
+it will be used.  However, these command line options can override them.  In most cases, all
+3 of these are required before any data fetching and analysis can begin.
+
+`-s, --scan` - Instead of checking only the most recent instant in time, scan backwards to find
+all the times this condition was met given our data set.  If any matches were found, output them as
+a JSON array and exit with code 0.  Otherwise, exit 1.
+
+By default, scripts will only check the most recent instance in time and use exit code 0
+for a match and exit code 1 for no match.  The `--scan` option lets you look back in time as well.
+
+### bin/price
+
+```
+Usage: price [options] <MOVING_AVERAGE> <PERIOD>
+
+Is the price greater-than/less-than a given moving average?
+
+Options:
+  -V, --version               output the version number
+  -x, --exchange <NAME>       Exchange to pull data from
+  -m, --market <SYMBOL>       Market in exchange to pull data from
+  -t, --timeframe <INTERVAL>  Candlestick duration for market data
+  -g, --gt                    Greater than
+  -l, --lt                    Less than
+  -s, --scan                  Scan for all occurrences
+  -h, --help                  output usage information
+
+```
+
+#### Examples
+
+Find candles where XLM/USDT's price crossed above its 2 hour 200 SMA.
 
 ```sh
-# Print the SMA values I guess.
-sma -x binance -m BTC/USDT -t 1d 50
-
-# Use environment variables to set default exchange, market, and timeframe
-export TA_EXCHANGE=binance
-export TA_MARKET=BTC/USDT
-export TA_TIMEFRAME=1d
-
-# Is the 50 sma greater than the 200 sma
-sma 50 .gt sma 200
-sma 50 .gt 200       # same thing -- if command is omitted, previous command is assumed
-
-# Is the previous candle of the sma less than the previous 200 sma
-sma -i 1 50 .lt 200
-
-# A golden cross could then be expressed as
-# -i is used to index the candles with the newest candle being 0 and 1 being the previous candle and 2 the candle before that.
-# -i will carry forward until explicitly reset
-sma -i 1 50 .lt 200 .and sma -i 0 50 .gt 200
-
-# What about providing a short-hand?
-golden-cross
-golden-cross --ema # to use EMA 50/200 instead of SMA 50/200
-
-# To be consistent with the Unix philosophy, I should be able to consume STDIN too.
-sma 50 < prices.json
-sma 200 < prices.csv
-
-# Is the (closing) price greater than the 50 sma?
-price   .gt sma 50
-price.c .gt sma 50   # same thing
+bin/price --exchange binance --market XLM/USDT --timeframe 2h --gt sma 200 --scan | jq .
 ```
 
-## Implementation
+Output:
 
-This may need a little evaluation engine. The expression from the command line
-needs to become an executable data structure. I need to turn infix into postfix.
-I need precedence rules. `.lt` needs to bind tighter than `.and`.  Gah.
-
-What have I gotten myself into? A supremely flexible CLI is nice, but I *fear* I
-don't have the time to do it. Special purpose scripts would solve my immediate
-problem and require far less effort than this more clever approach.
-
-## Imagine something dumber but easier to write
-
-```sh
-price --gt sma 200
-price --lt ema 200
-sma-aligned 50 100 200 # for the bullish posture
-sma-aligned 200 100 50 # for the bearish posture
-golden-cross
-death-cross
-bearish-divergence -t 1d ETH/BTC
-bullish-divergence -t 1d ETH/BTC
+```json
+[
+  [
+    1568721600000,
+    0.05863,
+    0.06058,
+    0.05859,
+    0.06039,
+    10938012,
+    "2019-09-17T05:00:00.000-07:00"
+  ]
+]
 ```
-
-I think I'm going to go with the dumb but effective way.  I'm going to keep most of
-the same options and environment variables though.
