@@ -1,2 +1,96 @@
 #!/usr/bin/env node
-ta = require('../index')
+const dotenv    = require('dotenv').config()
+const pkg       = require('../package.json')
+const ta        = require('../index')
+const luxon     = require('luxon')
+const commander = require('commander')
+const talib     = require('talib')
+const beautify  = require('json-beautify')
+
+function greaterThanFn(period) {
+  return function(imd) {
+    return imd.close[1] < imd.ma[1] && imd.close[0] > imd.ma[1]
+  }
+}
+
+function lessThanFn(period) {
+  return function(imd) {
+    return imd.close[1] > imd.ma[1] && imd.close[0] < imd.ma[1]
+  }
+}
+
+async function main() {
+  const program   = new commander.Command();
+  program
+    .version(pkg.version)
+    .description('Is the price greater-than/less-than a given moving average?')
+    .arguments('<MOVING_AVERAGE> <PERIOD>')
+    .option('-x, --exchange <NAME>', 'Exchange to pull data from', process.env.TA_EXCHANGE)
+    .option('-m, --market <SYMBOL>', 'Market in exchange to pull data from', process.env.TA_MARKET)
+    .option('-t, --timeframe <INTERVAL>', 'Candlestick duration for market data', process.env.TA_TIMEFRAME)
+    .option('-g, --gt', 'Greater than')
+    .option('-l, --lt', 'Less than')
+    .option('-s, --scan', 'Scan for all occurrences')
+  program.parse(process.argv)
+  if (program.gt && program.lt) {
+    console.error("You can't use --gt and --lt at the same time.  Pick one and only one.")
+    process.exit(-1)
+  }
+  if (!program.gt && !program.lt) {
+    console.error("You must use either --gt or --lt.")
+    process.exit(-1)
+  }
+  let optionsAreMissing = false;
+  ['exchange', 'market', 'timeframe'].forEach((opt) => {
+    if (!program[opt]) {
+      console.error(`The --${opt} option is required.`)
+      optionsAreMissing = true
+    }
+  })
+  if (optionsAreMissing) {
+    process.exit(-1)
+  }
+  const ma = program.args[0]
+  if (!ma.match(/^[es]ma$/)) {
+    console.error(`The MOVING_AVERAGE must be 'ema' or 'sma'.`)
+    process.exit(-1)
+  }
+
+  const period = program.args[1]
+  if (!period.match(/^[0-9]+$/)) {
+    console.error(`The PERIOD must be a positive decimal integer.`)
+    process.exit(-1)
+  }
+
+  try {
+    const candles            = await ta.loadCandles(program.exchange, program.market, program.timeframe)
+    const marketData         = ta.marketDataFromCandles(candles)
+    const indicatorSettings  = ta.id[ma](marketData, period)
+    const r                  = talib.execute(indicatorSettings)
+    const invertedMarketData = ta.invertedMarketData(marketData)
+    ta.invertedAppend(invertedMarketData, 'ma', r.result.outReal)
+    const compare = (program.gt) ? greaterThanFn(program.period) : lessThanFn(program.period)
+    if (program.scan) {
+      const indices = ta.scan(invertedMarketData, compare)
+      if (indices.length > 0) {
+        const matches = ta.invertedCandles(invertedMarketData, indices)
+        console.log(beautify(matches, null, 2, 128))
+        process.exit(0)
+      } else {
+        process.exit(1)
+      }
+    } else {
+      if (compare(invertedMarketData)) {
+        process.exit(0)
+      } else {
+        process.exit(1)
+      }
+    }
+  }
+  catch (err) {
+    console.error(err.stack)
+  }
+
+}
+
+main()
