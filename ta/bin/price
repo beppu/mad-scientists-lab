@@ -7,16 +7,12 @@ const commander = require('commander')
 const talib     = require('talib')
 const beautify  = require('json-beautify')
 
-function greaterThanFn(period) {
-  return function(imd) {
-    return imd.close[1] < imd.ma[1] && imd.close[0] > imd.ma[1]
-  }
+function greaterThan(imd) {
+  return imd.close[1] < imd.ma[1] && imd.close[0] > imd.ma[1]
 }
 
-function lessThanFn(period) {
-  return function(imd) {
-    return imd.close[1] > imd.ma[1] && imd.close[0] < imd.ma[1]
-  }
+function lessThan(imd) {
+  return imd.close[1] > imd.ma[1] && imd.close[0] < imd.ma[1]
 }
 
 async function main() {
@@ -69,7 +65,7 @@ async function main() {
     const r                  = talib.execute(indicatorSettings)
     const invertedMarketData = ta.invertedMarketData(marketData)
     ta.invertedAppend(invertedMarketData, 'ma', r.result.outReal)
-    const compare = (program.gt) ? greaterThanFn(program.period) : lessThanFn(program.period)
+    const compare = (program.gt) ? greaterThan : lessThan
     if (program.scan) {
       const indices = ta.scan(invertedMarketData, compare)
       if (indices.length > 0) {
