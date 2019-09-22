@@ -152,4 +152,11 @@ module.exports = {
   invertedMarketData = ta.invertedMarketData(marketData)
   ta.invertedAppend(invertedMarketData, 'sma200', r.result.outReal)
 
+  // how to just if price is currently greater than SMA 200
+  isPriceGtSMA200 = (imd) => imd.price[0] > imd.sma200[0]
+  r2 = isPriceGtSMA200(invertedMarketData) // r2 is a boolean
+
+  // how to scan invertedMarketData for all candles where price was greater than SMA 200
+  r3 = ta.scan(invertedMarketData, isPriceGtSMA200) // r3 is a list of indices in invertedMarketData
+
 */
