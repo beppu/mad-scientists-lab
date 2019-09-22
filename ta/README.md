@@ -44,13 +44,11 @@ a JSON array and exit with code 0.  Otherwise, exit 1.
 
 ### Common Exit Codes
 
-|------|--------------------------------|
-| code | meaning                        |
-|------|--------------------------------|
-|    0 | Success, a match was found     |
-|    1 | Failure, no matches were found |
-|  255 | Command line option error      |
-|------|--------------------------------|
+| Exit Code | Meaning                                    |
+|      ---: | :---                                       |
+|         0 | Success, a match was found                 |
+|         1 | Failure, no matches were found             |
+|       255 | Failure before analysis could be completed |
 
 ### bin/price
 
