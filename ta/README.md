@@ -24,6 +24,8 @@ parameters in common to make them work together consistently.
 
 `TA_TIMEFRAME` - The candlestick duration for the market data.
 
+If a `.env` file exists, it will be honored and loaded into the environment.
+
 ### Common Command Line Options
 
 `-x, --exchange <NAME>`
@@ -40,8 +42,15 @@ it will be used.  However, these command line options can override them.  In mos
 all the times this condition was met given our data set.  If any matches were found, output them as
 a JSON array and exit with code 0.  Otherwise, exit 1.
 
-By default, scripts will only check the most recent instance in time and use exit code 0
-for a match and exit code 1 for no match.  The `--scan` option lets you look back in time as well.
+### Common Exit Codes
+
+|------|--------------------------------|
+| code | meaning                        |
+|------|--------------------------------|
+|    0 | Success, a match was found     |
+|    1 | Failure, no matches were found |
+|  255 | Command line option error      |
+|------|--------------------------------|
 
 ### bin/price
 
