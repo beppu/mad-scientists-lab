@@ -46,17 +46,22 @@ async function main() {
   if (optionsAreMissing) {
     process.exit(-1)
   }
+  if (program.args.length < 2) {
+    console.error("A MOVING_AVERAGE and PERIOD must be provided.")
+    process.exit(-1)
+  }
+
   const ma = program.args[0]
   if (!ma.match(/^[es]ma$/)) {
     console.error(`The MOVING_AVERAGE must be 'ema' or 'sma'.`)
     process.exit(-1)
   }
 
-  const period = program.args[1]
-  if (!period.match(/^[0-9]+$/)) {
+  if (!program.args[1].match(/^[0-9]+$/)) {
     console.error(`The PERIOD must be a positive decimal integer.`)
     process.exit(-1)
   }
+  const period = parseInt(program.args[1])
 
   try {
     const candles            = await ta.loadCandles(program.exchange, program.market, program.timeframe)
