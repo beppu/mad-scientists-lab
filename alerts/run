@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# For use in || chains,
+# if the exit code is -1 to -128 (aka 255 to 128), stop the || chain .
+skip_errors() {
+  # process.exit(n) where n is -1 to -128 should be ignored.
+  # n ==   -1 => $? == 255
+  # n == -128 => $? == 128
+  # where n is an 8-bit signed integer
+  ec=$?
+  if [ "$ec" -gt 127 ] ; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# $1 exchange
+# $2 market
+run_alerts() {
+  (
+    export TA_EXCHANGE=$1
+    export TA_MARKET=$2
+    price --timeframe 2h --gt sma 200 \
+      && alert --timeframe 2h "$TA_MARKET price above 2h SMA 200"
+    price --timeframe 4h --gt sma 200 \
+      && alert --timeframe 4h "$TA_MARKET price above 4h SMA 200"
+    price --timeframe 2h --lt sma 200 \
+      && alert --timeframe 2h "$TA_MARKET price below 2h SMA 200"
+    price --timeframe 4h --lt sma 200 \
+      && alert --timeframe 4h "$TA_MARKET price below 4h SMA 200"
+    aligned --timeframe 1h sma 50 100 200 \
+      && alert --timeframe 1h "$TA_MARKET 1h SMA 50 100 200 in bullish alignment"
+    aligned --timeframe 2h sma 50 200 \
+      && alert --timeframe 2h "$TA_MARKET 2h SMA golden cross"
+    aligned --timeframe 1h sma 200 100 50 \
+      && alert --timeframe 1h "$TA_MARKET 1h SMA 50 100 200 in bearish alignment"
+    aligned --timeframe 2h sma 200 50 \
+      && alert --timeframe 2h "$TA_MARKET 2h SMA death cross"
+    # divergence --bullish --timeframe 1d
+    # divergence --bullish --timeframe 4h
+    # divergence --bearish --timeframe 1d
+    # divergence --bearish --timeframe 4h
+  )
+}
+
+run_all_alerts() {
+  for market in $(cat markets) ; do
+    run_alerts binance $market
+  done
+}
+
+# Run periodically
+run_all_alerts
+while sleep 300 ; do
+  run_all_alerts
+done
