@@ -10,7 +10,10 @@
     "dotenv": "^8.1.0",
     "json-beautify": "^1.1.1",
     "luxon": "^1.18.0",
-    "talib": "^1.1.2"
+    "sql-template-strings": "^2.2.2",
+    "sqlite": "^3.0.3",
+    "talib": "^1.1.2",
+    "xdg-basedir": "^4.0.0"
   },
   "bin": {
     "price": "./bin/price",
