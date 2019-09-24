@@ -11,5 +11,12 @@
     "json-beautify": "^1.1.1",
     "luxon": "^1.18.0",
     "talib": "^1.1.2"
+  },
+  "bin": {
+    "price": "./bin/price",
+    "aligned": "./bin/aligned",
+    "divergence": "./bin/divergence",
+    "alert": "./bin/alert",
+    "alert-server": "./bin/alert-server"
   }
 }

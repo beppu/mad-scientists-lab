@@ -1,0 +1,6 @@
+#!/usr/bin/env node
+
+// Does the potential for regular divergence exist?
+
+const ta = require('../index')
+process.exit(-1)
