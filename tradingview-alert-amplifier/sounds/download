@@ -2,3 +2,5 @@
 wget http://www.wavsource.com/snds_2018-06-03_5106726768923853/sfx/boxing_bell_multiple.wav
 youtube-dl 'https://soundcloud.com/fundsaresafubnb/funds-are-safu'
 ln -sf boxing_bell_multiple.wav default.wav
+# train melodies
+youtube-dl -x --audio-format flac 'https://www.youtube.com/watch?v=F5ic8hWn98Y'
