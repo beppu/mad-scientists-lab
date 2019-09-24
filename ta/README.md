@@ -71,7 +71,7 @@ Options:
 
 #### Examples
 
-Find candles where XLM/USDT's price crossed above its 2 hour 200 SMA.
+##### Find candles where XLM/USDT's price crossed above its 2 hour 200 SMA.
 
 ```sh
 bin/price --exchange binance --market XLM/USDT --timeframe 2h --gt sma 200 --scan | jq .
@@ -112,7 +112,7 @@ Options:
 
 #### Examples
 
-Find candles where ETH/BTC's SMA 50, 100, and 200 on the 1h timeframe are aligned in a bullish posture
+##### Find candles where ETH/BTC's SMA 50, 100, and 200 on the 1h timeframe are aligned in a bullish posture
 
 ```sh
 bin/aligned --exchange binance --market ETH/BTC --timeframe 1h sma 50 100 200 --scan | jq -c .[]
@@ -129,7 +129,7 @@ Note that the first candle is a little late, because the data necessary to calcu
 didn't exist, so sma 200 was undefined for us at the moment a few hours prior where the real alignment happened.
 Howeer, the second one is correct.
 
-Find candles where ETH/BTC's EMA 50, 100, and 200 on the 5m timeframe are aligned in a bearish posture
+##### Find candles where ETH/BTC's EMA 50, 100, and 200 on the 5m timeframe are aligned in a bearish posture
 
 ```sh
 bin/aligned --exchange binance --market ETH/BTC --timeframe 1h sma 200 100 50 --scan | jq -c .[]
@@ -143,3 +143,18 @@ Output:
 ```
 
 Again, the first value is off due to the lack of data, but the second one finds a relatively safe short entry.
+
+##### Find a 1d SMA death cross (SMA 200 crosses below SMA 50) on ETH/USDT
+
+```sh
+bin/aligned --exchange binance --market ETH/USDT --timeframe 1d sma 200 50 --scan | jq -c .[]
+```
+
+Output:
+
+```json
+[1530316800000,434.77,463.15,434.51,454.09,157169.20242,"2018-06-29T17:00:00.000-07:00"]
+[1567641600000,174.7,176.19,168.1,173.75,232753.83596,"2019-09-04T17:00:00.000-07:00"]
+```
+
+Again, the first value is off due to lack of data.
