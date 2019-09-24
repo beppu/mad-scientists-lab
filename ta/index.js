@@ -120,7 +120,7 @@ function scan(imd, matchFn) {
   return results
 }
 
-// i for indicator
+// id is short for indicator
 const id = {
   sma: function(marketData, period) {
     return {
