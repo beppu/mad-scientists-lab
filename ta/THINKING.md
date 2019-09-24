@@ -76,3 +76,29 @@ bullish-divergence -t 1d ETH/BTC
 
 I think I'm going to go with the dumb but effective way.  I'm going to keep most of
 the same options and environment variables though.
+
+## 2019-09-23 Much Has Happened
+
+### First, some respect
+
+Before I forget, I want to give a lot of credit to TradingView and Pine Script
+for their data model. In their system, they provide series data as arrays where
+index 0 represents the most recent candle and higher indexes go back in time.
+Common examples include `open`, `high`, `low` and `close` which are arrays in
+Pine Script. In my own code, I call this `invertedMarketData`, and this style of
+organization is what makes it so much easier to work with prices and indicator
+output. When everything shares the same origin with 0 meaning the present, the
+programmer is freed from having to do extra math to correlate indicator values
+to their candlestick.
+
+### Second, something useful
+
+I implemented price and aligned. Then, I realized that align was a superset of
+all the cross scripts, so I don't have to implement them. All that's left is
+divergence (which is my favorite weapon). However, even without divergence, I
+can become aware of many interesting changes in market structure.
+
+The next problem to solve is to organize and run my collection of alerts. I have
+some unixy ideas that I'm playing with now. It is so refreshing for me to go
+back to my Unix roots. The CLI is my favorite UI by far, and thank God I don't
+have to cater to anyone else.  I forgot what that felt like.
