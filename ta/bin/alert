@@ -1,0 +1,64 @@
+#!/usr/bin/env node
+
+/*
+ * alert has two jobs
+ * - deliver messages in various ways
+ * - rate limit messages to once per candle
+ *   To remember what messages we've sent between invocations, we're going to use sqlite.
+ *   To uniquely identify a message, create a key based on:
+ *   \ exchange
+ *   \ market
+ *   \ timeframe (very important)
+ *   \ message   (if I ever introduce template variables, this will stop working)
+ *
+ *   A `sent` table with columns (id, timeframe, created_at) will be used
+ *   id will be a string that concats exchange, market, timeframe, and message together.
+ *   id should be indexed for fast lookup.
+ */
+
+const dotenv    = require('dotenv').config()
+const pkg       = require('../package.json')
+const { Alerts, deliveryMethods, DEFAULT_DELIVERY } = require('../alerts')
+
+const commander = require('commander')
+
+async function main() {
+  const program   = new commander.Command();
+  program
+    .version(pkg.version)
+    .description('Are the given MAs aligned from highest value to lowest value?')
+    .arguments('<MESSAGE>')
+    .option('-x, --exchange <NAME>', 'Exchange to pull data from', process.env.TA_EXCHANGE)
+    .option('-m, --market <SYMBOL>', 'Market in exchange to pull data from', process.env.TA_MARKET)
+    .option('-t, --timeframe <INTERVAL>', 'Candlestick duration for market data', process.env.TA_TIMEFRAME)
+    .option('-w, --webhook <URL>', 'A custom webhook URL')
+  program.parse(process.argv)
+  let optionsAreMissing = false;
+  ['exchange', 'market', 'timeframe'].forEach((opt) => {
+    if (!program[opt]) {
+      console.error(`The --${opt} option is required.`)
+      optionsAreMissing = true
+    }
+  })
+  if (optionsAreMissing) {
+    process.exit(-1)
+  }
+  if (program.args.length < 1) {
+    console.error("A MESSAGE must be provided.")
+    process.exit(-1)
+  }
+  if (program.webhook) {
+    w = DEFAULT_DELIVERY.find((m) => m[0] == 'webhook')
+    if (w) {
+      // dirty mutation
+      w[1] = { url: program.webhook }
+    }
+  }
+
+
+  const alerts = new Alerts()
+  await alerts.init()
+  await alerts.send(program.exchange, program.market, program.timeframe, program.args[0], DEFAULT_DELIVERY)
+}
+
+main()
