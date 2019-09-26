@@ -66,7 +66,7 @@ class Alerts {
   async init() {
     mkdirp.sync(this.dbDataDir)
     this.db         = await sqlite.open(this.dbFile, { Promise })
-    this.resMigrate = await this.db.migrate({ force: 'last', migrationPath: `${__dirname}/migrations` })
+    this.resMigrate = await this.db.migrate({ force: 'last', migrationsPath: `${__dirname}/migrations` })
   }
 
   async isAlreadySent(exchange, market, timeframe, message) {
