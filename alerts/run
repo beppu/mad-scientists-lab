@@ -29,7 +29,7 @@ run_alerts() {
     price --timeframe 4h --gt sma 200 \
       && alert --timeframe 4h "price above 4h SMA 200"
     price --timeframe 1d --gt sma 200 \
-        && alert --timeframe 1d "price above 1d SMA 200"
+      && alert --timeframe 1d "price above 1d SMA 200"
 
     # price below sma 200
     price --timeframe 2h --lt sma 200 \
@@ -37,43 +37,43 @@ run_alerts() {
     price --timeframe 4h --lt sma 200 \
       && alert --timeframe 4h "price below 4h SMA 200"
     price --timeframe 1d --lt sma 200 \
-        && alert --timeframe 1d "price below 1d SMA 200"
+      && alert --timeframe 1d "price below 1d SMA 200"
 
     # sma bullish alignment
     aligned --timeframe 1h sma 50 100 200 \
       && alert --timeframe 1h "1h SMA 50 100 200 in bullish alignment"
     aligned --timeframe 4h sma 50 100 200 \
-        && alert --timeframe 4h "4h SMA 50 100 200 in bullish alignment"
+      && alert --timeframe 4h "4h SMA 50 100 200 in bullish alignment"
     aligned --timeframe 12h sma 50 100 200 \
-        && alert --timeframe 12h "12h SMA 50 100 200 in bullish alignment"
+      && alert --timeframe 12h "12h SMA 50 100 200 in bullish alignment"
 
     # sma bearish alignment
     aligned --timeframe 1h sma 200 100 50 \
       && alert --timeframe 1h "1h SMA 50 100 200 in bearish alignment"
     aligned --timeframe 4h sma 200 100 50 \
-        && alert --timeframe 4h "4h SMA 50 100 200 in bearish alignment"
+      && alert --timeframe 4h "4h SMA 50 100 200 in bearish alignment"
     aligned --timeframe 12h sma 200 100 50 \
-        && alert --timeframe 12h "12h SMA 50 100 200 in bearish alignment"
+      && alert --timeframe 12h "12h SMA 50 100 200 in bearish alignment"
 
     # golden cross
     aligned --timeframe 2h sma 50 200 \
-        && alert --timeframe 2h "2h SMA golden cross"
+      && alert --timeframe 2h "2h SMA golden cross"
     aligned --timeframe 4h sma 50 200 \
-        && alert --timeframe 4h "4h SMA golden cross"
+      && alert --timeframe 4h "4h SMA golden cross"
     aligned --timeframe 12h sma 50 200 \
-        && alert --timeframe 12h "12h SMA golden cross"
+      && alert --timeframe 12h "12h SMA golden cross"
     aligned --timeframe 1d sma 50 200 \
-        && alert --timeframe 1d "1d SMA golden cross"
+      && alert --timeframe 1d "1d SMA golden cross"
 
     # death cross
     aligned --timeframe 2h sma 200 50 \
-        && alert --timeframe 2h "2h SMA death cross"
+      && alert --timeframe 2h "2h SMA death cross"
     aligned --timeframe 4h sma 200 50 \
-        && alert --timeframe 4h "4h SMA death cross"
+      && alert --timeframe 4h "4h SMA death cross"
     aligned --timeframe 12h sma 200 50 \
-        && alert --timeframe 12h "12h SMA death cross"
+      && alert --timeframe 12h "12h SMA death cross"
     aligned --timeframe 1d sma 200 50 \
-        && alert --timeframe 1d "1d SMA death cross"
+      && alert --timeframe 1d "1d SMA death cross"
 
     # divergence --bullish --timeframe 1d
     # divergence --bullish --timeframe 4h
@@ -95,6 +95,7 @@ run_all_alerts() {
 
 # Run periodically
 echo "> starting alerts"
-run_all_alertswhile sleep 300 ; do
+run_all_alerts
+while sleep 300 ; do
   run_all_alerts
 done
