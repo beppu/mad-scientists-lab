@@ -66,7 +66,7 @@ class Alerts {
   async init() {
     mkdirp.sync(this.dbDataDir)
     this.db         = await sqlite.open(this.dbFile, { Promise })
-    this.resMigrate = await this.db.migrate({ force: 'last', migrationsPath: `${__dirname}/migrations` })
+    this.resMigrate = await this.db.migrate({ migrationsPath: `${__dirname}/migrations` })
   }
 
   async isAlreadySent(exchange, market, timeframe, message) {
@@ -105,13 +105,13 @@ class Alerts {
       return false
     }
     try {
+      await this.markSent(exchange, market, timeframe, message)
       let res = await Promise.each(delivery, async ([name, options]) => {
         if (deliveryMethods[name]) {
           return await deliveryMethods[name](exchange, market, timeframe, message, options)
         }
         return false
       })
-      await this.markSent(exchange, market, timeframe, message)
       return res
     } catch(err) {
       logger.error(err)
