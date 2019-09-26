@@ -23,13 +23,15 @@ run_alerts() {
     export TA_MARKET=$2
     echo "> analyzing $TA_EXCHANGE + $TA_MARKET"
 
-    # price relative to sma 200
+    # price above sma 200
     price --timeframe 2h --gt sma 200 \
       && alert --timeframe 2h "price above 2h SMA 200"
     price --timeframe 4h --gt sma 200 \
       && alert --timeframe 4h "price above 4h SMA 200"
     price --timeframe 1d --gt sma 200 \
         && alert --timeframe 1d "price above 1d SMA 200"
+
+    # price below sma 200
     price --timeframe 2h --lt sma 200 \
       && alert --timeframe 2h "price below 2h SMA 200"
     price --timeframe 4h --lt sma 200 \
