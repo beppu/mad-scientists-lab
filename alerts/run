@@ -25,19 +25,19 @@ run_alerts() {
 
     # price above sma 200
     price --timeframe 2h --gt sma 200 \
-      && alert --timeframe 2h "price above 2h SMA 200"
+      && alert --timeframe 2h "price above 2h 200 SMA"
     price --timeframe 4h --gt sma 200 \
-      && alert --timeframe 4h "price above 4h SMA 200"
+      && alert --timeframe 4h "price above 4h 200 SMA"
     price --timeframe 1d --gt sma 200 \
-      && alert --timeframe 1d "price above 1d SMA 200"
+      && alert --timeframe 1d "price above 1d 200 SMA"
 
     # price below sma 200
     price --timeframe 2h --lt sma 200 \
-      && alert --timeframe 2h "price below 2h SMA 200"
+      && alert --timeframe 2h "price below 2h 200 SMA"
     price --timeframe 4h --lt sma 200 \
-      && alert --timeframe 4h "price below 4h SMA 200"
+      && alert --timeframe 4h "price below 4h 200 SMA"
     price --timeframe 1d --lt sma 200 \
-      && alert --timeframe 1d "price below 1d SMA 200"
+      && alert --timeframe 1d "price below 1d 200 SMA"
 
     # sma bullish alignment
     aligned --timeframe 1h sma 50 100 200 \
