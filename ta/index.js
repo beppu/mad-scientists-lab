@@ -2,9 +2,18 @@ const ccxt  = require('ccxt')
 const talib = require('talib')
 const luxon = require('luxon')
 const DateTime = luxon.DateTime
-const diskMemoizer = require('disk-memoizer')
-const retry = require('retry')
+const cache = require('cache-all/file')
+const xdg = require('xdg-basedir')
+const pRetry = require('p-retry')
 Promise = require('bluebird')
+
+cache.init({
+  ttl: 50,
+  isEnable: true,
+  file: {
+    path: `${xdg.data}/ta/cache/`
+  }
+})
 
 /**
  * Load candlestick data
@@ -15,8 +24,23 @@ Promise = require('bluebird')
  */
 async function loadCandles(exchange, market, timeframe) {
   const ex = new ccxt[exchange]()
+  const key = `${exchange}-${market}-${timeframe}`
   try {
-    const candles = await ex.fetchOHLCV(market, timeframe, undefined)
+    let candles = await cache.get(key)
+    if (!candles) {
+      let fetch = async () => {
+        let _candles
+        try {
+          _candles = await ex.fetchOHLCV(market, timeframe, undefined)
+        }
+        catch (err) {
+          throw new pRetry.AbortError(err)
+        }
+        return _candles
+      };
+      candles = await pRetry(fetch, { retries: 5 })
+      await cache.set(key, candles)
+    }
     return candles
   } catch(err) {
     console.error(err)
