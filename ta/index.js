@@ -13,39 +13,16 @@ Promise = require('bluebird')
  * @param {String} timeframe - Duration of candle (5m, 30m, 1h, 1d, etc)
  * @returns {Array<Object>}  - An array of candles
  */
-async function _loadCandlesCb(exchange, market, timeframe, cb) {
+async function loadCandles(exchange, market, timeframe) {
   const ex = new ccxt[exchange]()
   try {
     const candles = await ex.fetchOHLCV(market, timeframe, undefined)
-    cb(null, candles)
+    return candles
   } catch(err) {
-    cb(err)
+    console.error(err)
+    return []
   }
 }
-function _faultTolerantLoadCandlesCb(exchange, market, timeframe, cb) {
-  const operation = retry.operation({
-    retries:    5,
-    factor:     2,
-    minTimeout: 1 * 1000,
-    maxTimeout: 10 * 1000,
-    randomize:  true,
-  })
-  operation.attempt(function(currentAttempt) {
-    _loadCandlesCb(exchange, market, timeframe, function(err, candles) {
-      if (operation.retry(err)) {
-        return
-      }
-      cb(err ? operation.mainError() : null, candles)
-    })
-  })
-}
-const _memoizedLoadCandlesCb = diskMemoizer(_faultTolerantLoadCandlesCb , {
-  maxAge: 50 * 1000,
-  identity: (exchange, market, timeframe) => {
-    return `${exchange}-${market}-${timeframe}`
-  }
-})
-const loadCandles = Promise.promisify(_memoizedLoadCandlesCb)
 
 /**
  * Transform candles from ccxt into marketData that talib can analyze.
