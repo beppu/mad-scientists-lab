@@ -169,6 +169,24 @@ const id = {
       inReal:          marketData.close,
       optInTimePeriod: period
     }
+  },
+  bbands: function(marketData, period=20) {
+    return {
+      name:            'BBANDS',
+      startIdx:        0,
+      endIdx:          marketData.close.length - 1,
+      inReal:          marketData.close,
+      optInTimePeriod: period
+    }
+  },
+  rsi: function(marketData, period=14) {
+    return {
+      name:            'RSI',
+      startIdx:        0,
+      endIdx:          marketData.close.length - 1,
+      inReal:          marketData.close,
+      optInTimePeriod: period
+    }
   }
 }
 
