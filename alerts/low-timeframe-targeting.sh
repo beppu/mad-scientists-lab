@@ -2,30 +2,22 @@
 
 export TA_EXCHANGE=${1:-binance}
 export TA_MARKET=${2:-BTC/USDT}
-export WEBHOOK=${3:-"http://localhost:5000/hooks/alert-small"}
+export TA_TIMEFRAME=${3:-5m}
+export ALERT_SMALL=${ALERT_SMALL:-"http://localhost:5000/hooks/alert-small"}
 export ALERT_BULLISH_ALIGNED=${ALERT_BULLISH_ALIGNED:-"http://localhost:5000/hooks/alert-bullish"}
 export ALERT_BEARISH_ALIGNED=${ALERT_BEARISH_ALIGNED:-"http://localhost:5000/hooks/alert-bearish"}
 
-# 3m alignment
-aligned --timeframe 3m sma 50 100 200 \
-  && alert --timeframe 3m --webhook $ALERT_BULLISH_ALIGNED "50/100/200 SMA in bullish alignment"
-aligned --timeframe 3m sma 200 100 50 \
-  && alert --timeframe 3m --webhook $ALERT_BEARISH_ALIGNED "50/100/200 SMA in bearish alignment"
+echo "> analyzing $TA_EXCHANGE + $TA_MARKET on $TA_TIMEFRAME timeframe"
 
-# 3m sma 200 
-price --timeframe 3m --gt sma 200 \
-  && alert --timeframe 3m --webhook $WEBHOOK "Price above 200 SMA"
-price --timeframe 3m --lt sma 200 \
-  && alert --timeframe 3m --webhook $WEBHOOK "Price below 200 SMA"
+# 50/100/200 alignment
+aligned sma 50 100 200 \
+  && alert --webhook $ALERT_BULLISH_ALIGNED "50/100/200 SMA in bullish alignment"
+aligned sma 200 100 50 \
+  && alert --webhook $ALERT_BEARISH_ALIGNED "50/100/200 SMA in bearish alignment"
 
-# 5m alignment
-aligned --timeframe 5m sma 50 100 200 \
-  && alert --timeframe 5m --webhook $ALERT_BULLISH_ALIGNED "50/100/200 SMA in bullish alignment"
-aligned --timeframe 5m sma 200 100 50 \
-  && alert --timeframe 5m --webhook $ALERT_BEARISH_ALIGNED "50/100/200 SMA in bearish alignment"
+# price vs sma 200 
+price --gt sma 200 \
+  && alert --webhook $ALERT_SMALL "Price above 200 SMA"
+price --lt sma 200 \
+  && alert --webhook $ALERT_SMALL "Price below 200 SMA"
 
-# 5m sma 200
-price --timeframe 5m --gt sma 200 \
-  && alert --timeframe 5m --webhook $WEBHOOK "Price above 200 SMA"
-price --timeframe 5m --lt sma 200 \
-  && alert --timeframe 5m --webhook $WEBHOOK "Price below 200 SMA"
