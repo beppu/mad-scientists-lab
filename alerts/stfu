@@ -1,0 +1,2 @@
+#!/bin/sh
+killall aplay mpg123 2> /dev/null
