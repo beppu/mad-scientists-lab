@@ -6,5 +6,25 @@
   {
     "id": "alert-safu",
     "execute-command": "alert-safu"
+  },
+  {
+    "id": "alert-small",
+    "execute-command": "alert-small"
+  },
+  {
+    "id": "alert-bullish",
+    "execute-command": "alert-bullish"
+  },
+  {
+    "id": "alert-bearish",
+    "execute-command": "alert-bearish"
+  },
+  {
+    "id": "alert-bullish-price",
+    "execute-command": "alert-bullish-price"
+  },
+  {
+    "id": "alert-bearish-price",
+    "execute-command": "alert-bearish-price"
   }
 ]
