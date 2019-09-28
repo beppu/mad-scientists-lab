@@ -1,0 +1,2 @@
+#!/bin/bash
+mpg123 "${SOUNDS:-.}/jr-joban.0002.mp3"
