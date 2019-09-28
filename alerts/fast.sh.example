@@ -1,0 +1,3 @@
+#!/bin/sh
+./low-timeframe-targeting.sh binance BTC/USDT 3m
+./low-timeframe-targeting.sh bitmex  BTC/USD  5m
