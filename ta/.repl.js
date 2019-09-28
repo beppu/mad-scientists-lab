@@ -16,6 +16,8 @@ global.cl       = console.log
 // global.outdent     = require('outdent')
 global.ccxt        = require('ccxt')
 global.talib       = require('talib')
+global.luxon       = require('luxon')
+global.DateTime    = luxon.DateTime
 
 global.ta = require('./index')
 global.alerts = require('./alerts')
