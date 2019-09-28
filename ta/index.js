@@ -7,6 +7,8 @@ const xdg = require('xdg-basedir')
 const pRetry = require('p-retry')
 Promise = require('bluebird')
 
+const time = require('./time')
+
 cache.init({
   ttl: 50,
   isEnable: true,
@@ -31,7 +33,11 @@ async function loadCandles(exchange, market, timeframe) {
       let fetch = async () => {
         let _candles
         try {
-          _candles = await ex.fetchOHLCV(market, timeframe, undefined)
+          const limit = 750
+          const now = DateTime.local()
+          const tf = time.timeframeToMinutes(timeframe)
+          const since = now.minus({ minutes: tf * limit })
+          _candles = await ex.fetchOHLCV(market, timeframe, since.toMillis(), limit)
         }
         catch (err) {
           throw new pRetry.AbortError(err)
