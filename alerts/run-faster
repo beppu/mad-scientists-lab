@@ -1,0 +1,14 @@
+#!/bin/bash
+
+run_fast_alerts() {
+  echo begin $(date --iso-8601=s)
+  [ -e fast.sh ] && source fast.sh
+  echo end $(date --iso-8601=s)
+}
+
+# Run periodically
+echo "> starting alerts"
+run_fast_alerts
+while sleep 60 ; do
+  run_fast_alerts
+done
