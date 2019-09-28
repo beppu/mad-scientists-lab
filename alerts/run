@@ -76,7 +76,7 @@ run_alerts() {
 }
 
 run_extra_alerts() {
-    [ -e extra.sh ] && source extra.sh
+  [ -e extra.sh ] && source extra.sh
 }
 
 run_all_alerts() {
