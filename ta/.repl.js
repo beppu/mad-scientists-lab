@@ -22,6 +22,7 @@ global.DateTime    = luxon.DateTime
 global.ta = require('./index')
 global.alerts = require('./alerts')
 global.time = require('./time')
+global.utils = require('./utils')
 
 // XXX - This function works for XBTUSD, but what about other markets?
 global.profitLoss = function profitLoss(quantity, entry, exit, leverage, short) {
