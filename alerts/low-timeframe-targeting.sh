@@ -15,7 +15,7 @@ aligned sma 50 100 200 \
 aligned sma 200 100 50 \
   && alert --webhook $ALERT_BEARISH_ALIGNED "50/100/200 SMA in bearish alignment"
 
-# price vs sma 200 
+# price vs sma 200
 price --gt sma 200 \
   && alert --webhook $ALERT_SMALL "Price above 200 SMA"
 price --lt sma 200 \
