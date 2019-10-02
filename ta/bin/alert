@@ -19,7 +19,9 @@
 const dotenv    = require('dotenv').config()
 const pkg       = require('../package.json')
 const { Alerts, deliveryMethods, DEFAULT_DELIVERY } = require('../alerts')
+const pino      = require('pino')
 
+const commandLogger = pino(pino.destination('/tmp/command.log'))
 const commander = require('commander')
 
 async function main() {
@@ -32,6 +34,7 @@ async function main() {
     .option('-m, --market <SYMBOL>', 'Market in exchange to pull data from', process.env.TA_MARKET)
     .option('-t, --timeframe <INTERVAL>', 'Candlestick duration for market data', process.env.TA_TIMEFRAME)
     .option('-w, --webhook <URL>', 'A custom webhook URL')
+  commandLogger.info({ exchange: process.env.TA_EXCHANGE, market: process.env.TA_MARKET }, process.argv.join(' | '))
   program.parse(process.argv)
   let optionsAreMissing = false;
   ['exchange', 'market', 'timeframe'].forEach((opt) => {
