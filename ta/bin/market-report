@@ -2,8 +2,8 @@
 
 [ -e .env ] && eval $(sed 's/^/export /' .env)
 
-export TA_EXCHANGE=${TA_EXCHANGE:-$1}
-export TA_MARKET=${TA_MARKET:-$2}
+export TA_EXCHANGE=${1:-$TA_EXCHANGE}
+export TA_MARKET=${2:-$TA_MARKET}
 
 echo $TA_EXCHANGE - $TA_MARKET
 

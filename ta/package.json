@@ -28,6 +28,7 @@
     "aligned": "./bin/aligned",
     "divergence": "./bin/divergence",
     "alert": "./bin/alert",
-    "alert-server": "./bin/alert-server"
+    "alert-server": "./bin/alert-server",
+    "market-report": "./bin/market-report"
   }
 }
