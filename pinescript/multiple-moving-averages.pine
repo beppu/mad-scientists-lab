@@ -1,9 +1,9 @@
 //@version=4
 study(title="別府 Multiple Moving Averages", shorttitle="別府 MAs", overlay=true)
-sma_1_period = input(defval=9, title="SMA 1", minval=1)
-sma_2_period = input(defval=277, title="SMA 2", minval=1)
-ema_1_period = input(defval=9, title="EMA 1", minval=1)
-ema_2_period = input(defval=277, title="EMA 2", minval=1)
+sma_1_period = input(defval=34, title="SMA 1", minval=1)
+sma_2_period = input(defval=68, title="SMA 2", minval=1)
+ema_1_period = input(defval=5, title="EMA 1", minval=1)
+ema_2_period = input(defval=13, title="EMA 2", minval=1)
 
 sma50  = sma(close, 50)
 sma100 = sma(close, 100)
