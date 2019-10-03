@@ -25,10 +25,10 @@ function timestampForTimeframe(timeframe, ms) {
   return ms - diff;
 }
 
-function translatePeriods(periods, tf1, tf2) {
-  const tf1m = timeframeToMinutes(tf1)
-  const tf2m = timeframeToMinutes(tf2)
-  const factor = tf2m / tf1m
+function translatePeriods(periods, tfSrc, tfDst) {
+  const tfDstm = timeframeToMinutes(tfDst)
+  const tfSrcm = timeframeToMinutes(tfSrc)
+  const factor = tfSrcm / tfDstm
   return periods.map((p) => p * factor)
 }
 
