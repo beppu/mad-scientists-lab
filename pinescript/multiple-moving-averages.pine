@@ -47,5 +47,5 @@ plotchar(sma200_below_price, title="Above SMA200", char="*", color=color.green, 
 plotchar(sma200_above_price, title="Below SMA200", char="*", color=color.red, size=size.small, location=location.belowbar)
 
 // alignment
-plotchar(sma_bullish, title="SMA Bullish Alignment", char="=", color=color.green, size=size.small, location=location.abovebar)
-plotchar(sma_bearish, title="SMA Bearish Alignment", char="=", color=color.red, size=size.small, location=location.belowbar)
+plotchar(sma_bullish, title="SMA Bullish Alignment", char="=", color=color.green, size=size.small, location=location.belowbar)
+plotchar(sma_bearish, title="SMA Bearish Alignment", char="=", color=color.red, size=size.small, location=location.abovebar)
