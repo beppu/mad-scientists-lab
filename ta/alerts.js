@@ -35,7 +35,7 @@ const deliveryMethods = {
     const espeak = spawn('espeak', [], { stdio: ['pipe', process.stdout, process.stderr]})
     const _market = speakableMarket(market)
     const _message = message.replace(new RegExp(market, 'g'), _market)
-    await streamWrite(espeak.stdin, `${_market}, ${timeframe}\n`)
+    await streamWrite(espeak.stdin, `${exchange}, ${_market}, ${timeframe}\n`)
     await streamWrite(espeak.stdin, _message + "\n")
     await streamEnd(espeak.stdin)
     await onExit(espeak)
@@ -107,8 +107,13 @@ class Alerts {
     try {
       await this.markSent(exchange, market, timeframe, message)
       let res = await Promise.each(delivery, async ([name, options]) => {
-        if (deliveryMethods[name]) {
-          return await deliveryMethods[name](exchange, market, timeframe, message, options)
+        try {
+          if (deliveryMethods[name]) {
+            return await deliveryMethods[name](exchange, market, timeframe, message, options)
+          }
+        }
+        catch (err) {
+          logger.error(err)
         }
         return false
       })
