@@ -20,6 +20,8 @@ sma_golden_cross = (sma50[1] < sma200[1] and sma50[0] > sma200[0])
 sma_death_cross  = (sma50[1] > sma200[1] and sma50[0] < sma200[0])
 sma200_below_price = (sma200[1] > close[1] and sma200[0] < close[0]) // bullish
 sma200_above_price = (sma200[1] < close[1] and sma200[0] > close[0]) // bearish
+sma_bullish = ((sma50[0] > sma100[0]) and (sma100[0] > sma200[0]) and not ((sma50[1] > sma100[1]) and (sma100[1] > sma200[1])))
+sma_bearish = ((sma50[0] < sma100[0]) and (sma100[0] < sma200[0]) and not ((sma50[1] < sma100[1]) and (sma100[1] < sma200[1])))
 
 // #883677 #CA61C3 #EE85B5 #FF958C #56203D
 plot(series=sma50,  title="SMA 50",  color=#E91E63, linewidth=2, style=plot.style_line)
@@ -43,3 +45,7 @@ plotchar(sma_death_cross, title="Death Cross", char="☠", color=color.red, text
 // price vs sma200
 plotchar(sma200_below_price, title="Above SMA200", char="*", color=color.green, size=size.small, location=location.abovebar)
 plotchar(sma200_above_price, title="Below SMA200", char="*", color=color.red, size=size.small, location=location.belowbar)
+
+// alignment
+plotchar(sma_bullish, title="SMA Bullish Alignment", char="=", color=color.green, size=size.small, location=location.abovebar)
+plotchar(sma_bearish, title="SMA Bearish Alignment", char="=", color=color.red, size=size.small, location=location.belowbar)
