@@ -4,19 +4,21 @@
 
 export TA_EXCHANGE=${1:-$TA_EXCHANGE}
 export TA_MARKET=${2:-$TA_MARKET}
+export MA=${3:-sma}
 
 echo $TA_EXCHANGE - $TA_MARKET - $(date --iso-8601=m)
 
 for tf in 5m 15m 1h 2h 4h 6h 12h 1d ; do
-  aligned --timeframe $tf sma 50 100 200 --now
+  aligned --timeframe $tf $MA 50 100 200 --now
   is_bullish=$?
-  aligned --timeframe $tf sma 200 100 50 --now
+  aligned --timeframe $tf $MA 200 100 50 --now
   is_bearish=$?
+  BIG_MA=$(echo $MA | tr a-z A-Z)
 
   if [ "$is_bullish" = 0 ] ; then
-    echo "$tf 50/100/200 SMA aligned bullishly"
+    echo "$tf 50/100/200 $BIG_MA aligned bullishly"
   elif [ "$is_bearish" = 0 ]  ; then
-    echo "$tf 50/100/200 SMA aligned bearishly"
+    echo "$tf 50/100/200 $BIG_MA aligned bearishly"
   else
     echo "$tf is neutral"
   fi
