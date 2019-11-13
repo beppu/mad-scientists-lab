@@ -14,6 +14,8 @@ function timeframeToMinutes(timeframe) {
     return 60 * n;
   case 'd':
     return 24 * 60 * n;
+  case 'w':
+    return 24 * 60 * 7 * n;
   }
   throw new Error(`Unsupported timeframe: '${timeframe}'`);
 }
