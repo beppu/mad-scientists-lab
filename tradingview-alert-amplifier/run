@@ -1,4 +1,4 @@
 #!/bin/sh
 export SOUNDS=`pwd`/sounds
 export PATH="$PATH:./sounds"
-webhook -port 5000 -verbose
+webhook -port 5000 -verbose 2>&1
