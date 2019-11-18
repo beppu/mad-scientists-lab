@@ -183,7 +183,10 @@ const id = {
       startIdx:        0,
       endIdx:          marketData.close.length - 1,
       inReal:          marketData.close,
-      optInTimePeriod: period
+      optInTimePeriod: period,
+      optInNbDevUp:    2,
+      optInNbDevDn:    2,
+      optInMAType:     0
     }
   },
   rsi: function(marketData, period=14) {
