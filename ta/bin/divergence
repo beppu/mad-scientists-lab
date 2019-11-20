@@ -61,16 +61,30 @@ async function main() {
     if (program.scan) {
     } else if (program.now) {
     } else {
-      const clusters = utils.findClusters(imd, utils.lowEnoughFn(0))
-      const low0 = utils.findLocalLow(imd, clusters[0])
-      const low1 = utils.findLocalLow(imd, clusters[1])
-      const rsi0 = imd.rsi[low0]
-      const rsi1 = imd.rsi[low1]
-      const regularBullishDivergence = rsi0 > rsi1
-      if (regularBullishDivergence) {
-        process.exit(0)
+      if (program.bearish) {
+        const clusters = utils.findClusters(imd, utils.highEnoughFn(0)) // XXX I only need the first two clusters.
+        const high0 = utils.findLocalHigh(imd, clusters[0])
+        const high1 = utils.findLocalHigh(imd, clusters[1])
+        const rsi0 = imd.rsi[high0]
+        const rsi1 = imd.rsi[high1]
+        const regularBearishDivergence = rsi0 < rsi1
+        if (regularBearishDivergence) {
+          process.exit(0)
+        } else {
+          process.exit(1)
+        }
       } else {
-        process.exit(1)
+        const clusters = utils.findClusters(imd, utils.lowEnoughFn(0)) // XXX I only need the first two clusters.
+        const low0 = utils.findLocalLow(imd, clusters[0])
+        const low1 = utils.findLocalLow(imd, clusters[1])
+        const rsi0 = imd.rsi[low0]
+        const rsi1 = imd.rsi[low1]
+        const regularBullishDivergence = rsi0 > rsi1
+        if (regularBullishDivergence) {
+          process.exit(0)
+        } else {
+          process.exit(1)
+        }
       }
     }
   }
@@ -87,7 +101,7 @@ main()
 // REPL Debugging
 
 x = {}
-ta.loadCandles('binance', 'BTC/USDT', '1h').then((candles) => x.candles = candles)
+ta.loadCandles('binance', 'BTC/USDT', '3m').then((candles) => x.candles = candles)
 
 md = ta.marketDataFromCandles(x.candles)
 imd = ta.invertedMarketData(md)
@@ -100,4 +114,10 @@ rsiSettings = ta.id.rsi(md)
 rsi = talib.execute(rsiSettings)
 ta.invertedAppend(imd, 'rsi', rsi.result.outReal)
 
+clusters = utils.findClusters(imd, utils.highEnoughFn(0)) // XXX I only need the first two clusters.
+high0 = utils.findLocalHigh(imd, clusters[0])
+high1 = utils.findLocalHigh(imd, clusters[1])
+rsi0 = imd.rsi[high0]
+rsi1 = imd.rsi[high1]
+console.log({ high0, high1, rsi0, rsi1 })
  */

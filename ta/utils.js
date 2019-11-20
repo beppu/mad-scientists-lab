@@ -41,6 +41,12 @@ function lowEnoughFn(threshold) {
   }
 }
 
+function highEnoughFn(threshold) {
+  return function (imd, i) {
+    return imd.high[i] - imd.upperBand[i] >= threshold // negative value means you don't have to touch the upper band
+  }
+}
+
 /**
  * Return an array or array of indices of consecutive candles that satisfy the given function
  * @param {InvertedMarketData} imd - inverted market data
@@ -94,6 +100,7 @@ module.exports = {
   isAscending,
   isDescending,
   lowEnoughFn,
+  highEnoughFn,
   findClusters,
   findLocalLow,
   findLocalHigh
