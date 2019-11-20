@@ -33,27 +33,45 @@ async function main() {
     process.exit(-1)
   }
   try {
-    const candles            = await ta.loadCandles(program.exchange, program.market, program.timeframe)
-    const marketData         = ta.marketDataFromCandles(candles)
-    const invertedMarketData = ta.invertedMarketData(marketData)
+    const candles = await ta.loadCandles(program.exchange, program.market, program.timeframe)
+    const md      = ta.marketDataFromCandles(candles)
+    const imd     = ta.invertedMarketData(md)
 
     // bollinger bands
-    const bbandSettings = ta.id.bbands(marketData)
+    const bbandSettings = ta.id.bbands(md)
     const bbands = talib.execute(bbandSettings)
-    ta.invertedAppend(invertedMarketData, 'upperBand',  bbands.result.outRealUpperBand)
-    ta.invertedAppend(invertedMarketData, 'middleBand', bbands.result.outRealMiddleBand)
-    ta.invertedAppend(invertedMarketData, 'lowerBand',  bbands.result.outRealLowerBand)
+    ta.invertedAppend(imd, 'upperBand',  bbands.result.outRealUpperBand)
+    ta.invertedAppend(imd, 'middleBand', bbands.result.outRealMiddleBand)
+    ta.invertedAppend(imd, 'lowerBand',  bbands.result.outRealLowerBand)
 
     // rsi
-    const rsiSettings = ta.id.rsi(marketData)
+    const rsiSettings = ta.id.rsi(md)
     const rsi = talib.execute(rsiSettings)
-    ta.invertedAppend(invertedMarketData, 'rsi', rsi.result.outReal)
+    ta.invertedAppend(imd, 'rsi', rsi.result.outReal)
 
-    // regular bullish divergence (default)
+    /*
+     * regular bullish divergence (default)
+     * - using closes, find valleys that touch the lower band
+     *   + if there's a cluster, choose the lowest touch
+     * - scan backwards to find the next valley
+     * - once two price lows are found, compare the RSI values that correspond to the same candles.
+     * - does bullish divergence exist or not?
+     */
 
     if (program.scan) {
     } else if (program.now) {
     } else {
+      const clusters = utils.findClusters(imd, utils.lowEnoughFn(0))
+      const low0 = utils.findLocalLow(imd, clusters[0])
+      const low1 = utils.findLocalLow(imd, clusters[1])
+      const rsi0 = imd.rsi[low0]
+      const rsi1 = imd.rsi[low1]
+      const regularBullishDivergence = rsi0 > rsi1
+      if (regularBullishDivergence) {
+        process.exit(0)
+      } else {
+        process.exit(1)
+      }
     }
   }
   catch (err) {
@@ -69,11 +87,17 @@ main()
 // REPL Debugging
 
 x = {}
-ta.loadCandles('binance', 'BTC/USDT', '4h').then((candles) => x.candles = candles)
+ta.loadCandles('binance', 'BTC/USDT', '1h').then((candles) => x.candles = candles)
 
 md = ta.marketDataFromCandles(x.candles)
 imd = ta.invertedMarketData(md)
 bbs = ta.id.bbands(md)
 bb = talib.execute(bbs)
+ta.invertedAppend(imd, 'upperBand',  bb.result.outRealUpperBand)
+ta.invertedAppend(imd, 'middleBand', bb.result.outRealMiddleBand)
+ta.invertedAppend(imd, 'lowerBand',  bb.result.outRealLowerBand)
+rsiSettings = ta.id.rsi(md)
+rsi = talib.execute(rsiSettings)
+ta.invertedAppend(imd, 'rsi', rsi.result.outReal)
 
  */
