@@ -9,7 +9,7 @@ export ALERT_BEARISH_ALIGNED=${ALERT_BEARISH_ALIGNED:-"http://localhost:5000/hoo
 
 # ema 12 & 26
 aligned ema 12 26 \
-  && alert --webhook $ALERT_BULLISH_ALIGNED "34/68 EMA cross up"
+  && alert --webhook $ALERT_BULLISH_ALIGNED "12/26 EMA cross up"
 aligned ema 26 12 \
-  && alert --webhook $ALERT_BEARISH_ALIGNED "34/68 EMA cross down"
+  && alert --webhook $ALERT_BEARISH_ALIGNED "12/26 EMA cross down"
 
