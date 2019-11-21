@@ -14,31 +14,44 @@ run_alerts() {
     export ALERT_BEARISH_ALIGNED=${ALERT_BEARISH_ALIGNED:-"http://localhost:5000/hooks/alert-bearish"}
     export ALERT_BULLISH_CROSS=${ALERT_BULLISH_CROSS:-"http://localhost:5000/hooks/alert-bullish"}
     export ALERT_BEARISH_CROSS=${ALERT_BEARISH_CROSS:-"http://localhost:5000/hooks/alert-bearish"}
+    export ALERT_BULLISH_DIVERGENCE=${ALERT_BULLISH_DIVERGENCE:-"http://localhost:5000/hooks/alert-bullish"}
+    export ALERT_BEARISH_DIVERGENCE=${ALERT_BEARISH_DIVERGENCE:-"http://localhost:5000/hooks/alert-bearish"}
     echo "> analyzing $TA_EXCHANGE + $TA_MARKET"
 
     for tf in 1h 2h 4h 12h 1d ; do
-      # price above sma 200
-      price --timeframe $tf --gt sma 200 \
-        && alert --timeframe $tf "price above $tf 200 SMA" --webhook $ALERT_BULLISH_PRICE
-      # price below sma 200
-      price --timeframe $tf --lt sma 200 \
-        && alert --timeframe $tf "price below $tf 200 SMA" --webhook $ALERT_BEARISH_PRICE
-      # sma bullish alignment
-      aligned --timeframe $tf sma 50 100 200 \
-        && alert --timeframe $tf "$tf 50/100/200 SMA in bullish alignment" --webhook $ALERT_BULLISH_ALIGNED
-      # sma bearish alignment
-      aligned --timeframe $tf sma 200 100 50 \
-        && alert --timeframe $tf "$tf 50/100/200 SMA in bearish alignment" --webhook $ALERT_BEARISH_ALIGNED
-      # golden cross
-      aligned --timeframe $tf sma 50 200 \
-        && alert --timeframe $tf "$tf SMA golden cross" --webhook $ALERT_BULLISH_CROSS
-      # death cross
-      aligned --timeframe $tf sma 200 50 \
-        && alert --timeframe $tf "$tf SMA death cross" --webhook $ALERT_BEARISH_CROSS
-    done
+      case $tf in
+        1h|2h)
+          # sma bullish alignment
+          aligned --timeframe $tf sma 50 100 200 \
+            && alert --timeframe $tf "$tf 50/100/200 SMA in bullish alignment" --webhook $ALERT_BULLISH_ALIGNED
+          # sma bearish alignment
+          aligned --timeframe $tf sma 200 100 50 \
+            && alert --timeframe $tf "$tf 50/100/200 SMA in bearish alignment" --webhook $ALERT_BEARISH_ALIGNED
+          ;;
+        *)
+          # price above sma 200
+          price --timeframe $tf --gt sma 200 \
+            && alert --timeframe $tf "price above $tf 200 SMA" --webhook $ALERT_BULLISH_PRICE
+          # price below sma 200
+          price --timeframe $tf --lt sma 200 \
+            && alert --timeframe $tf "price below $tf 200 SMA" --webhook $ALERT_BEARISH_PRICE
 
-    # divergence --bullish --timeframe 1d
-    # divergence --bearish --timeframe 1d
+          # golden cross
+          aligned --timeframe $tf sma 50 200 \
+            && alert --timeframe $tf "$tf SMA golden cross" --webhook $ALERT_BULLISH_CROSS
+          # death cross
+          aligned --timeframe $tf sma 200 50 \
+            && alert --timeframe $tf "$tf SMA death cross" --webhook $ALERT_BEARISH_CROSS
+
+          # bullish divergence
+          divergence --timeframe $tf \
+            && alert --timeframe $tf "$tf bullish divergence" --webhook $ALERT_BULLISH_ALIGNED
+          # bearish divergence
+          divergence --timeframe $tf --bearish \
+            && alert --timeframe $tf "$tf bearish divergence" --webhook $ALERT_BEARISH_ALIGNED
+          ;;
+      esac
+    done
   )
 }
 
