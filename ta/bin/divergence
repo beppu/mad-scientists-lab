@@ -9,6 +9,49 @@ const commander = require('commander')
 const talib     = require('talib')
 const beautify  = require('json-beautify')
 
+function detectRegularBearishDivergence(imd, ageThreshold) {
+  const clusters = utils.findClusters(imd, utils.highEnoughFn(0)) // XXX I only need the first two clusters.
+  if (clusters.length < 2) {
+    // not enough local highs detected
+    return false
+  }
+  if (clusters[0][0] > ageThreshold) {
+    // too far in the past
+    return false
+  }
+  const high0 = utils.findLocalHigh(imd, clusters[0])
+  const high1 = utils.findLocalHigh(imd, clusters[1])
+  const rsi0 = imd.rsi[high0]
+  const rsi1 = imd.rsi[high1]
+  const regularBearishDivergence = rsi0 < rsi1
+  if (regularBearishDivergence) {
+    return true
+  } else {
+    return false
+  }
+}
+
+function detectRegularBullishDivergence(imd, ageThreshold) {
+  const clusters = utils.findClusters(imd, utils.lowEnoughFn(0)) // XXX I only need the first two clusters.
+  if (clusters.length < 2) {
+    // not enough local highs detected
+    return false
+  }
+  if (clusters[0][0] > ageThreshold) {
+    return false
+  }
+  const low0 = utils.findLocalLow(imd, clusters[0])
+  const low1 = utils.findLocalLow(imd, clusters[1])
+  const rsi0 = imd.rsi[low0]
+  const rsi1 = imd.rsi[low1]
+  const regularBullishDivergence = rsi0 > rsi1
+  if (regularBullishDivergence) {
+    return true
+  } else {
+    return true
+  }
+}
+
 async function main() {
   const program   = new commander.Command();
   program
@@ -58,29 +101,33 @@ async function main() {
      * - does bullish divergence exist or not?
      */
 
+    let ageThreshold = 16
+
     if (program.scan) {
     } else if (program.now) {
-    } else {
+      ageThreshold = 0
       if (program.bearish) {
-        const clusters = utils.findClusters(imd, utils.highEnoughFn(0)) // XXX I only need the first two clusters.
-        const high0 = utils.findLocalHigh(imd, clusters[0])
-        const high1 = utils.findLocalHigh(imd, clusters[1])
-        const rsi0 = imd.rsi[high0]
-        const rsi1 = imd.rsi[high1]
-        const regularBearishDivergence = rsi0 < rsi1
-        if (regularBearishDivergence) {
+        if (detectRegularBearishDivergence(imd, ageThreshold)) {
           process.exit(0)
         } else {
           process.exit(1)
         }
       } else {
-        const clusters = utils.findClusters(imd, utils.lowEnoughFn(0)) // XXX I only need the first two clusters.
-        const low0 = utils.findLocalLow(imd, clusters[0])
-        const low1 = utils.findLocalLow(imd, clusters[1])
-        const rsi0 = imd.rsi[low0]
-        const rsi1 = imd.rsi[low1]
-        const regularBullishDivergence = rsi0 > rsi1
-        if (regularBullishDivergence) {
+        if (detectRegularBullishDivergence(imd, ageThreshold)) {
+          process.exit(0)
+        } else {
+          process.exit(1)
+        }
+      }
+    } else {
+      if (program.bearish) {
+        if (detectRegularBearishDivergence(imd, ageThreshold)) {
+          process.exit(0)
+        } else {
+          process.exit(1)
+        }
+      } else {
+        if (detectRegularBullishDivergence(imd, ageThreshold)) {
           process.exit(0)
         } else {
           process.exit(1)
