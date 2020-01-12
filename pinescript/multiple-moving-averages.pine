@@ -1,5 +1,5 @@
 //@version=4
-study(title="別府 Multiple Moving Averages", shorttitle="別府 MAs", overlay=true)
+study(title="Multiple Moving Averages", shorttitle="M.MAs", overlay=true)
 sma_1_period = input(defval=34, title="SMA 1", minval=1)
 sma_2_period = input(defval=68, title="SMA 2", minval=1)
 ema_1_period = input(defval=5, title="EMA 1", minval=1)
@@ -23,6 +23,13 @@ sma200_above_price = (sma200[1] < close[1] and sma200[0] > close[0]) // bearish
 sma_bullish = ((sma50[0] > sma100[0]) and (sma100[0] > sma200[0]) and not ((sma50[1] > sma100[1]) and (sma100[1] > sma200[1])))
 sma_bearish = ((sma50[0] < sma100[0]) and (sma100[0] < sma200[0]) and not ((sma50[1] < sma100[1]) and (sma100[1] < sma200[1])))
 
+ema_golden_cross = (ema50[1] < ema200[1] and ema50[0] > ema200[0])
+ema_death_cross  = (ema50[1] > ema200[1] and ema50[0] < ema200[0])
+ema200_below_price = (ema200[1] > close[1] and ema200[0] < close[0]) // bullish
+ema200_above_price = (ema200[1] < close[1] and ema200[0] > close[0]) // bearish
+ema_bullish = ((ema50[0] > ema100[0]) and (ema100[0] > ema200[0]) and not ((ema50[1] > ema100[1]) and (ema100[1] > ema200[1])))
+ema_bearish = ((ema50[0] < ema100[0]) and (ema100[0] < ema200[0]) and not ((ema50[1] < ema100[1]) and (ema100[1] < ema200[1])))
+
 plot(series=sma50,  title="SMA 50",  color=#E91E63, linewidth=2, style=plot.style_line)
 plot(series=sma100, title="SMA 100", color=#512DA8, linewidth=3, style=plot.style_line)
 plot(series=sma200, title="SMA 200", color=#B71C1C, linewidth=4, style=plot.style_line)
@@ -35,15 +42,28 @@ plot(series=ema200, title="EMA 200", color=#FFA726, linewidth=4, style=plot.styl
 plot(series=ema_1,  title="EMA #1",  color=#FFEE58, linewidth=2, style=plot.style_line)
 plot(series=ema_2,  title="EMA #2",  color=#81C784, linewidth=2, style=plot.style_line)
 
-// crosses
+// sma crosses
 opaque_yellow = color.new(#F2C14E, 0)
-plotchar(sma_golden_cross, title="Golden Cross", char="✠", color=opaque_yellow, textcolor=#F5D17E, location=location.belowbar, size=size.small, text="Golden Cross")
-plotchar(sma_death_cross, title="Death Cross", char="☠", color=color.red, textcolor=color.red, location=location.abovebar, size=size.small, text="Death Cross")
+plotchar(sma_golden_cross, title="SMA Golden Cross", char="✠", color=opaque_yellow, textcolor=#F5D17E, location=location.belowbar, size=size.small, text="SMA Golden Cross")
+plotchar(sma_death_cross, title="SMA Death Cross", char="☠", color=color.red, textcolor=color.red, location=location.abovebar, size=size.small, text="SMA Death Cross")
 
 // price vs sma200
 plotchar(sma200_below_price, title="Above SMA200", char="*", color=color.green, size=size.small, location=location.abovebar)
 plotchar(sma200_above_price, title="Below SMA200", char="*", color=color.red, size=size.small, location=location.belowbar)
 
-// alignment
+// sma alignment
 plotchar(sma_bullish, title="SMA Bullish Alignment", char="=", color=color.green, size=size.small, location=location.belowbar)
 plotchar(sma_bearish, title="SMA Bearish Alignment", char="=", color=color.red, size=size.small, location=location.abovebar)
+
+// ema crosses
+//opaque_yellow = color.new(#F2C14E, 0)
+plotchar(ema_golden_cross, title="EMA Golden Cross", char="✠", color=opaque_yellow, textcolor=#F5D17E, location=location.belowbar, size=size.small, text="EMA Golden Cross")
+plotchar(ema_death_cross, title="EMA Death Cross", char="☠", color=color.red, textcolor=color.red, location=location.abovebar, size=size.small, text="EMA Death Cross")
+
+// price vs ema200
+plotchar(ema200_below_price, title="Above EMA200", char="★", color=color.green, size=size.small, location=location.abovebar)
+plotchar(ema200_above_price, title="Below EMA200", char="★", color=color.red, size=size.small, location=location.belowbar)
+
+// ema alignment
+plotchar(ema_bullish, title="EMA Bullish Alignment", char="≈", color=color.green, size=size.small, location=location.belowbar)
+plotchar(ema_bearish, title="EMA Bearish Alignment", char="≈", color=color.red, size=size.small, location=location.abovebar)
