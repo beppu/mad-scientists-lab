@@ -77,6 +77,31 @@ bullish-divergence -t 1d ETH/BTC
 I think I'm going to go with the dumb but effective way.  I'm going to keep most of
 the same options and environment variables though.
 
+# Blog
+
+## 2020-01-11 How Should Trade Execution Engine Work?
+
+I have this recurring thought that analysis and trade execution is just a pure
+function against price that implements rules for buying and selling. Another
+recurring thought that I have is that the analysis functions that are living
+inside various bin/* scripts should be refactored into a library of reusuable
+code, but I'm not quite sure how that should look.
+
+The command line tools present a nice common interface though, and maybe I should
+follow their lead.  Many of the tools have the following modes of operation:
+
+* The default is to check if a criteria state change happened on the current candle.
+* `--now` -- This checks if the criteria is true.  (This allows the criteria to become true in the past.)
+* `--scan` -- This goes back in time to find the moments when the criteria was true.
+
+These are all generally useful modes, and maybe the library form of this code
+should continue providing these modes.
+
+I should also probably study how TradingView implements trading strategies. I
+learned so much from them by adapting their data structures for the analysis
+side, that I could certainly learn something from their trade execution side
+too.
+
 ## 2019-09-23 Much Has Happened
 
 ### First, some respect
