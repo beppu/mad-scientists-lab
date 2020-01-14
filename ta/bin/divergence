@@ -10,13 +10,15 @@ const talib     = require('talib')
 const beautify  = require('json-beautify')
 
 function detectRegularBearishDivergence(imd, ageThreshold) {
-  const clusters = utils.findClusters(imd, utils.highEnoughFn(0)) // XXX I only need the first two clusters.
+  const clusters = utils.findClusters(imd, utils.highEnoughFn(1.1)) // XXX I only need the first two clusters.
   if (clusters.length < 2) {
     // not enough local highs detected
+    console.log('clusters')
     return false
   }
   if (clusters[0][0] > ageThreshold) {
     // too far in the past
+    console.log('age', clusters[0])
     return false
   }
   const high0 = utils.findLocalHigh(imd, clusters[0])
@@ -32,7 +34,7 @@ function detectRegularBearishDivergence(imd, ageThreshold) {
 }
 
 function detectRegularBullishDivergence(imd, ageThreshold) {
-  const clusters = utils.findClusters(imd, utils.lowEnoughFn(0)) // XXX I only need the first two clusters.
+  const clusters = utils.findClusters(imd, utils.lowEnoughFn(1.1)) // XXX I only need the first two clusters.
   if (clusters.length < 2) {
     // not enough local highs detected
     return false
@@ -62,8 +64,11 @@ async function main() {
     .option('-t, --timeframe <INTERVAL>', 'Candlestick duration for market data', process.env.TA_TIMEFRAME)
     .option('-H, --hidden', 'Search for hidden divergence instead of regular')
     .option('-b, --bearish', 'Search for bearish divergence instaed of bullish')
+    .option('-a, --age-threshold <CANDLES>', 'Number of candles allowed after detection', 2)
+    .option('-g, --gap-threshold <CANDLES>', 'Number of candles required between extremes', 5)
+    .option('-p, --peak-threshold <PERCENT>', '% distance allowed from upper or lower bband', 1.1)
     .option('-s, --scan', 'Scan for all occurrences')
-    .option('-n, --now', 'Are they aligned now regardless of the past')
+    .option('-n, --now', 'Does divergence exist right now regardless of the past')
   program.parse(process.argv)
   let optionsAreMissing = false;
   ['exchange', 'market', 'timeframe'].forEach((opt) => {
@@ -101,7 +106,7 @@ async function main() {
      * - does bullish divergence exist or not?
      */
 
-    let ageThreshold = 16
+    let ageThreshold = program.ageThreshold
 
     if (program.scan) {
     } else if (program.now) {
