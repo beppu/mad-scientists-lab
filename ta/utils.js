@@ -32,18 +32,23 @@ function isDescending(comparables) {
 
 /**
  * Trying to find lows by comparing lows to their proximity to the lower bband
- * @param {Number} threshold - Distance from lowerBand.  Positive values allow prices to be higher than the lower band.
+ * @param {Number} threshold - % distance of low from lowerBand.
  * @returns {Function} A function that takes (imd, i) and returns a boolean
  */
 function lowEnoughFn(threshold) {
   return function (imd, i) {
-    return imd.low[i] - imd.lowerBand[i] <= threshold
+    return 1 - (imd.lowerBand[i] / imd.low[i]) <= (threshold / 100)
   }
 }
 
+/**
+ * Trying to find highs by comparing highs to their proximity to the upper bband
+ * @param {Number} threshold - % distance of high from upperBand.
+ * @returns {Function} A funciton that takes (imd, i) and returns a boolean
+ */
 function highEnoughFn(threshold) {
   return function (imd, i) {
-    return imd.high[i] - imd.upperBand[i] >= threshold // negative value means you don't have to touch the upper band
+    return 1 - (imd.high[i] / imd.upperBand[i]) <= (threshold / 100)
   }
 }
 
