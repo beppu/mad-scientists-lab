@@ -60,8 +60,8 @@ plotchar(sma_bullish, title="SMA Bullish Alignment", char="=", color=color.green
 plotchar(sma_bearish, title="SMA Bearish Alignment", char="=", color=color.red, size=size.small, location=location.abovebar)
 
 // sma slope
-plotchar(sma200_positive_slope, title="SMA200 Positive Slope", char="+", color=color.green, size=size.small, location=location.abovebar)
-plotchar(sma200_negative_slope, title="SMA200 Negative Slope", char="-", color=color.red, size=size.small, location=location.belowbar)
+plotchar(sma200_positive_slope, title="SMA200 Positive Slope", char="⊕", color=color.green, size=size.small, location=location.abovebar)
+plotchar(sma200_negative_slope, title="SMA200 Negative Slope", char="⊝", color=color.red, size=size.small, location=location.belowbar)
 
 // ema crosses
 //opaque_yellow = color.new(#F2C14E, 0)
@@ -77,5 +77,5 @@ plotchar(ema_bullish, title="EMA Bullish Alignment", char="≈", color=color.gre
 plotchar(ema_bearish, title="EMA Bearish Alignment", char="≈", color=color.red, size=size.small, location=location.abovebar)
 
 // ema slope
-plotchar(ema200_positive_slope, title="EMA200 Positive Slope", char="⊕", color=color.green, size=size.small, location=location.abovebar)
-plotchar(ema200_negative_slope, title="EMA200 Negative Slope", char="⊝", color=color.red, size=size.small, location=location.belowbar)
+plotchar(ema200_positive_slope, title="EMA200 Positive Slope", char="+", color=color.green, size=size.small, location=location.abovebar)
+plotchar(ema200_negative_slope, title="EMA200 Negative Slope", char="-", color=color.red, size=size.small, location=location.belowbar)
