@@ -6,8 +6,15 @@
   "repository": "https://github.com/beppu/mad-scientists-lab/tree/master/tvaa2",
   "author": "John BEPPU",
   "license": "MIT",
+  "scripts": {
+    "start": "micro",
+    "dev": "micro-dev"
+  },
   "dependencies": {
     "fs-router": "^0.5.0",
     "micro": "^9.3.4"
+  },
+  "devDependencies": {
+    "micro-dev": "^3.0.0"
   }
 }
