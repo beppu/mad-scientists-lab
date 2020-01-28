@@ -1,0 +1,13 @@
+{
+  "name": "tvaa2",
+  "version": "1.0.0",
+  "description": "TradingView Alert Amplifier 2",
+  "main": "index.js",
+  "repository": "https://github.com/beppu/mad-scientists-lab/tree/master/tvaa2",
+  "author": "John BEPPU",
+  "license": "MIT",
+  "dependencies": {
+    "fs-router": "^0.5.0",
+    "micro": "^9.3.4"
+  }
+}
