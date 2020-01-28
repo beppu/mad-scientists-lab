@@ -33,7 +33,7 @@ async function loadCandles(exchange, market, timeframe) {
       let fetch = async () => {
         let _candles
         try {
-          const limit = 750
+          const limit = 1000 
           const now = DateTime.local()
           const tf = time.timeframeToMinutes(timeframe)
           const since = now.minus({ minutes: tf * limit })
@@ -45,6 +45,7 @@ async function loadCandles(exchange, market, timeframe) {
         return _candles
       };
       candles = await pRetry(fetch, { retries: 5 })
+      console.log(candles.length)
       await cache.set(key, candles)
     }
     return candles
