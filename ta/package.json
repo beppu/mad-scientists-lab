@@ -30,6 +30,8 @@
     "divergence": "./bin/divergence",
     "alert": "./bin/alert",
     "alert-server": "./bin/alert-server",
-    "market-report": "./bin/market-report"
+    "market-report": "./bin/market-report",
+    "profit-loss": "./bin/profit-loss",
+    "pnl": "./bin/profit-loss"
   }
 }

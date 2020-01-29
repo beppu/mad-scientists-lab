@@ -101,6 +101,16 @@ function findLocalHigh(imd, cluster) {
   return cluster[highestIndex]
 }
 
+function profitLoss(quantity, entry, exit, leverage, short) {
+  // XXX - This function works for XBTUSD, but what about other markets?
+  const entryValue = quantity / entry
+  const exitValue  = (exit / entry) * entryValue
+  const profitLoss = short ? entryValue - exitValue : exitValue - entryValue
+  const profitLossPercent = short ? (exitValue / entryValue * 100) : (entryValue / exitValue * 100)
+  const roe = profitLossPercent * leverage
+  return { entryValue, exitValue, profitLoss, profitLossPercent, roe }
+}
+
 module.exports = {
   isAscending,
   isDescending,
@@ -108,5 +118,6 @@ module.exports = {
   highEnoughFn,
   findClusters,
   findLocalLow,
-  findLocalHigh
+  findLocalHigh,
+  profitLoss
 }

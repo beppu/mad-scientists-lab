@@ -1,0 +1,44 @@
+#!/usr/bin/env node
+// Does the potential for regular divergence exist?
+const dotenv    = require('dotenv').config()
+const pkg       = require('../package.json')
+const ta        = require('../index')
+const utils     = require('../utils')
+const luxon     = require('luxon')
+const commander = require('commander')
+const talib     = require('talib')
+const beautify  = require('json-beautify')
+
+async function main() {
+  const program   = new commander.Command();
+  program
+    .version(pkg.version)
+    .description('How much money could I have made or lost?')
+    .usage("[options] <entry> <exit>")
+    .option('-q, --quantity <CONTRACTS>', 'How many contracts were bought?', 100000, parseFloat)
+    .option('-l, --leverage <MULTIPLIER>', 'How much leverage on the position', 100, parseFloat)
+    .option('-s, --short', 'Treat this as a short position instead of a long position', false)
+    .option('-d, --dollars', 'Translate money values into dollars')
+  program.parse(process.argv)
+  if (program.args.length != 2) {
+    console.warn("Exactly one entry and one exit price must be provided.")
+    process.exit(-1)
+  }
+  try {
+    const entry = parseFloat(program.args[0])
+    const exit = parseFloat(program.args[1])
+    const res = utils.profitLoss(program.quantity, entry, exit, program.leverage, program.short)
+    if (program.dollars) {
+      res.entryValue$ = res.entryValue * exit
+      res.exitValue$  = res.exitValue  * exit
+      res.profitLoss$ = res.profitLoss * exit
+    }
+    console.log(res)
+  }
+  catch (err) {
+    console.error(err.stack)
+    process.exit(-1)
+  }
+}
+
+main()
