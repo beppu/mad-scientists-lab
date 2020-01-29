@@ -45,7 +45,6 @@ async function loadCandles(exchange, market, timeframe) {
         return _candles
       };
       candles = await pRetry(fetch, { retries: 5 })
-      console.log(candles.length)
       await cache.set(key, candles)
     }
     return candles
