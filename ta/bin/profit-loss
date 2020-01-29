@@ -18,7 +18,8 @@ async function main() {
     .option('-q, --quantity <CONTRACTS>', 'How many contracts were bought?', 100000, parseFloat)
     .option('-l, --leverage <MULTIPLIER>', 'How much leverage on the position', 100, parseFloat)
     .option('-s, --short', 'Treat this as a short position instead of a long position', false)
-    .option('-d, --dollars', 'Translate money values into dollars')
+    .option('-d, --dollars', 'Translate money values into dollars', true)
+    .option('--no-dollars', 'Do *NOT* translate money values into dollars')
   program.parse(process.argv)
   if (program.args.length != 2) {
     console.warn("Exactly one entry and one exit price must be provided.")
