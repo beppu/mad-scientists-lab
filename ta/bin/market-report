@@ -24,4 +24,4 @@ for tf in 5m 15m 1h 2h 4h 6h 12h 1d ; do
   fi
 done
 
-price --timeframe 1d --gt sma 200 --now && echo "price is above 1d 200 SMA" || echo "price is below 1d 200 SMA"
+price --timeframe 1d --gt $MA 200 --now && echo "price is above 1d 200 $BIG_MA" || echo "price is below 1d 200 $BIT_MA"
