@@ -22,7 +22,49 @@ TradingView Alert Amplifier 2
 Some of the code from bin/alert that does the actual alerting might get moved here.
 I'm going to have to think about this more.
 
-- I want the server-side to maintain a record of what alerts have happened.
-- Audio should be done in tvaa2 and not by bin/alert anymore.
-- The job of bin/alert should be to send messages via webhooks or push notifications or whatever.
-- The receivers of those messages can interpret them in a humanly useful way.
+### What should bin/alert's job be?
+
+`bin/alert` runs on a server, and it encapsulates the essence of an alert.
+
+* exchange
+* market
+* timeframe
+* message
+
+It sends this information to tvaa2 so that a human can become aware of the alert.
+
+**Question**:  Should logging and database writing be done by `bin/alert` or by tvaa2?
+
+**Answer**:  I think it should be done by `bin/alert`, because it will be running on a
+server, and it's a lot less likely for it to miss recording data.  Computers running tvaa2
+are not guaranteed to be online.
+
+`bin/alert`'s delivery methods should be:
+
+* webhook
+* database
+* log file (optional)
+* push notification (TODO)
+* slack (TODO)
+
+#### Changes to be made
+
+* Stop making noise.
+* Send data with the webhook request.
+* Add slack and push notifications.
+
+### What should tvaa2's job be?
+
+The responsibility of tvaa2 is to get a human's attention when an alert
+happens.  This will be done using the following methods:
+
+* mplayer
+* espeak
+* desktop notifications
+
+Make some noise, so I can look at interesting developments in the market.
+
+#### Changes to be made
+
+* Add espeak support
+* Add desktop notification support
