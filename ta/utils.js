@@ -153,7 +153,6 @@ function log10Slope(a, b) {
 function lineFn(a, b) {
   let m = slope(a, b)
   let offset = a[1] - (m * a[0])
-  console.log({m, offset})
   return function(x) {
     return (m * x) + offset
   }
@@ -166,6 +165,7 @@ function lineFn(a, b) {
  * @returns {Function} given x, return y in log-linear space
  */
 function log10LineFn(a, b) {
+  // https://en.wikipedia.org/wiki/Semi-log_plot#log-linear_plot
   return function(x) {
     return (a[1] * 10 ** (((x - a[0]) / (b[0] - a[0]) * Math.log10(b[1]/a[1]))))
   }
