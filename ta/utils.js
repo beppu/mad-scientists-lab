@@ -101,6 +101,15 @@ function findLocalHigh(imd, cluster) {
   return cluster[highestIndex]
 }
 
+/**
+ * Calculate profit and loss
+ * @param {Number} quantity - How many contracts
+ * @param {Number} entry - price the position was opened at
+ * @param {Number} exit - price the position was closed at
+ * @param {Number} leverage - how much leverage was used when opening the position
+ * @param {Boolean} short - if true, this is for a short position instead of the default long position
+ * @returns {Object} various stats on profit and loss of this position
+ */
 function profitLoss(quantity, entry, exit, leverage, short) {
   // XXX - This function works for XBTUSD, but what about other markets?
   const entryValue = quantity / entry
@@ -111,6 +120,19 @@ function profitLoss(quantity, entry, exit, leverage, short) {
   return { entryValue, exitValue, profitLoss, profitLossPercent, roe }
 }
 
+/**
+ * Return a function for plotting a line in log-linear space as defined by the 2 points, a and b
+ * @param a {Point} a point in the line
+ * @param b {Point} another point in the line
+ * @returns {Function} given x, return y in log-linear space
+ */
+function log10LineFn(a, b) {
+  return function(x) {
+    return (a[1] * 10 ** (((x - a[0]) / (b[0] - a[0]) * Math.log10(b[1]/a[1]))))
+  }
+}
+// TODO Write bin/trendline
+
 module.exports = {
   isAscending,
   isDescending,
@@ -119,5 +141,6 @@ module.exports = {
   findClusters,
   findLocalLow,
   findLocalHigh,
-  profitLoss
+  profitLoss,
+  log10LineFn
 }
