@@ -121,6 +121,45 @@ function profitLoss(quantity, entry, exit, leverage, short) {
 }
 
 /**
+ * An array with 2 numbers in it representing the x and y coordinates of a point in a chart
+ * @typedef {Array<Number>} Point
+ */
+
+/**
+ * Calculate the slope between two points in linear space.
+ * @param {Point} a - a point
+ * @param {Point} b - another point
+ * @returns {Number} The slope for the line connecting a and b in linear space
+ */
+function slope(a, b) { return (b[1] - a[1]) / (b[0] - a[0]) }
+
+/**
+ * Calculate the slope between two points in log-linear space.
+ * @param {Point} a - a point
+ * @param {Point} b - another point
+ * @returns {Number} The slope for the line connecting a and b in log-linear space
+ */
+function log10Slope(a, b) {
+  return Math.log10(b[1] / a[1]) / (b[0] - a[0])
+}
+// I don't know if I'll need this, but it might be handy later.
+
+/**
+ * Return a function for plotting a line in linear space as defined by the 2 points, a and b
+ * @param a {Point} a point in the line
+ * @param b {Point} another point in the line
+ * @returns {Function} given x, return y in linear space
+ */
+function lineFn(a, b) {
+  let m = slope(a, b)
+  let offset = a[1] - (m * a[0])
+  console.log({m, offset})
+  return function(x) {
+    return (m * x) + offset
+  }
+}
+
+/**
  * Return a function for plotting a line in log-linear space as defined by the 2 points, a and b
  * @param a {Point} a point in the line
  * @param b {Point} another point in the line
@@ -132,6 +171,7 @@ function log10LineFn(a, b) {
   }
 }
 // TODO Write bin/trendline
+// My code tries to load 1000 candles by default, and this means big trendlines need big timeframes.
 
 module.exports = {
   isAscending,
@@ -142,5 +182,8 @@ module.exports = {
   findLocalLow,
   findLocalHigh,
   profitLoss,
+  slope,
+  log10Slope,
+  lineFn,
   log10LineFn
 }
