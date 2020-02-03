@@ -1,6 +1,6 @@
 # tvaa2
 
-TradingView Alert Amplifier 2
+TradingView Alert Amplifier 2 - Accept webhook requests from TradingView and make loud noises so that I notice.
 
 ## Why?
 
@@ -9,7 +9,7 @@ TradingView Alert Amplifier 2
   - Analysis has to run all the time on a computer that stays up most of the time.
   - Alerts need to run on devices that are physically close to me that can make noise.
   - The system is currently made so everything runs on the same system, and that's not going to cut it.
-* I also want to see what kind of JSON TradingView has been sending me, and webhook doesn't let me see that easily.
+* I also want to see what kind of estra data TradingView has been sending me, and webhook doesn't let me see that easily.
 * I want to generalize the routing and audio playing code.
 
 ## How?
