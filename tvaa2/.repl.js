@@ -18,3 +18,4 @@ global.cl       = console.log
 global.DB = require('./lib/db')
 global.alert = require('./lib/alert')
 global.audio = require('./lib/audio')
+global.desktop = require('./lib/desktop')

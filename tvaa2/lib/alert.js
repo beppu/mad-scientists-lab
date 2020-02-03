@@ -2,6 +2,7 @@ const micro = require('micro')
 const q = require('workq')()
 
 const audio = require('./audio')
+const desktop = require('./desktop')
 
 async function send(message) {
   q.add(async () => {
@@ -9,8 +10,11 @@ async function send(message) {
     if (message.sound) {
       actions.push(audio.play(message.sound))
     }
-    if (message.message) {
-      actions.push(audio.say(message.message))
+    if (message.speech) {
+      actions.push(audio.say(message.speech))
+    }
+    if (message.desktop) {
+      actions.push(desktop.notify(message.desktop))
     }
     return Promise.all(actions)
   })

@@ -16,7 +16,20 @@ async function say(message, opts) {
   await onExit(espeak)
 }
 
+function speakableMarket(market) {
+  return market.replace(/([A-Z])/g, '$1.')
+}
+
+function makeSpeakable(payload) {
+  const {exchange, market, timeframe, message} = payload
+  const _market = speakableMarket(market)
+  const speakable = `${exchange}, ${_market}, ${timeframe}; ${message}`
+  return speakable
+}
+
 module.exports = {
   play,
-  say
+  say,
+  speakableMarket,
+  makeSpeakable
 }
