@@ -10,7 +10,7 @@ async function send(message) {
       actions.push(audio.play(message.sound))
     }
     if (message.message) {
-      actions.push((async () => { console.log(message.message); return true })())
+      actions.push(audio.say(message.message))
     }
     return Promise.all(actions)
   })
