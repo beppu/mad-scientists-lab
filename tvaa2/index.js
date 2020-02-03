@@ -1,5 +1,7 @@
 const { send } = require('micro')
-let match = require('fs-router')(__dirname + '/routes')
+const DB = require('./lib/db')
+const db = DB.instance()
+const match = require('fs-router')(__dirname + '/routes')
 
 module.exports = async function(req, res) {
   let matched = match(req)
