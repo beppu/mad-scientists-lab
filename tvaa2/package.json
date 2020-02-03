@@ -11,10 +11,16 @@
     "dev": "micro-dev"
   },
   "dependencies": {
+    "@rauschma/stringio": "^1.4.0",
+    "dotenv": "^8.2.0",
     "exec-sh": "^0.3.4",
     "fs-router": "^0.5.0",
+    "lowdb": "^1.0.0",
     "micro": "^9.3.4",
-    "workq": "^3.0.0"
+    "mkdirp": "^1.0.3",
+    "path-dirname": "^1.0.2",
+    "workq": "^3.0.0",
+    "xdg-basedir": "^4.0.0"
   },
   "devDependencies": {
     "micro-dev": "^3.0.0"
