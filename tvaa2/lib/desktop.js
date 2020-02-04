@@ -1,7 +1,7 @@
 const notifier = require('node-notifier')
 
-async function notify(title, message) {
-  notifier.notify({ title, message })
+function notify(opts) {
+  notifier.notify(opts)
 }
 
 function makeNotification(payload) {
