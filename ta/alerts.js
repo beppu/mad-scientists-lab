@@ -26,7 +26,18 @@ const deliveryMethods = {
   },
 
   webhook: async function(exchange, market, timeframe, message, options) {
-    await request.post(options.url)
+    const req = {
+      method: 'POST',
+      uri: options.url,
+      body: {
+        exchange,
+        market,
+        timeframe,
+        message
+      },
+      json: true
+    }
+    await request(req)
   },
 
   tts: async function(exchange, market, timeframe, message, options) {
@@ -52,8 +63,8 @@ const deliveryMethods = {
 const DEFAULT_DELIVERY = [
   ['log', {}],
   ['webhook', { url: 'http://localhost:5000/hooks/alert' }],
-  ['desktop', {}],
-  ['tts', {}]
+  //['desktop', {}],
+  //['tts', {}],
 ]
 
 class Alerts {
