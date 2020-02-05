@@ -124,10 +124,10 @@ caseless@~0.12.0:
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
-ccxt@^1.18.1149:
-  version "1.18.1149"
-  resolved "https://registry.yarnpkg.com/ccxt/-/ccxt-1.18.1149.tgz#fc48252900a49f669f322a9b2bc922a545c6bbe6"
-  integrity sha512-c7s4lTjEdL8xNIL9ulNy/AS94H9KLB4IfqaEEWTMbfbooUW2GMuHRrb4q+CFYQsmtwxpehdafO5oPzVhtyvJFw==
+ccxt@^1.22.35:
+  version "1.22.35"
+  resolved "https://registry.yarnpkg.com/ccxt/-/ccxt-1.22.35.tgz#c8828d20a274401eeff70bb42aaa3cae228fa228"
+  integrity sha512-kVCdSBxlHhV/cyTJ68XeqMlxbS5z5XuYgi7/EuBmPypWw29/FSgXwNb0rdfFa4P/gAS6v46PBc0Z6WQw+PoIoA==
 
 chownr@^1.1.1:
   version "1.1.2"
