@@ -17,8 +17,6 @@ async function main() {
     .option('-x, --exchange <NAME>', 'Exchange to pull data from', process.env.TA_EXCHANGE)
     .option('-m, --market <SYMBOL>', 'Market in exchange to pull data from', process.env.TA_MARKET)
     .option('-t, --timeframe <INTERVAL>', 'Candlestick duration for market data', process.env.TA_TIMEFRAME)
-    .option('-H, --hidden', 'Search for hidden divergence instead of regular')
-    .option('-b, --bearish', 'Search for bearish divergence instaed of bullish')
     .option('-s, --scan', 'Scan for all occurrences')
     .option('-n, --now', 'Are they aligned now regardless of the past')
   program.parse(process.argv)
