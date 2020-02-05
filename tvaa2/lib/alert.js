@@ -28,7 +28,12 @@ function handlerFn(sound) {
     } catch(e) {
       console.warn(e)
     }
-    send({ sound, message })
+    const payload = {
+      sound,
+      speech: message,
+      desktop: { title: 'TradingView', message }
+    }
+    send(payload)
     micro.send(res, 200, { success: true, sound, message })
   }
 }
