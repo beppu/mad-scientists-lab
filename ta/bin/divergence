@@ -25,6 +25,7 @@ function detectRegularBearishDivergence(imd, ageThreshold, gapThreshold, peakThr
   const high1 = utils.findLocalHigh(imd, clusters[1])
   const rsi0 = imd.rsi[high0]
   const rsi1 = imd.rsi[high1]
+  //console.log({ high0, rsi0, high1, rsi1, cluster0: clusters[0], cluster1: clusters[1] })
   const regularBearishDivergence = rsi0 < rsi1
   if (regularBearishDivergence) {
     return true
@@ -64,9 +65,9 @@ async function main() {
     .option('-t, --timeframe <INTERVAL>', 'Candlestick duration for market data', process.env.TA_TIMEFRAME)
     .option('-H, --hidden', 'Search for hidden divergence instead of regular')
     .option('-b, --bearish', 'Search for bearish divergence instaed of bullish')
-    .option('-a, --age-threshold <CANDLES>', 'Number of candles allowed after detection', 1)
-    .option('-g, --gap-threshold <CANDLES>', 'Number of candles required between extremes', 5)
-    .option('-p, --peak-threshold <PERCENT>', '% distance allowed from upper or lower bband', 1.1)
+    .option('-a, --age-threshold <CANDLES>', 'Number of candles allowed after detection', parseInt, 1)
+    .option('-g, --gap-threshold <CANDLES>', 'Number of candles required between extremes', parseInt, 5)
+    .option('-p, --peak-threshold <PERCENT>', '% distance allowed from upper or lower bband', parseFloat, 1.1)
     .option('-s, --scan', 'Scan for all occurrences')
     .option('-n, --now', 'Does divergence exist right now regardless of the past')
   program.parse(process.argv)
