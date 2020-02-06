@@ -8,6 +8,7 @@ run_alerts() {
   (
     export TA_EXCHANGE=$1
     export TA_MARKET=$2
+    profile=$3
     export ALERT_BULLISH_PRICE=${ALERT_BULLISH_PRICE:-"http://localhost:5000/hooks/alert-bullish-price"}
     export ALERT_BEARISH_PRICE=${ALERT_BEARISH_PRICE:-"http://localhost:5000/hooks/alert-bearish-price"}
     export ALERT_BULLISH_ALIGNED=${ALERT_BULLISH_ALIGNED:-"http://localhost:5000/hooks/alert-bullish"}
@@ -18,44 +19,7 @@ run_alerts() {
     export ALERT_BEARISH_DIVERGENCE=${ALERT_BEARISH_DIVERGENCE:-"http://localhost:5000/hooks/alert-bearish"}
     echo "> analyzing $TA_EXCHANGE + $TA_MARKET"
 
-    for tf in 1h 2h 4h 12h 1d ; do
-      if [[ "$tf" =~ ^(1h|2h)$ ]] ; then
-        # sma bullish alignment
-        aligned --timeframe $tf sma 50 100 200 \
-          && alert --timeframe $tf "$tf 50/100/200 SMA in bullish alignment" --webhook $ALERT_BULLISH_ALIGNED
-        # sma bearish alignment
-        aligned --timeframe $tf sma 200 100 50 \
-          && alert --timeframe $tf "$tf 50/100/200 SMA in bearish alignment" --webhook $ALERT_BEARISH_ALIGNED
-      else
-        # sma bullish alignment
-        aligned --timeframe $tf sma 50 100 200 \
-          && alert --timeframe $tf "$tf 50/100/200 SMA in bullish alignment" --webhook $ALERT_BULLISH_ALIGNED
-        # sma bearish alignment
-        aligned --timeframe $tf sma 200 100 50 \
-          && alert --timeframe $tf "$tf 50/100/200 SMA in bearish alignment" --webhook $ALERT_BEARISH_ALIGNED
-
-        # price above sma 200
-        price --timeframe $tf --gt sma 200 \
-          && alert --timeframe $tf "price above $tf 200 SMA" --webhook $ALERT_BULLISH_PRICE
-        # price below sma 200
-        price --timeframe $tf --lt sma 200 \
-          && alert --timeframe $tf "price below $tf 200 SMA" --webhook $ALERT_BEARISH_PRICE
-
-        # golden cross
-        aligned --timeframe $tf sma 50 200 \
-          && alert --timeframe $tf "$tf SMA golden cross" --webhook $ALERT_BULLISH_CROSS
-        # death cross
-        aligned --timeframe $tf sma 200 50 \
-          && alert --timeframe $tf "$tf SMA death cross" --webhook $ALERT_BEARISH_CROSS
-
-        # bullish divergence
-        divergence --timeframe $tf \
-          && alert --timeframe $tf "$tf bullish divergence" --webhook $ALERT_BULLISH_DIVERGENCE
-        # bearish divergence
-        divergence --timeframe $tf --bearish \
-          && alert --timeframe $tf "$tf bearish divergence" --webhook $ALERT_BEARISH_DIVERGENCE
-      fi
-    done
+    perl alerts.pl $profile
   )
 }
 
@@ -65,8 +29,11 @@ run_extra_alerts() {
 
 run_all_alerts() {
   echo begin $(date --iso-8601=s)
-  for market in $(cat markets) ; do
-    run_alerts binance $market
+  for market in $(cat casual-markets) ; do
+    run_alerts binance $market casual
+  done
+  for market in $(cat active-markets) ; do
+    run_alerts binance $market active
   done
   run_extra_alerts
   echo end $(date --iso-8601=s)
