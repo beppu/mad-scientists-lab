@@ -9,14 +9,14 @@ run_alerts() {
     export TA_EXCHANGE=$1
     export TA_MARKET=$2
     profile=$3
-    export ALERT_BULLISH_PRICE=${ALERT_BULLISH_PRICE:-"http://localhost:5000/hooks/alert-bullish-price"}
-    export ALERT_BEARISH_PRICE=${ALERT_BEARISH_PRICE:-"http://localhost:5000/hooks/alert-bearish-price"}
-    export ALERT_BULLISH_ALIGNED=${ALERT_BULLISH_ALIGNED:-"http://localhost:5000/hooks/alert-bullish"}
-    export ALERT_BEARISH_ALIGNED=${ALERT_BEARISH_ALIGNED:-"http://localhost:5000/hooks/alert-bearish"}
-    export ALERT_BULLISH_CROSS=${ALERT_BULLISH_CROSS:-"http://localhost:5000/hooks/alert-bullish"}
-    export ALERT_BEARISH_CROSS=${ALERT_BEARISH_CROSS:-"http://localhost:5000/hooks/alert-bearish"}
-    export ALERT_BULLISH_DIVERGENCE=${ALERT_BULLISH_DIVERGENCE:-"http://localhost:5000/hooks/alert-bullish"}
-    export ALERT_BEARISH_DIVERGENCE=${ALERT_BEARISH_DIVERGENCE:-"http://localhost:5000/hooks/alert-bearish"}
+    export ALERT_BULLISH_PRICE=${ALERT_BULLISH_PRICE:-"http://localhost:5000/a/bullish-price"}
+    export ALERT_BEARISH_PRICE=${ALERT_BEARISH_PRICE:-"http://localhost:5000/a/bearish-price"}
+    export ALERT_BULLISH_ALIGNED=${ALERT_BULLISH_ALIGNED:-"http://localhost:5000/a/bullish"}
+    export ALERT_BEARISH_ALIGNED=${ALERT_BEARISH_ALIGNED:-"http://localhost:5000/a/bearish"}
+    export ALERT_BULLISH_CROSS=${ALERT_BULLISH_CROSS:-"http://localhost:5000/a/bullish"}
+    export ALERT_BEARISH_CROSS=${ALERT_BEARISH_CROSS:-"http://localhost:5000/a/bearish"}
+    export ALERT_BULLISH_DIVERGENCE=${ALERT_BULLISH_DIVERGENCE:-"http://localhost:5000/a/bullish"}
+    export ALERT_BEARISH_DIVERGENCE=${ALERT_BEARISH_DIVERGENCE:-"http://localhost:5000/a/bearish"}
     echo "> analyzing $TA_EXCHANGE + $TA_MARKET"
 
     perl alerts.pl $profile
