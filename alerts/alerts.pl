@@ -98,8 +98,6 @@ my %active_alerts = (
     price_below_sh('15m', 'sma', 960),
     price_above_sh('15m', 'sma', 200),
     price_below_sh('15m', 'sma', 200),
-    bullish_divergence_sh('15m'),
-    bearish_divergence_sh('15m'),
   ],
   '30m' => [
     price_above_sh('30m', 'sma', 960),
