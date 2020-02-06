@@ -25,6 +25,10 @@ function detectRegularBearishDivergence(imd, ageThreshold, gapThreshold, peakThr
   const high1 = utils.findLocalHigh(imd, clusters[1])
   const rsi0 = imd.rsi[high0]
   const rsi1 = imd.rsi[high1]
+  //console.log({ gapThreshold, high0, high1, distance: high1 - high0 })
+  if (high1 - high0 < gapThreshold) {
+    return false
+  }
   //console.log({ high0, rsi0, high1, rsi1, cluster0: clusters[0], cluster1: clusters[1] })
   const regularBearishDivergence = rsi0 < rsi1
   if (regularBearishDivergence) {
@@ -47,6 +51,9 @@ function detectRegularBullishDivergence(imd, ageThreshold, gapThreshold, peakThr
   const low1 = utils.findLocalLow(imd, clusters[1])
   const rsi0 = imd.rsi[low0]
   const rsi1 = imd.rsi[low1]
+  if (low1 - low0 < gapThreshold) {
+    return false
+  }
   const regularBullishDivergence = rsi0 > rsi1
   if (regularBullishDivergence) {
     return true
