@@ -158,3 +158,49 @@ Output:
 ```
 
 Again, the first value is off due to lack of data.
+
+
+### bin/divergence 
+
+```
+Usage: divergence [options]
+
+Does divergence exist?
+
+Options:
+  -V, --version                   output the version number
+  -x, --exchange <NAME>           Exchange to pull data from (default: "binance")
+  -m, --market <SYMBOL>           Market in exchange to pull data from (default: "BTC/USDT")
+  -t, --timeframe <INTERVAL>      Candlestick duration for market data
+  -H, --hidden                    Search for hidden divergence instead of regular
+  -b, --bearish                   Search for bearish divergence instaed of bullish
+  -a, --age-threshold <CANDLES>   Number of candles allowed after detection (default: 1)
+  -g, --gap-threshold <CANDLES>   Number of candles required between extremes (default: 5)
+  -p, --peak-threshold <PERCENT>  % distance allowed from upper or lower bband (default: 1.1)
+  -s, --scan                      Scan for all occurrences
+  -n, --now                       Does divergence exist right now regardless of the past
+  -h, --help                      output usage information
+```
+
+#### Examples
+
+##### Find candles where 1d bullish divergence occurred in the past
+
+```sh
+bin/divergence --exchange binance --market BTC/USDT --timeframe 1d --scan | jq -c .[]
+```
+
+Output:
+
+```json
+[1569715200000,8199.38,8229.13,7890,8043.82,31544.211388,"2019-09-28T17:00:00.000-07:00"]
+[1571443200000,7946.89,8098.1,7866.92,7948.01,26627.889388,"2019-10-18T17:00:00.000-07:00"]
+[1572048000000,8655.88,10370,8470.38,9230,162588.585413,"2019-10-25T17:00:00.000-07:00"]
+[1574726400000,7109.99,7340,7017.48,7156.14,65722.39769,"2019-11-25T16:00:00.000-08:00"]
+[1576713600000,7277.83,7380,7038.31,7150.3,55509.049075,"2019-12-18T16:00:00.000-08:00"]
+
+```
+
+It has a few false positives, but it gets most of the real ones.  It missed the one on 2019-10-07 because the
+way we use Bollinger Band %b to find suitable lows didn't work in that case, because trendline support was
+significantly higher than the lower Bollinger Band support, and it kicked in first.
