@@ -37,7 +37,8 @@ function isDescending(comparables) {
  */
 function lowEnoughFn(threshold) {
   return function (imd, i) {
-    return 1 - (imd.lowerBand[i] / imd.low[i]) <= (threshold / 100)
+    const percentBLow = (imd.low[i] - imd.lowerBand[i]) / ( imd.upperBand[i] - imd.lowerBand[i]) * 100
+    return percentBLow - threshold <= 0
   }
 }
 
@@ -48,7 +49,9 @@ function lowEnoughFn(threshold) {
  */
 function highEnoughFn(threshold) {
   return function (imd, i) {
-    return 1 - (imd.high[i] / imd.upperBand[i]) <= (threshold / 100)
+    const percentBHigh = (imd.high[i] - imd.lowerBand[i]) / ( imd.upperBand[i] - imd.lowerBand[i]) * 100
+    //console.log({percentBHigh, threshold, highEnough: percentBHigh + threshold > 100 })
+    return percentBHigh + threshold >= 100
   }
 }
 
