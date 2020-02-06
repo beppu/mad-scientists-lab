@@ -112,6 +112,27 @@ async function main() {
     let peakThreshold = program.peakThreshold
 
     if (program.scan) {
+      const detector = program.bearish
+        ? (imd) => detectRegularBearishDivergence(imd, ageThreshold, gapThreshold, peakThreshold)
+        : (imd) => detectRegularBullishDivergence(imd, ageThreshold, gapThreshold, peakThreshold)
+      const indices = ta.scan(imd, detector)
+      const collapsed = indices.reduce((m, a) => {
+        if (m.indices.length === 0) {
+          m.last = a
+          m.indices.push(a)
+        } else {
+          if (m.last == a - 1) {
+            m.last = a
+          } else {
+            m.indices.push(a)
+            m.last = a
+          }
+        }
+        return m
+      }, { indices: [], last: 0 })
+      //console.log(indices, collapsed.indices)
+      const matches = ta.invertedCandles(imd, collapsed.indices)
+      console.log(beautify(matches, null, 2, 128))
     } else if (program.now) {
       ageThreshold = 0
       if (program.bearish) {
