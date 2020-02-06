@@ -64,7 +64,7 @@ async function main() {
     .option('-t, --timeframe <INTERVAL>', 'Candlestick duration for market data', process.env.TA_TIMEFRAME)
     .option('-H, --hidden', 'Search for hidden divergence instead of regular')
     .option('-b, --bearish', 'Search for bearish divergence instaed of bullish')
-    .option('-a, --age-threshold <CANDLES>', 'Number of candles allowed after detection', 2)
+    .option('-a, --age-threshold <CANDLES>', 'Number of candles allowed after detection', 1)
     .option('-g, --gap-threshold <CANDLES>', 'Number of candles required between extremes', 5)
     .option('-p, --peak-threshold <PERCENT>', '% distance allowed from upper or lower bband', 1.1)
     .option('-s, --scan', 'Scan for all occurrences')

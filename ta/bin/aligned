@@ -25,8 +25,8 @@ function becameAlignedFn(ma, periods) {
   const isDescending0 = isDescendingFn(ma, periods, 0)
   const isDescending1 = isDescendingFn(ma, periods, 1)
   return function(imd) {
+    //console.log(imd.sma50[0], imd.sma100[0], imd.sma200[0])
     if (isDescending0(imd) && !isDescending1(imd)) {
-      //console.log(imd.sma50[0], imd.sma100[0], imd.sma200[0])
       return true
     } else {
       return false
