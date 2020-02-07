@@ -32,6 +32,7 @@
     "alert-server": "./bin/alert-server",
     "market-report": "./bin/market-report",
     "profit-loss": "./bin/profit-loss",
-    "pnl": "./bin/profit-loss"
+    "pnl": "./bin/profit-loss",
+    "horizontal": "./bin/horizontal"
   }
 }
