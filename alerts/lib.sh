@@ -13,3 +13,18 @@ skip_errors() {
   fi
 }
 
+# Check if a price has gone above a horizontal level.
+horizontal_gt() {
+  tf=$1
+  price=$2
+  horizontal --timeframe $tf --gt $price \
+    && alert --timeframe $tf --webhook $ALERT_BULLISH_PRICE "Price above $price"
+}
+
+# Check if a price has gone below a horizontal level.
+horizontal_lt() {
+  tf=$1
+  price=$2
+  horizontal --timeframe $tf --lt $price \
+    && alert --timeframe $tf --webhook $ALERT_BEARISH_PRICE "Price below $price"
+}
