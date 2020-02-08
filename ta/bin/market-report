@@ -5,15 +5,16 @@
 export TA_EXCHANGE=${1:-$TA_EXCHANGE}
 export TA_MARKET=${2:-$TA_MARKET}
 export MA=${3:-sma}
+BIG_MA=$(echo $MA | tr a-z A-Z)
 
 echo $TA_EXCHANGE - $TA_MARKET - $(date --iso-8601=m)
 
+echo -e "\n# 50/100/200 $BIG_MA Alignment"
 for tf in 5m 15m 1h 2h 4h 6h 12h 1d ; do
   aligned --timeframe $tf $MA 50 100 200 --now
   is_bullish=$?
   aligned --timeframe $tf $MA 200 100 50 --now
   is_bearish=$?
-  BIG_MA=$(echo $MA | tr a-z A-Z)
 
   if [ "$is_bullish" = 0 ] ; then
     echo "$tf 50/100/200 $BIG_MA aligned bullishly"
@@ -24,4 +25,20 @@ for tf in 5m 15m 1h 2h 4h 6h 12h 1d ; do
   fi
 done
 
+echo -e "\n# Guppy EMA Color"
+for tf in 5m 15m 1h 2h 4h 6h 12h 1d ; do
+  guppy --timeframe $tf --green --now
+  is_green=$?
+  guppy --timeframe $tf --red --now
+  is_red=$?
+  if [ "$is_green" = 0 ] ; then
+    echo "$tf Guppy EMAs are green"
+  elif [ "$is_red" = 0 ] ; then
+    echo "$tf Guppy EMAs are red"
+  else
+    echo "$tf Guppy EMAs are neutral"
+  fi
+done
+
+echo -e "\n# 1d 200 $BIG_MA Status"
 price --timeframe 1d --gt $MA 200 --now && echo "price is above 1d 200 $BIG_MA" || echo "price is below 1d 200 $BIT_MA"
