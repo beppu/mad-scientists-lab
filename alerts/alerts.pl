@@ -56,6 +56,16 @@ sub bearish_divergence_sh {
   qq|divergence --timeframe $tf --bearish && alert --timeframe $tf "bearish divergence" --webhook "$ENV{ALERT_BEARISH_DIVERGENCE}"|;
 }
 
+sub guppy_green_sh {
+  my ($tf) = @_;
+  qq|guppy --timeframe $tf --green && alert --timeframe $tf "guppy has turned green" --webhook "$ENV{ALERT_BULLISH}"|;
+}
+
+sub guppy_red_sh {
+  my ($tf) = @_;
+  qq|guppy --timeframe $tf --red && alert --timeframe $tf "guppy has turned red" --webhook "$ENV{ALERT_BEARISH}"|;
+}
+
 # casual interest
 my %casual_alerts = (
   '1m'  => [],
@@ -73,12 +83,16 @@ my %casual_alerts = (
     bearish_divergence_sh('12h'),
     price_above_sh('12h', 'sma', 200),
     price_below_sh('12h', 'sma', 200),
+    guppy_green_sh('12h'),
+    guppy_red_sh('12h'),
   ],
   '1d'  => [
     bullish_divergence_sh('1d'),
     bearish_divergence_sh('1d'),
     price_above_sh('1d', 'sma', 200),
     price_below_sh('1d', 'sma', 200),
+    guppy_green_sh('1d'),
+    guppy_red_sh('1d'),
   ],
   '3d'  => [],
   '1w'  => [],
@@ -136,6 +150,8 @@ my %active_alerts = (
     cross_sh('4h', 'sma', 200, 50),
     aligned_sh('4h', 'sma', 50, 100, 200),
     aligned_sh('4h', 'sma', 200, 100, 50),
+    guppy_green_sh('4h'),
+    guppy_red_sh('4h'),
   ],
   '6h'  => [
     price_above_sh('6h', 'sma', 960),
@@ -164,6 +180,8 @@ my %active_alerts = (
     cross_sh('12h', 'sma', 200, 50),
     aligned_sh('12h', 'sma', 50, 100, 200),
     aligned_sh('12h', 'sma', 200, 100, 50),
+    guppy_green_sh('12h'),
+    guppy_red_sh('12h'),
   ],
   '1d'  => [
     price_above_sh('1d', 'sma', 960),
@@ -180,6 +198,8 @@ my %active_alerts = (
     cross_sh('1d', 'sma', 200, 50),
     aligned_sh('1d', 'sma', 50, 100, 200),
     aligned_sh('1d', 'sma', 200, 100, 50),
+    guppy_green_sh('1d'),
+    guppy_red_sh('1d'),
   ],
   '3d'  => [
     price_above_sh('3d', 'sma', 50),
