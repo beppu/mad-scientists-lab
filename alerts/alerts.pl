@@ -58,12 +58,12 @@ sub bearish_divergence_sh {
 
 sub guppy_green_sh {
   my ($tf) = @_;
-  qq|guppy --timeframe $tf --green && alert --timeframe $tf "guppy has turned green" --webhook "$ENV{ALERT_BULLISH}"|;
+  qq|guppy --timeframe $tf --green && alert --timeframe $tf "guppy has turned green" --webhook "$ENV{ALERT_BULLISH_DIVERGENCE}"|;
 }
 
 sub guppy_red_sh {
   my ($tf) = @_;
-  qq|guppy --timeframe $tf --red && alert --timeframe $tf "guppy has turned red" --webhook "$ENV{ALERT_BEARISH}"|;
+  qq|guppy --timeframe $tf --red && alert --timeframe $tf "guppy has turned red" --webhook "$ENV{ALERT_BEARISH_DIVERGENCE}"|;
 }
 
 # casual interest
