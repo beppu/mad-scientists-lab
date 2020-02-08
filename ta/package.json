@@ -33,6 +33,7 @@
     "market-report": "./bin/market-report",
     "profit-loss": "./bin/profit-loss",
     "pnl": "./bin/profit-loss",
-    "horizontal": "./bin/horizontal"
+    "horizontal": "./bin/horizontal",
+    "guppy": "./bin/guppy"
   }
 }

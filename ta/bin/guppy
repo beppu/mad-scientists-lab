@@ -1,0 +1,130 @@
+#!/usr/bin/env node
+// Does the potential for regular divergence exist?
+const dotenv    = require('dotenv').config()
+const pkg       = require('../package.json')
+const ta        = require('../index')
+const utils     = require('../utils')
+const luxon     = require('luxon')
+const commander = require('commander')
+const talib     = require('talib')
+const beautify  = require('json-beautify')
+
+const fastEMAs = [3, 5, 8, 10, 12, 15]
+const slowEMAs = [30, 35, 40, 45, 50, 60]
+const allEMAs = fastEMAs.concat(slowEMAs)
+
+// Big thanks to Chris Moody whose CM_Guppy_EMA pinescript indicator I ported to Javascript.
+function guppyColors(imd, index) {
+  const ema = []
+  allEMAs.forEach((period, i) => {
+    const ma = `ema${period}`
+    ema[i+1] = imd[ma][index]
+  })
+  //Fast EMA Color Rules
+  const colfastL = (ema[1] > ema[2] && ema[2] > ema[3] && ema[3] > ema[4] && ema[4] > ema[5] && ema[5] > ema[6])
+  const colfastS = (ema[1] < ema[2] && ema[2] < ema[3] && ema[3] < ema[4] && ema[4] < ema[5] && ema[5] < ema[6])
+  //Slow EMA Color Rules
+  const colslowL = ema[7] > ema[8] && ema[8] > ema[9] && ema[9] > ema[10] && ema[10] > ema[11] && ema[11] > ema[12]
+  const colslowS = ema[7] < ema[8] && ema[8] < ema[9] && ema[9] < ema[10] && ema[10] < ema[11] && ema[11] < ema[12]
+  //Fast EMA Final Color Rules
+  const colFinal = colfastL && colslowL ? 'aqua' : colfastS && colslowS ? 'orange' : 'gray'
+  //Slow EMA Final Color Rules
+  const colFinal2 = colslowL ? 'green' : colslowS ? 'red' : 'gray'
+  return {
+    colfastL,
+    colfastS,
+    colslowL,
+    colslowS,
+    colFinal,
+    colFinal2
+  }
+}
+
+function haveSlowEMAsTurnedColor(imd, color) {
+  const col0 = guppyColors(imd, 0)
+  const col1 = guppyColors(imd, 1)
+  return (col1.colFinal2 != color && col0.colFinal2 == color)
+}
+
+function isSlowEMAColoredNow(imd, color) {
+  const col0 = guppyColors(imd, 0)
+  return col0.colFinal2 == color
+}
+
+async function main() {
+  const program   = new commander.Command();
+  program
+    .version(pkg.version)
+    .description('What color are the Guppy EMAs?')
+    .option('-x, --exchange <NAME>', 'Exchange to pull data from', process.env.TA_EXCHANGE)
+    .option('-m, --market <SYMBOL>', 'Market in exchange to pull data from', process.env.TA_MARKET)
+    .option('-t, --timeframe <INTERVAL>', 'Candlestick duration for market data', process.env.TA_TIMEFRAME)
+    .option('-s, --scan', 'Scan for all occurrences')
+    .option('-n, --now', 'What is the current color of the slow EMAs?')
+    .option('-g, --green', 'Did the slow EMAs turn green?')
+    .option('-r, --red', 'Did the slow EMAs turn red?')
+    .option('--gray', 'Did the slow EMAs turn grey?')
+  program.parse(process.argv)
+  let optionsAreMissing = false;
+  ['exchange', 'market', 'timeframe'].forEach((opt) => {
+    if (!program[opt]) {
+      console.error(`The --${opt} option is required.`)
+      optionsAreMissing = true
+    }
+  })
+  if (optionsAreMissing) {
+    process.exit(-1)
+  }
+  try {
+    const candles            = await ta.loadCandles(program.exchange, program.market, program.timeframe)
+    const marketData         = ta.marketDataFromCandles(candles)
+    const invertedMarketData = ta.invertedMarketData(marketData)
+
+    // EMAs
+    allEMAs.forEach((period) => {
+      const emaSettings = ta.id.ema(marketData, period)
+      const emas = talib.execute(emaSettings)
+      ta.invertedAppend(invertedMarketData, `ema${period}`, emas.result.outReal)
+    })
+
+    let color
+    if (program.green) {
+      color = 'green'
+    } else if (program.red) {
+      color = 'red'
+    } else if (program.gray) {
+      color = 'gray'
+    }
+
+    if (program.scan) {
+      const compare = imd => haveSlowEMAsTurnedColor(imd, color)
+      const indices = ta.scan(invertedMarketData, compare)
+      if (indices.length > 0) {
+        const matches = ta.invertedCandles(invertedMarketData, indices)
+        console.log(beautify(matches, null, 2, 128))
+        process.exit(0)
+      } else {
+        process.exit(1)
+      }
+    } else if (program.now) {
+      if (isSlowEMAColoredNow(invertedMarketData, color)) {
+        process.exit(0)
+      } else {
+        process.exit(1)
+      }
+    } else {
+      //console.log(guppyColors(invertedMarketData, 0))
+      if (haveSlowEMAsTurnedColor(invertedMarketData, color)) {
+        process.exit(0)
+      } else {
+        process.exit(1)
+      }
+    }
+  }
+  catch (err) {
+    console.error(err.stack)
+    process.exit(-1)
+  }
+}
+
+main()
