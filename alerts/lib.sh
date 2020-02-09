@@ -33,21 +33,21 @@ horizontal_lt() {
 guppy_green() {
   tf=$1
   guppy --timeframe $tf --green \
-    && alert --timeframe $tf --webhook $ALERT_BEARISH_ALIGNED "Guppy EMAs have turned turned green"
+    && alert --timeframe $tf --webhook $ALERT_BEARISH_ALIGNED "Guppy EMAs have turned green"
 }
 
 # Check if Guppy EMAs have turned gray
 guppy_gray() {
   tf=$1
   guppy --timeframe $tf --gray \
-    && alert --timeframe $tf --webhook $ALERT_SMALL "Guppy EMAs have turned turned gray"
+    && alert --timeframe $tf --webhook $ALERT_SMALL "Guppy EMAs have turned gray"
 }
 
 # Check if Guppy EMAs have turned red
 guppy_red() {
   tf=$1
   guppy --timeframe $tf --red \
-    && alert --timeframe $tf --webhook $ALERT_BEARISH_ALIGNED "Guppy EMAs have turned turned red"
+    && alert --timeframe $tf --webhook $ALERT_BEARISH_ALIGNED "Guppy EMAs have turned red"
 }
 
 # Check if price has crossed above an MA
