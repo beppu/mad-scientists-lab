@@ -128,6 +128,8 @@ my %active_alerts = (
     cross_sh('1h', 'sma', 68, 34),
     aligned_sh('1h', 'sma', 50, 100, 200),
     aligned_sh('1h', 'sma', 200, 100, 50),
+    guppy_green_sh('1h'),
+    guppy_red_sh('1h'),
   ],
   '2h'  => [
     price_above_sh('2h', 'sma', 960),
