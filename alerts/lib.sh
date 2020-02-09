@@ -28,3 +28,21 @@ horizontal_lt() {
   horizontal --timeframe $tf --lt $price \
     && alert --timeframe $tf --webhook $ALERT_BEARISH_PRICE "Price below $price"
 }
+
+guppy_green() {
+  $tf=$1
+  guppy --timeframe $tf --green \
+    && alert --timeframe $tf --webhook $ALERT_BEARISH_ALIGNED "Guppy EMAs have turned turned green"
+}
+
+guppy_gray() {
+  $tf=$1
+  guppy --timeframe $tf --gray \
+    && alert --timeframe $tf --webhook $ALERT_BEARISH_ALIGNED "Guppy EMAs have turned turned gray"
+}
+
+guppy_red() {
+  $tf=$1
+  guppy --timeframe $tf --red \
+    && alert --timeframe $tf --webhook $ALERT_BEARISH_ALIGNED "Guppy EMAs have turned turned red"
+}
