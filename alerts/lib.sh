@@ -29,20 +29,43 @@ horizontal_lt() {
     && alert --timeframe $tf --webhook $ALERT_BEARISH_PRICE "Price below $price"
 }
 
+# Check if Guppy EMAs have turned green
 guppy_green() {
-  $tf=$1
+  tf=$1
   guppy --timeframe $tf --green \
     && alert --timeframe $tf --webhook $ALERT_BEARISH_ALIGNED "Guppy EMAs have turned turned green"
 }
 
+# Check if Guppy EMAs have turned gray
 guppy_gray() {
-  $tf=$1
+  tf=$1
   guppy --timeframe $tf --gray \
     && alert --timeframe $tf --webhook $ALERT_BEARISH_ALIGNED "Guppy EMAs have turned turned gray"
 }
 
+# Check if Guppy EMAs have turned red
 guppy_red() {
-  $tf=$1
+  tf=$1
   guppy --timeframe $tf --red \
     && alert --timeframe $tf --webhook $ALERT_BEARISH_ALIGNED "Guppy EMAs have turned turned red"
+}
+
+# Check if price has crossed above an MA
+price_gt() {
+  tf=$1
+  ma=$2
+  big_ma=`echo $ma | tr a-z A-Z`
+  period=$3
+  price --timeframe $tf --gt $ma $period \
+    && alert --timeframe $tf --webhook $ALERT_BULLISH_PRICE "Price is above the $period $big_ma"
+}
+
+# Check if price has crossed below an MA
+price_gt() {
+  tf=$1
+  ma=$2
+  big_ma=`echo $ma | tr a-z A-Z`
+  period=$3
+  price --timeframe $tf --gt $ma $period \
+    && alert --timeframe $tf --webhook $ALERT_BULLISH_PRICE "Price is below the $period $big_ma"
 }
