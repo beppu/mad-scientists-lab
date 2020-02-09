@@ -44,12 +44,16 @@ echo -e "\n# Recent Bullish Divergences"
 echo -n "1h - " && bin/divergence --timeframe 1h --scan | jq -c .[] | tail -n 1
 echo -n "2h - " && bin/divergence --timeframe 2h --scan | jq -c .[] | tail -n 1
 echo -n "4h - " && bin/divergence --timeframe 4h --scan | jq -c .[] | tail -n 1
+echo -n "6h - " && bin/divergence --timeframe 6h --scan | jq -c .[] | tail -n 1
+echo -n "12h - " && bin/divergence --timeframe 12h --scan | jq -c .[] | tail -n 1
 echo -n "1d - " && bin/divergence --timeframe 1d --scan | jq -c .[] | tail -n 1
 
 echo -e "\n# Recent Bearish Divergences"
 echo -n "1h - " && bin/divergence --timeframe 1h --bearish --scan | jq -c .[] | tail -n 1
 echo -n "2h - " && bin/divergence --timeframe 2h --bearish --scan | jq -c .[] | tail -n 1
 echo -n "4h - " && bin/divergence --timeframe 4h --bearish --scan | jq -c .[] | tail -n 1
+echo -n "6h - " && bin/divergence --timeframe 6h --bearish --scan | jq -c .[] | tail -n 1
+echo -n "12h - " && bin/divergence --timeframe 12h --bearish --scan | jq -c .[] | tail -n 1
 echo -n "1d - " && bin/divergence --timeframe 1d --bearish --scan | jq -c .[] | tail -n 1
 
 echo -e "\n# 1d 200 $BIG_MA Status"
