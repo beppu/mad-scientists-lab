@@ -28,9 +28,10 @@ function handlerFn(sound) {
     } catch(e) {
       console.warn(e)
     }
+    const speakableMessage = message.replace(/([A-Z]+)([0-9]*)/, (match, p1, p2) => p1.replace(/([A-Z])/g, '$1.') + p2)
     const payload = {
       sound,
-      speech: message,
+      speech: speakableMessage,
       desktop: { title: 'TradingView', message }
     }
     send(payload)
