@@ -61,7 +61,7 @@ price_gt() {
 }
 
 # Check if price has crossed below an MA
-price_gt() {
+price_lt() {
   tf=$1
   ma=$2
   big_ma=`echo $ma | tr a-z A-Z`
