@@ -42,12 +42,12 @@ done
 
 divergence_bullish() {
   tf=$1
-  echo -n "$tf - " && bin/divergence --timeframe $tf --scan | jq -c .[] | tail -n 1 | jq -c '[.[6], .[1]]'
+  printf "%3s " $tf && bin/divergence --timeframe $tf --scan | jq -c .[] | tail -n 1 | jq -c '[.[6], .[1]]'
 }
 
 divergence_bearish() {
   tf=$1
-  echo -n "$tf - " && bin/divergence --timeframe $tf --bearish --scan | jq -c .[] | tail -n 1 | jq -c '[.[6], .[1]]'
+  printf "%3s " $tf && bin/divergence --timeframe $tf --bearish --scan | jq -c .[] | tail -n 1 | jq -c '[.[6], .[1]]'
 }
 
 echo -e "\n# Recent Bullish Divergences"
