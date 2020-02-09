@@ -40,7 +40,7 @@ guppy_green() {
 guppy_gray() {
   tf=$1
   guppy --timeframe $tf --gray \
-    && alert --timeframe $tf --webhook $ALERT_BEARISH_ALIGNED "Guppy EMAs have turned turned gray"
+    && alert --timeframe $tf --webhook http://localhost:5000/a/small "Guppy EMAs have turned turned gray"
 }
 
 # Check if Guppy EMAs have turned red
