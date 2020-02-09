@@ -40,7 +40,7 @@ guppy_green() {
 guppy_gray() {
   tf=$1
   guppy --timeframe $tf --gray \
-    && alert --timeframe $tf --webhook http://localhost:5000/a/small "Guppy EMAs have turned turned gray"
+    && alert --timeframe $tf --webhook $ALERT_SMALL "Guppy EMAs have turned turned gray"
 }
 
 # Check if Guppy EMAs have turned red
@@ -68,4 +68,41 @@ price_lt() {
   period=$3
   price --timeframe $tf --gt $ma $period \
     && alert --timeframe $tf --webhook $ALERT_BULLISH_PRICE "Price is below the $period $big_ma"
+}
+
+# Check for bullish MA alignment
+aligned_bullish() {
+  tf=$1
+  ma=$2
+  shift; shift
+  big_ma=`echo $ma | tr a-z A-Z`
+  ps=`echo $@ | sed 's, ,/,g'`
+  aligned --timeframe $tf $ma $@ \
+    && alert --timeframe $tf --webhook $ALERT_BULLISH_ALIGNED "$tf $ps $big_ma in bullish alignment"
+}
+
+# Check for bearish MA alignment
+aligned_bearish() {
+  tf=$1
+  ma=$2
+  shift; shift
+  big_ma=`echo $ma | tr a-z A-Z`
+  # https://stackoverflow.com/a/8522933
+  ps=`printf '%s\n' "$@" | tac | paste -s -d '/' -`
+  aligned --timeframe $tf $ma $@ \
+    && alert --timeframe $tf --webhook $ALERT_BULLISH_ALIGNED "$tf $ps $big_ma in bearish alignment"
+}
+
+# Check for bullish divergence
+divergence_bullish() {
+  tf=$1
+  divergence --timeframe $tf \
+    && alert --timeframe $tf --webhook $ALERT_BULLISH_DIVERGENCE "$tf bullish divergence"
+}
+
+# Check for bearish divergence
+divergence_bearish() {
+  tf=$1
+  divergence --timeframe $tf \
+    && alert --timeframe $tf --webhook $ALERT_BEARISH_DIVERGENCE "$tf bearish divergence"
 }
