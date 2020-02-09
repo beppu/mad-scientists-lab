@@ -40,21 +40,31 @@ for tf in 5m 15m 1h 2h 4h 6h 12h 1d ; do
   fi
 done
 
+divergence_bullish() {
+  tf=$1
+  echo -n "$tf - " && bin/divergence --timeframe $tf --scan | jq -c .[] | tail -n 1 | jq -c '[.[6], .[1]]'
+}
+
+divergence_bearish() {
+  tf=$1
+  echo -n "$tf - " && bin/divergence --timeframe $tf --bearish --scan | jq -c .[] | tail -n 1 | jq -c '[.[6], .[1]]'
+}
+
 echo -e "\n# Recent Bullish Divergences"
-echo -n "1h - " && bin/divergence --timeframe 1h --scan | jq -c .[] | tail -n 1
-echo -n "2h - " && bin/divergence --timeframe 2h --scan | jq -c .[] | tail -n 1
-echo -n "4h - " && bin/divergence --timeframe 4h --scan | jq -c .[] | tail -n 1
-echo -n "6h - " && bin/divergence --timeframe 6h --scan | jq -c .[] | tail -n 1
-echo -n "12h - " && bin/divergence --timeframe 12h --scan | jq -c .[] | tail -n 1
-echo -n "1d - " && bin/divergence --timeframe 1d --scan | jq -c .[] | tail -n 1
+divergence_bullish 1h
+divergence_bullish 2h
+divergence_bullish 4h
+divergence_bullish 6h
+divergence_bullish 12h
+divergence_bullish 1d
 
 echo -e "\n# Recent Bearish Divergences"
-echo -n "1h - " && bin/divergence --timeframe 1h --bearish --scan | jq -c .[] | tail -n 1
-echo -n "2h - " && bin/divergence --timeframe 2h --bearish --scan | jq -c .[] | tail -n 1
-echo -n "4h - " && bin/divergence --timeframe 4h --bearish --scan | jq -c .[] | tail -n 1
-echo -n "6h - " && bin/divergence --timeframe 6h --bearish --scan | jq -c .[] | tail -n 1
-echo -n "12h - " && bin/divergence --timeframe 12h --bearish --scan | jq -c .[] | tail -n 1
-echo -n "1d - " && bin/divergence --timeframe 1d --bearish --scan | jq -c .[] | tail -n 1
+divergence_bearish 1h
+divergence_bearish 2h
+divergence_bearish 4h
+divergence_bearish 6h
+divergence_bearish 12h
+divergence_bearish 1d
 
 echo -e "\n# 1d 200 $BIG_MA Status"
 price --timeframe 1d --gt $MA 200 --now && echo "price is above 1d 200 $BIG_MA" || echo "price is below 1d 200 $BIT_MA"
