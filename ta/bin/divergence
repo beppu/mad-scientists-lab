@@ -8,6 +8,7 @@ const luxon     = require('luxon')
 const commander = require('commander')
 const talib     = require('talib')
 const beautify  = require('json-beautify')
+const DateTime  = luxon.DateTime
 
 function detectRegularBearishDivergence(imd, ageThreshold, gapThreshold, peakThreshold) {
   const clusters = utils.findClusters(imd, utils.highEnoughFn(peakThreshold)) // XXX I only need the first two clusters.
@@ -92,7 +93,9 @@ async function main() {
   try {
     const candles = await ta.loadCandles(program.exchange, program.market, program.timeframe)
     const md      = ta.marketDataFromCandles(candles)
-    const imd     = ta.invertedMarketData(md)
+    let imd     = ta.invertedMarketData(md)
+    //imd = ta._goBack(imd, 1)
+    //console.warn(DateTime.fromMillis(imd.timestamp[0]).toString())
 
     // bollinger bands
     const bbandSettings = ta.id.bbands(md)

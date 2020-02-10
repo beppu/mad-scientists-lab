@@ -134,6 +134,20 @@ function _previous(imd) {
 }
 
 /**
+ * Return and imd that's $candles candles in the past.
+ * @param {Object<Array<Number>>} imd - Parameter description.
+ * @param {Number} candles - Parameter description.
+ * @returns {Object<Array<Number>>} Return description.
+ */
+function _goBack(imd, candles) {
+  if (candles > 0) {
+    return _goBack(_previous(imd), candles - 1)
+  } else {
+    return imd
+  }
+}
+
+/**
  * Given a predicate `matchFn` iterate through `imd` starting from the present, index 0, and going back in time.
  * @param {Object}        imd      - invertedMarketData, an object with series data with newest data at index 0
  * @param {Function}      matchFn  - A function that can take invertedMarketData, analyze it, and return a boolean
@@ -150,6 +164,7 @@ function scan(imd, matchFn) {
   let current = imd
   for (let i = 0; i < longest; i++) {
     if (matchFn(current)) {
+      //console.warn(DateTime.fromMillis(current.timestamp[0]).toString())
       results.push(i)
     }
     current = _previous(current)
@@ -207,7 +222,9 @@ module.exports = {
   invertedAppend,
   invertedCandles,
   scan,
-  id
+  id,
+  _previous,
+  _goBack
 };
 
 /*
