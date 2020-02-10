@@ -55,10 +55,11 @@ function detectRegularBullishDivergence(imd, ageThreshold, gapThreshold, peakThr
     return false
   }
   const regularBullishDivergence = rsi0 > rsi1
+  //console.log({ low0, rsi0, low1, rsi1, cluster0: clusters[0], cluster1: clusters[1], regularBullishDivergence })
   if (regularBullishDivergence) {
     return true
   } else {
-    return true
+    return false
   }
 }
 
