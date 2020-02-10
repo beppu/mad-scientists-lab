@@ -16,12 +16,13 @@ for tf in 5m 15m 1h 2h 4h 6h 12h 1d ; do
   aligned --timeframe $tf $MA 200 100 50 --now
   is_bearish=$?
 
+  printf "%3s " $tf
   if [ "$is_bullish" = 0 ] ; then
-    echo "$tf 50/100/200 $BIG_MA aligned bullishly"
+    echo "50/100/200 $BIG_MA aligned bullishly"
   elif [ "$is_bearish" = 0 ]  ; then
-    echo "$tf 50/100/200 $BIG_MA aligned bearishly"
+    echo "50/100/200 $BIG_MA aligned bearishly"
   else
-    echo "$tf is neutral"
+    echo "is neutral"
   fi
 done
 
@@ -31,12 +32,13 @@ for tf in 5m 15m 1h 2h 4h 6h 12h 1d ; do
   is_green=$?
   guppy --timeframe $tf --red --now
   is_red=$?
+  printf "%3s " $tf
   if [ "$is_green" = 0 ] ; then
-    echo "$tf Guppy EMAs are green"
+    echo "Guppy EMAs are green"
   elif [ "$is_red" = 0 ] ; then
-    echo "$tf Guppy EMAs are red"
+    echo "Guppy EMAs are red"
   else
-    echo "$tf Guppy EMAs are neutral"
+    echo "Guppy EMAs are neutral"
   fi
 done
 
