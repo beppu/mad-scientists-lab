@@ -29,6 +29,12 @@ horizontal_lt() {
     && alert --timeframe $tf --webhook $ALERT_BEARISH_PRICE "Price below $price"
 }
 
+# Check if a price crosses a horizontal level in either direction
+horizontal() {
+  horizontal_gt $1 $2
+  horizontal_lt $1 $2
+}
+
 # Check if Guppy EMAs have turned green
 guppy_green() {
   tf=$1
