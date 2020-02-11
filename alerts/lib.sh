@@ -103,6 +103,6 @@ divergence_bullish() {
 # Check for bearish divergence
 divergence_bearish() {
   tf=$1
-  divergence --timeframe $tf \
+  divergence --timeframe $tf --bearish \
     && alert --timeframe $tf --webhook $ALERT_BEARISH_DIVERGENCE "$tf bearish divergence"
 }
