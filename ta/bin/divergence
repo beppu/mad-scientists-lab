@@ -30,7 +30,7 @@ function detectRegularBearishDivergence(imd, ageThreshold, gapThreshold, peakThr
   if (high1 - high0 < gapThreshold) {
     return false
   }
-  console.log({ high0, rsi0, high1, rsi1, cluster0: clusters[0], cluster1: clusters[1] })
+  //console.log({ high0, rsi0, high1, rsi1, cluster0: clusters[0], cluster1: clusters[1] })
   const regularBearishDivergence = rsi0 < rsi1
   if (regularBearishDivergence) {
     return true
