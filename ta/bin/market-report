@@ -44,7 +44,7 @@ done
 
 divergence_bullish() {
   tf=$1
-  printf "%3s " $tf && bin/divergence --timeframe $tf --scan | jq -c .[] | tail -n 1 | jq -c '[.[6], .[2]]'
+  printf "%3s " $tf && bin/divergence --timeframe $tf --scan | jq -c .[] | tail -n 1 | jq -c '[.[6], .[3]]'
 }
 
 divergence_bearish() {
