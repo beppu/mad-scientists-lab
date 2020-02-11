@@ -89,6 +89,7 @@ function findLocalLow(imd, cluster) {
   const closes = cluster.map((i) => imd.close[i])
   const lowest = Math.min(...closes)
   const lowestIndex = closes.findIndex((c) => c == lowest)
+  //console.log({ lowest, lowestIndex, clusterLowestIndex: cluster[lowestIndex], cluster })
   return cluster[lowestIndex]
 }
 

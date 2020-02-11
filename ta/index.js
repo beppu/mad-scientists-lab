@@ -163,10 +163,16 @@ function scan(imd, matchFn) {
   // - if fn returns true, append to results.
   let current = imd
   for (let i = 0; i < longest; i++) {
-    if (matchFn(current)) {
-      //console.warn(DateTime.fromMillis(current.timestamp[0]).toString())
-      results.push(i)
+    let res = matchFn(current)
+    if (res) {
+      //console.warn(i, res, DateTime.fromMillis(current.timestamp[0]).toString())
+      if (typeof res != 'boolean') {
+        results.push(i + res.offset)
+      } else {
+        results.push(i)
+      }
     }
+    //if (results.length > 1) break
     current = _previous(current)
   }
   return results

@@ -33,7 +33,7 @@ function detectRegularBearishDivergence(imd, ageThreshold, gapThreshold, peakThr
   const regularBearishDivergence = rsi0 < rsi1
   //console.log({ high0, rsi0, high1, rsi1, cluster0: clusters[0], cluster1: clusters[1], regularBearishDivergence })
   if (regularBearishDivergence) {
-    return true
+    return { offset: high0 }
   } else {
     return false
   }
@@ -56,9 +56,11 @@ function detectRegularBullishDivergence(imd, ageThreshold, gapThreshold, peakThr
     return false
   }
   const regularBullishDivergence = rsi0 > rsi1
-  //console.log({ low0, rsi0, low1, rsi1, cluster0: clusters[0], cluster1: clusters[1], regularBullishDivergence })
+  const cluster0Candles = ta.invertedCandles(imd, [low0])
+  const cluster1Candles = ta.invertedCandles(imd, [low1])
+  //console.log({ low0, rsi0, low1, rsi1, cluster0: clusters[0], cluster0Candles, cluster1: clusters[1], cluster1Candles, regularBullishDivergence })
   if (regularBullishDivergence) {
-    return true
+    return { offset: low0 }
   } else {
     return false
   }
@@ -127,14 +129,13 @@ async function main() {
         ? (imd) => detectRegularBearishDivergence(imd, ageThreshold, gapThreshold, peakThreshold)
         : (imd) => detectRegularBullishDivergence(imd, ageThreshold, gapThreshold, peakThreshold)
       const indices = ta.scan(imd, detector)
+      //console.log(indices)
       const collapsed = indices.reduce((m, a) => {
         if (m.indices.length === 0) {
           m.last = a
           m.indices.push(a)
         } else {
-          if (m.last == a - 1) {
-            m.last = a
-          } else {
+          if (a >= m.last+2) {
             m.indices.push(a)
             m.last = a
           }
