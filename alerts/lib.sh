@@ -30,7 +30,7 @@ horizontal_lt() {
 }
 
 # Check if a price crosses a horizontal level in either direction
-horizontal() {
+horizontal_x() {
   horizontal_gt $1 $2
   horizontal_lt $1 $2
 }
