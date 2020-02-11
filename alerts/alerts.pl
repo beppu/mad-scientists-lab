@@ -102,7 +102,10 @@ my %casual_alerts = (
 # actively traded
 my %active_alerts = (
   '1m'  => [],
-  '3m'  => [],
+  '3m'  => [
+    price_above_sh('3m', 'sma', 960),
+    price_below_sh('3m', 'sma', 960),
+  ],
   '5m'  => [
     price_above_sh('5m', 'sma', 960),
     price_below_sh('5m', 'sma', 960),
