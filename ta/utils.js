@@ -100,6 +100,7 @@ function findLocalLow(imd, cluster) {
 function findLocalHigh(imd, cluster) {
   const closes = cluster.map((i) => imd.close[i])
   const highest = Math.max(...closes)
+  //console.log({closes, highest})
   const highestIndex = closes.findIndex((c) => c == highest)
   return cluster[highestIndex]
 }
