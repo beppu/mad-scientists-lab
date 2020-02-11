@@ -172,7 +172,7 @@ function scan(imd, matchFn) {
         results.push(i)
       }
     }
-    //if (results.length > 1) break
+    //if (results.length > 0) break
     current = _previous(current)
   }
   return results

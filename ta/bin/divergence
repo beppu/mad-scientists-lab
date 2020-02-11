@@ -10,7 +10,15 @@ const talib     = require('talib')
 const beautify  = require('json-beautify')
 const DateTime  = luxon.DateTime
 
+function parseGap(gapThreshold) {
+  const parts = gapThreshold.split('-')
+  const minGap = parseInt(parts[0], 10)
+  const maxGap = parseInt(parts[1], 10)
+  return [minGap, maxGap]
+}
+
 function detectRegularBearishDivergence(imd, ageThreshold, gapThreshold, peakThreshold) {
+  const [minGap, maxGap] = parseGap(gapThreshold)
   const clusters = utils.findClusters(imd, utils.highEnoughFn(peakThreshold)) // XXX I only need the first two clusters.
   if (clusters.length < 2) {
     // not enough local highs detected
@@ -23,11 +31,22 @@ function detectRegularBearishDivergence(imd, ageThreshold, gapThreshold, peakThr
     return false
   }
   const high0 = utils.findLocalHigh(imd, clusters[0])
-  const high1 = utils.findLocalHigh(imd, clusters[1])
+  let high1 = utils.findLocalHigh(imd, clusters[1])
   const rsi0 = imd.rsi[high0]
-  const rsi1 = imd.rsi[high1]
+  let rsi1 = imd.rsi[high1]
   //console.log({ gapThreshold, high0, high1, distance: high1 - high0 })
-  if (high1 - high0 < gapThreshold) {
+  if (high1 - high0 < minGap) {
+    if (clusters.length > 2) {
+      // if high1 is too recent, try the next cluster
+      high1 = utils.findLocalHigh(imd, clusters[2])
+      if (high1 - high0 < minGap) return false
+      rsi1 = imd.rsi[high1]
+    } else {
+      return false
+    }
+    return false
+  }
+  if (high1 - high0 > maxGap) {
     return false
   }
   const regularBearishDivergence = rsi0 < rsi1
@@ -40,6 +59,7 @@ function detectRegularBearishDivergence(imd, ageThreshold, gapThreshold, peakThr
 }
 
 function detectRegularBullishDivergence(imd, ageThreshold, gapThreshold, peakThreshold) {
+  const [minGap, maxGap] = parseGap(gapThreshold)
   const clusters = utils.findClusters(imd, utils.lowEnoughFn(peakThreshold)) // XXX I only need the first two clusters.
   if (clusters.length < 2) {
     // not enough local highs detected
@@ -49,15 +69,27 @@ function detectRegularBullishDivergence(imd, ageThreshold, gapThreshold, peakThr
     return false
   }
   const low0 = utils.findLocalLow(imd, clusters[0])
-  const low1 = utils.findLocalLow(imd, clusters[1])
+  const cluster0Candles = ta.invertedCandles(imd, [low0])
+  let low1 = utils.findLocalLow(imd, clusters[1])
   const rsi0 = imd.rsi[low0]
-  const rsi1 = imd.rsi[low1]
-  if (low1 - low0 < gapThreshold) {
+  let rsi1 = imd.rsi[low1]
+  if (low1 - low0 < minGap) {
+    if (clusters.length > 2) {
+      // if low1 is too recent, try the next cluster
+      low1 = utils.findLocalLow(imd, clusters[2])
+      if (low1 - low0 < minGap) return false
+      rsi1 = imd.rsi[low1]
+    } else {
+      return false
+    }
+  }
+  if (low1 - low0 > maxGap) {
     return false
   }
+  //console.log({ diff: low1 - low0, minGap, maxGap })
   const regularBullishDivergence = rsi0 > rsi1
-  const cluster0Candles = ta.invertedCandles(imd, [low0])
-  const cluster1Candles = ta.invertedCandles(imd, [low1])
+  //const cluster0Candles = ta.invertedCandles(imd, [low0])
+  //const cluster1Candles = ta.invertedCandles(imd, [low1])
   //console.log({ low0, rsi0, low1, rsi1, cluster0: clusters[0], cluster0Candles, cluster1: clusters[1], cluster1Candles, regularBullishDivergence })
   if (regularBullishDivergence) {
     return { offset: low0 }
@@ -77,7 +109,7 @@ async function main() {
     .option('-H, --hidden', 'Search for hidden divergence instead of regular')
     .option('-b, --bearish', 'Search for bearish divergence instaed of bullish')
     .option('-a, --age-threshold <CANDLES>', 'Number of candles allowed after detection', parseInt, 1)
-    .option('-g, --gap-threshold <CANDLES>', 'Number of candles required between extremes', parseInt, 5)
+    .option('-g, --gap-threshold <CANDLES>', 'Min and max number of candles allowed between extremes', '7-30')
     .option('-p, --peak-threshold <PERCENT>', '% distance allowed from upper or lower bband', parseFloat, 9.0)
     .option('-s, --scan', 'Scan for all occurrences')
     .option('-n, --now', 'Does divergence exist right now regardless of the past')
@@ -96,6 +128,7 @@ async function main() {
     const candles = await ta.loadCandles(program.exchange, program.market, program.timeframe)
     const md      = ta.marketDataFromCandles(candles)
     let imd     = ta.invertedMarketData(md)
+    // XXX - The following doesn't work yet, because md needs to be rewound too.
     //imd = ta._goBack(imd, 1)
     //console.warn(DateTime.fromMillis(imd.timestamp[0]).toString())
 
