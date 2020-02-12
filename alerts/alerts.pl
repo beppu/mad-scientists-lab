@@ -152,6 +152,8 @@ my %active_alerts = (
     price_below_sh('4h', 'sma', 960),
     price_above_sh('4h', 'sma', 200),
     price_below_sh('4h', 'sma', 200),
+    price_above_sh('4h', 'sma', 50),
+    price_below_sh('4h', 'sma', 50),
     price_above_sh('4h', 'sma', 20),
     price_below_sh('4h', 'sma', 20),
     bullish_divergence_sh('4h'),
