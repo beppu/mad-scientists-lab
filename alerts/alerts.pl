@@ -37,13 +37,13 @@ sub aligned_sh {
 sub price_above_sh {
   my ($tf, $ma, $period) = @_;
   my $MA = uc $ma;
-  qq|price --timeframe $tf --gt $ma $period && alert --timeframe $tf "price above $tf $period $MA" --webhook "$ENV{ALERT_BULLISH_PRICE}"|;
+  qq|price --timeframe $tf --gt $ma $period && alert --timeframe $tf "Price is above the $tf $period $MA" --webhook "$ENV{ALERT_BULLISH_PRICE}"|;
 }
 
 sub price_below_sh {
   my ($tf, $ma, $period) = @_;
   my $MA = uc $ma;
-  qq|price --timeframe $tf --lt $ma $period && alert --timeframe $tf "price below $tf $period $MA" --webhook "$ENV{ALERT_BEARISH_PRICE}"|;
+  qq|price --timeframe $tf --lt $ma $period && alert --timeframe $tf "Price is below the $tf $period $MA" --webhook "$ENV{ALERT_BEARISH_PRICE}"|;
 }
 
 sub bullish_divergence_sh {
@@ -58,12 +58,12 @@ sub bearish_divergence_sh {
 
 sub guppy_green_sh {
   my ($tf) = @_;
-  qq|guppy --timeframe $tf --green && alert --timeframe $tf "guppy has turned green" --webhook "$ENV{ALERT_BULLISH_DIVERGENCE}"|;
+  qq|guppy --timeframe $tf --green && alert --timeframe $tf "Guppy EMAs have turned green" --webhook "$ENV{ALERT_BULLISH_DIVERGENCE}"|;
 }
 
 sub guppy_red_sh {
   my ($tf) = @_;
-  qq|guppy --timeframe $tf --red && alert --timeframe $tf "guppy has turned red" --webhook "$ENV{ALERT_BEARISH_DIVERGENCE}"|;
+  qq|guppy --timeframe $tf --red && alert --timeframe $tf "Guppy EMAs have turned red" --webhook "$ENV{ALERT_BEARISH_DIVERGENCE}"|;
 }
 
 # casual interest
