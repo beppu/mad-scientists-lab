@@ -44,7 +44,6 @@ function detectRegularBearishDivergence(imd, ageThreshold, gapThreshold, peakThr
     } else {
       return false
     }
-    return false
   }
   if (high1 - high0 > maxGap) {
     return false
