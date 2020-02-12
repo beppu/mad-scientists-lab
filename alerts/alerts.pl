@@ -61,6 +61,11 @@ sub guppy_green_sh {
   qq|guppy --timeframe $tf --green && alert --timeframe $tf "Guppy EMAs have turned green" --webhook "$ENV{ALERT_BULLISH_DIVERGENCE}"|;
 }
 
+sub guppy_gray_sh {
+  my ($tf) = @_;
+  qq|guppy --timeframe $tf --gray && alert --timeframe $tf "Guppy EMAs have turned gray" --webhook "$ENV{ALERT_SMALL}"|;
+}
+
 sub guppy_red_sh {
   my ($tf) = @_;
   qq|guppy --timeframe $tf --red && alert --timeframe $tf "Guppy EMAs have turned red" --webhook "$ENV{ALERT_BEARISH_DIVERGENCE}"|;
@@ -92,6 +97,7 @@ my %casual_alerts = (
     price_above_sh('1d', 'sma', 200),
     price_below_sh('1d', 'sma', 200),
     guppy_green_sh('1d'),
+    guppy_gray_sh('1d'),
     guppy_red_sh('1d'),
   ],
   '3d'  => [],
@@ -132,6 +138,7 @@ my %active_alerts = (
     aligned_sh('1h', 'sma', 50, 100, 200),
     aligned_sh('1h', 'sma', 200, 100, 50),
     guppy_green_sh('1h'),
+    guppy_gray_sh('1h'),
     guppy_red_sh('1h'),
   ],
   '2h'  => [
@@ -156,6 +163,7 @@ my %active_alerts = (
     aligned_sh('4h', 'sma', 50, 100, 200),
     aligned_sh('4h', 'sma', 200, 100, 50),
     guppy_green_sh('4h'),
+    guppy_gray_sh('4h'),
     guppy_red_sh('4h'),
   ],
   '6h'  => [
@@ -186,6 +194,7 @@ my %active_alerts = (
     aligned_sh('12h', 'sma', 50, 100, 200),
     aligned_sh('12h', 'sma', 200, 100, 50),
     guppy_green_sh('12h'),
+    guppy_gray_sh('12h'),
     guppy_red_sh('12h'),
   ],
   '1d'  => [
@@ -204,6 +213,7 @@ my %active_alerts = (
     aligned_sh('1d', 'sma', 50, 100, 200),
     aligned_sh('1d', 'sma', 200, 100, 50),
     guppy_green_sh('1d'),
+    guppy_gray_sh('1d'),
     guppy_red_sh('1d'),
   ],
   '3d'  => [
