@@ -48,12 +48,12 @@ sub price_below_sh {
 
 sub bullish_divergence_sh {
   my ($tf) = @_;
-  qq|divergence --timeframe $tf && alert --timeframe $tf "bullish divergence" --webhook "$ENV{ALERT_BULLISH_DIVERGENCE}"|;
+  qq|divergence --timeframe $tf && alert --timeframe $tf "$tf Bullish divergence" --webhook "$ENV{ALERT_BULLISH_DIVERGENCE}"|;
 }
 
 sub bearish_divergence_sh {
   my ($tf) = @_;
-  qq|divergence --timeframe $tf --bearish && alert --timeframe $tf "bearish divergence" --webhook "$ENV{ALERT_BEARISH_DIVERGENCE}"|;
+  qq|divergence --timeframe $tf --bearish && alert --timeframe $tf "$tf Bearish divergence" --webhook "$ENV{ALERT_BEARISH_DIVERGENCE}"|;
 }
 
 sub guppy_green_sh {
