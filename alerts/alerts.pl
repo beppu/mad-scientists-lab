@@ -204,6 +204,8 @@ my %active_alerts = (
     price_below_sh('1d', 'sma', 960),
     price_above_sh('1d', 'sma', 200),
     price_below_sh('1d', 'sma', 200),
+    price_above_sh('1d', 'sma', 50),
+    price_below_sh('1d', 'sma', 50),
     price_above_sh('1d', 'sma', 20),
     price_below_sh('1d', 'sma', 20),
     price_above_sh('1d', 'ema', 13),
