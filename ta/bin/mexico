@@ -1,0 +1,65 @@
+#!/usr/bin/env node
+// Does the potential for regular divergence exist?
+const dotenv    = require('dotenv').config()
+const pkg       = require('../package.json')
+const ta        = require('../index')
+const utils     = require('../utils')
+const luxon     = require('luxon')
+const commander = require('commander')
+const talib     = require('talib')
+const beautify  = require('json-beautify')
+const ccxt      = require('ccxt')
+const Bluebird  = require('bluebird')
+const fs        = require('fs')
+
+async function main() {
+  const program   = new commander.Command();
+  program
+    .version(pkg.version)
+    .description('Download OHLCV candlestick data')
+    .option('-x, --exchange <NAME>', 'Exchange to pull data from', process.env.TA_EXCHANGE)
+    .option('-m, --market <SYMBOL>', 'Market in exchange to pull data from', process.env.TA_MARKET)
+    .option('-t, --timeframe <INTERVAL>', 'Candlestick duration for market data', process.env.TA_TIMEFRAME)
+    .option('-s, --scan', 'Scan for all occurrences')
+    .option('-n, --now', 'Are they aligned now regardless of the past')
+  program.parse(process.argv)
+  let optionsAreMissing = false;
+  ['exchange', 'market', 'timeframe'].forEach((opt) => {
+    if (!program[opt]) {
+      console.error(`The --${opt} option is required.`)
+      optionsAreMissing = true
+    }
+  })
+  if (optionsAreMissing) {
+    process.exit(-1)
+  }
+  try {
+    // XXX just work with bitmex for now
+    // - download the first 1000 candles
+    // - write out the results as a JSON file
+    // - wait a few seconds to stay well within API limits
+    // - calculate the timestamp of the first candle of the next 1000 candles
+    // - download again until the number of candles returned is less than 1000
+    const bitmex = new ccxt.bitmex()
+    let since = 0
+    let limit = 1000
+    let candles = []
+    do {
+      candles = await bitmex.fetchOHLCV('BTC/USD', '5m', since, limit)
+      if (candles.length) {
+        let timestamp = candles[0][0]
+        let filename = `data/${timestamp}.json`
+        console.log(filename)
+        fs.writeFileSync(filename, JSON.stringify(candles))
+        await Bluebird.delay(3000)
+        since = candles[candles.length - 1][0] + 300000
+      }
+    } while (candles.length <= 1000)
+  }
+  catch (err) {
+    console.error(err.stack)
+    process.exit(-1)
+  }
+}
+
+main()
