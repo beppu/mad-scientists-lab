@@ -20,8 +20,7 @@ async function main() {
     .option('-x, --exchange <NAME>', 'Exchange to pull data from', process.env.TA_EXCHANGE)
     .option('-m, --market <SYMBOL>', 'Market in exchange to pull data from', process.env.TA_MARKET)
     .option('-t, --timeframe <INTERVAL>', 'Candlestick duration for market data', process.env.TA_TIMEFRAME)
-    .option('-s, --scan', 'Scan for all occurrences')
-    .option('-n, --now', 'Are they aligned now regardless of the past')
+    .option('-s, --since <TIMESTAMP>', 'Specify a timestamp for the first candle', parseInt, 0)
   program.parse(process.argv)
   let optionsAreMissing = false;
   ['exchange', 'market', 'timeframe'].forEach((opt) => {
@@ -40,8 +39,8 @@ async function main() {
     // - wait a few seconds to stay well within API limits
     // - calculate the timestamp of the first candle of the next 1000 candles
     // - download again until the number of candles returned is less than 1000
-    const bitmex = new ccxt.bitmex()
-    let since = 0
+    const bitmex = new ccxt.bitmex({ enableRateLimit: true })
+    let since = program.since
     let limit = 1000
     let candles = []
     do {
