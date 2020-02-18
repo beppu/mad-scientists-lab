@@ -46,6 +46,7 @@ async function main() {
     let candles = []
     do {
       const now = DateTime.local()
+      console.log({ since, limit })
       candles = await bitmex.fetchOHLCV('BTC/USD', '5m', since, limit)
       if (candles.length) {
         let timestamp = candles[0][0]
@@ -55,7 +56,7 @@ async function main() {
         await Bluebird.delay(3000)
         since = candles[candles.length - 1][0] + 300000
       }
-    } while (candles.length <= 1000)
+    } while (candles.length == 1000)
   }
   catch (err) {
     console.error(err.stack)
