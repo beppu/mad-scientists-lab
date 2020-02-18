@@ -11,6 +11,7 @@ const beautify  = require('json-beautify')
 const ccxt      = require('ccxt')
 const Bluebird  = require('bluebird')
 const fs        = require('fs')
+const {DateTime} = luxon
 
 async function main() {
   const program   = new commander.Command();
@@ -44,11 +45,12 @@ async function main() {
     let limit = 1000
     let candles = []
     do {
+      const now = DateTime.local()
       candles = await bitmex.fetchOHLCV('BTC/USD', '5m', since, limit)
       if (candles.length) {
         let timestamp = candles[0][0]
         let filename = `data/${timestamp}.json`
-        console.log(filename)
+        console.log(now.toISO(), filename)
         fs.writeFileSync(filename, JSON.stringify(candles))
         await Bluebird.delay(3000)
         since = candles[candles.length - 1][0] + 300000
