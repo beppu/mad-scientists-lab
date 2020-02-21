@@ -72,7 +72,7 @@ price_lt() {
   ma=$2
   big_ma=`echo $ma | tr a-z A-Z`
   period=$3
-  price --timeframe $tf --gt $ma $period \
+  price --timeframe $tf --lt $ma $period \
     && alert --timeframe $tf --webhook $ALERT_BULLISH_PRICE "Price is below the $period $big_ma"
 }
 
