@@ -247,6 +247,13 @@ my %active_alerts = (
   '1M'  => [],
 );
 
+my %debug = (
+  '15m' => [
+    price_above_sh('15m', 'sma', 68),
+    price_below_sh('15m', 'sma', 68),
+  ]
+);
+
 sub run_alerts {
   my $alerts = shift;
   for my $tf (@timeframes) {
@@ -261,6 +268,7 @@ sub run_alerts {
 my %profiles = (
   casual => \%casual_alerts,
   active => \%active_alerts,
+  debug  => \%debug,
 );
 my $p = shift || 'casual';
 
