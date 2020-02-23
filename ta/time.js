@@ -20,6 +20,10 @@ function timeframeToMinutes(timeframe) {
   throw new Error(`Unsupported timeframe: '${timeframe}'`);
 }
 
+function timeframeToMilliseconds(timeframe) {
+  return timeframeToMinutes(timeframe) * 60000
+}
+
 
 function timestampForTimeframe(timeframe, ms) {
   const ints = timeframeToMinutes(timeframe) * 60 * 1000;
@@ -36,6 +40,7 @@ function translatePeriods(periods, tfSrc, tfDst) {
 
 module.exports = {
   timeframeToMinutes,
+  timeframeToMilliseconds,
   timestampForTimeframe,
   translatePeriods
 }
