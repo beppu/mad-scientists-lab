@@ -25,3 +25,5 @@ global.time = require('./time')
 global.utils = require('./utils')
 
 global.profitLoss = global.utils.profitLoss
+global.bitmex = new ccxt.bitmex()
+global.binance = new ccxt.binance()
