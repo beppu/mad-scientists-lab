@@ -19,6 +19,11 @@ function parseIntB10(n) {
   return parseInt(n, 10)
 }
 
+function predictablePath(dataDir, exchange, market, timeframe) {
+  let mkt = market.replace(/\W/g, '')
+  return `${dataDir}/${exchange}/${mkt}/${timeframe}`
+}
+
 async function main() {
   const program   = new commander.Command();
   program
@@ -29,8 +34,9 @@ async function main() {
     .option('-t, --timeframe <INTERVAL>', 'Candlestick duration for market data', process.env.TA_TIMEFRAME || '5m')
     .option('-s, --since <TIMESTAMP>', 'Specify a timestamp for the first candle', parseIntB10, 0)
     .option('-l, --limit <CANDLES>', 'Specify how many candles to ask for per API call', parseIntB10, 1000)
-    .option('-d, --datadir <PATH>', 'Directory to store candlestick data in', './')
+    .option('-d, --data <PATH>', 'Directory to store candlestick data in', './data')
     .option('-D, --delay <MILLISECONDS>', 'Milliseconds to wait before sending next request', parseIntB10, 3000)
+    .option('-i, --info', 'Display timeframes and markets available for an exchange')
     .option('-v, --verbose', 'Be verbose')
   program.parse(process.argv)
   let optionsAreMissing = false;
@@ -43,16 +49,41 @@ async function main() {
   if (optionsAreMissing) {
     process.exit(-1)
   }
+  if (program.info) {
+    let width
+    if (process.env.COLUMNS) {
+      width = parseIntB10(process.env.COLUMNS)
+    } else {
+      width = 80
+    }
+    try {
+      const Exchange = ccxt[program.exchange]
+      const exchange = new Exchange({ enableRateLimit: true })
+      const markets = await exchange.fetchMarkets()
+      console.log(beautify({
+        exchange: program.exchange,
+        markets: markets.map((m) => m.symbol),
+        timeframes: Object.values(exchange.timeframes)
+      }, null, 2, width))
+      process.exit(-1)
+    }
+    catch (e) {
+      console.warn(e)
+      process.exit(-1)
+    }
+  }
   //console.log(program)
   //process.exit(0)
   try {
-    mkdirp.sync(program.datadir)
+    const dataPath = predictablePath(program.data, program.exchange, program.market, program.timeframe)
+    console.log(dataPath)
+    mkdirp.sync(dataPath)
     // XXX just work with bitmex for now
     // - download the first 1000 candles
     // - write out the results as a JSON file
     // - wait a few seconds to stay well within API limits
     // - calculate the timestamp of the first candle of the next 1000 candles
-    // - download again until the number of candles returned is less than 1000
+    // - repeat until the number of candles returned is less than 1000
     const Exchange = ccxt[program.exchange]
     const exchange = new Exchange({ enableRateLimit: true })
     const limit = program.limit
@@ -64,7 +95,7 @@ async function main() {
       candles = await exchange.fetchOHLCV(program.market, program.timeframe, since, limit)
       if (candles.length) {
         let timestamp = candles[0][0]
-        let filename = `${program.datadir}/${timestamp}.json`
+        let filename = `${dataPath}/${timestamp}.json`
         let ts = DateTime.fromMillis(timestamp)
         if (program.verbose) {
           let extra = {}
