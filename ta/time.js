@@ -1,3 +1,4 @@
+const {DateTime, Interval} = require('luxon')
 
 function timeframeToMinutes(timeframe) {
   const match  = timeframe.match(/(\d+)(\w+)/);
@@ -38,9 +39,35 @@ function translatePeriods(periods, tfSrc, tfDst) {
   return periods.map((p) => p * factor)
 }
 
+function isTimeframeBoundary(timeframe, time) {
+  const match  = timeframe.match(/(\d+)(\w+)/);
+  if (!match) {
+    return false;
+  }
+  const nu = match[1];
+  const unit = match[2];
+  const n = Math.min(parseInt(nu, 10));
+  const dayOfYear = Math.floor(
+    Interval.fromDateTimes(DateTime.utc(time.year, 1, 1), time).length() + 1);
+
+  switch (unit) {
+  case 'm':
+    if (time.minute % n === 0) return true;
+    break;
+  case 'h':
+    if (time.hour % n === 0 && time.minute === 0) return true;
+    break;
+  case 'd':
+    if (time.minute === 0 && time.hour === 0 && dayOfYear % n === 0) return true;
+    break;
+  }
+  return false;
+}
+
 module.exports = {
   timeframeToMinutes,
   timeframeToMilliseconds,
   timestampForTimeframe,
-  translatePeriods
+  translatePeriods,
+  isTimeframeBoundary
 }

@@ -151,8 +151,8 @@ function log10Slope(a, b) {
 
 /**
  * Return a function for plotting a line in linear space as defined by the 2 points, a and b
- * @param a {Point} a point in the line
- * @param b {Point} another point in the line
+ * @param {Point} a a point in the line
+ * @param {Point} b another point in the line
  * @returns {Function} given x, return y in linear space
  */
 function lineFn(a, b) {
@@ -165,8 +165,8 @@ function lineFn(a, b) {
 
 /**
  * Return a function for plotting a line in log-linear space as defined by the 2 points, a and b
- * @param a {Point} a point in the line
- * @param b {Point} another point in the line
+ * @param {Point} a a point in the line
+ * @param {Point} b another point in the line
  * @returns {Function} given x, return y in log-linear space
  */
 function log10LineFn(a, b) {
@@ -177,6 +177,20 @@ function log10LineFn(a, b) {
 }
 // TODO Write bin/trendline
 // My code tries to load 1000 candles by default, and this means big trendlines need big timeframes.
+
+
+/**
+ * Return a predictable path for storing/retrieving OHLCV data
+ * @param {String} dataDir - Directory reserved for data storage
+ * @param {String} exchange - exchange name
+ * @param {String} market - market symbol
+ * @param {String} timeframe - duration of candle
+ * @returns {String} Path where OHLCV JSON files are stored
+ */
+function dataPath(dataDir, exchange, market, timeframe) {
+  let mkt = market.replace(/\W/g, '')
+  return `${dataDir}/${exchange}/${mkt}/${timeframe}`
+}
 
 module.exports = {
   isAscending,
@@ -190,5 +204,6 @@ module.exports = {
   slope,
   log10Slope,
   lineFn,
-  log10LineFn
+  log10LineFn,
+  dataPath
 }
