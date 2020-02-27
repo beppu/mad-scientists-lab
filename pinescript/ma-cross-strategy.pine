@@ -1,0 +1,17 @@
+//@version=4
+strategy("Simple Moving Average Cross Strategy")
+sma_1_period = input(defval=34, title="SMA 1", minval=1)
+sma_2_period = input(defval=68, title="SMA 2", minval=1)
+sma_1  = sma(close, sma_1_period)
+sma_2  = sma(close, sma_2_period)
+
+sma_bullish_cross = (sma_1[1] < sma_2[1] and sma_1[0] > sma_2[0])
+sma_bearish_cross = (sma_1[1] > sma_2[1] and sma_1[0] < sma_2[0])
+
+if bar_index > 100
+    strategy.entry("buy", strategy.long, 10, when=sma_bullish_cross)
+    strategy.close("buy", when=sma_bearish_cross)
+    strategy.entry("sell", strategy.short, 10, when=sma_bearish_cross)
+    strategy.close("sell", when=sma_bullish_cross)
+
+plot(strategy.equity)
