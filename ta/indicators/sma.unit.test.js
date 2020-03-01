@@ -71,4 +71,5 @@ test('SMA values should be appended as new candles arrive', () => {
   // extra testing for ta.*AppendCandle
   expect(md.close.length).toEqual(imd.close.length)
   expect(md.close[lastIndex]).toEqual(imd.close[0])
+  expect(md.close[lastIndex-1]).toEqual(imd.close[1])
 })
