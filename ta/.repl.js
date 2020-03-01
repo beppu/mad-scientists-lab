@@ -18,12 +18,18 @@ global.ccxt        = require('ccxt')
 global.talib       = require('talib')
 global.luxon       = require('luxon')
 global.DateTime    = global.luxon.DateTime
+global.Interval    = global.luxon.Interval
 
 global.ta = require('./index')
 global.alerts = require('./alerts')
 global.time = require('./time')
 global.utils = require('./utils')
+global.pipeline = global.pl = require('./pipeline')
 
 global.profitLoss = global.utils.profitLoss
+const ccxt = global.ccxt
 global.bitmex = new ccxt.bitmex()
 global.binance = new ccxt.binance()
+
+// Where I like to store my temporary results from async functions.
+global.x = {}
