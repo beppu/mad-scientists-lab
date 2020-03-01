@@ -33,7 +33,7 @@ async function loadCandles(exchange, market, timeframe) {
       let fetch = async () => {
         let _candles
         try {
-          const limit = 1000 
+          const limit = 1000
           const now = DateTime.local()
           const tf = time.timeframeToMinutes(timeframe)
           const since = now.minus({ minutes: tf * limit })
@@ -106,6 +106,27 @@ function marketDataTake(marketData, n, wantAll) {
     abbreviatedMarketData.volume    = marketData.volume.slice(0, n)
   } else {
     abbreviatedMarketData.close = marketData.close.slice(0, n)
+  }
+  return abbreviatedMarketData
+}
+
+/**
+ * Reduce marketData to its last n values
+ * @param {MarketData} marketData - a MarketData structure
+ * @param {Number} n - number of values desired
+ * @returns {MarketData} a MarketData struct with n values per key
+ */
+function marketDataTakeLast(marketData, n, wantAll) {
+  const abbreviatedMarketData = {}
+  if (wantAll) {
+    abbreviatedMarketData.timestamp = marketData.timestamp.slice(-n)
+    abbreviatedMarketData.open      = marketData.open.slice(-n)
+    abbreviatedMarketData.high      = marketData.high.slice(-n)
+    abbreviatedMarketData.low       = marketData.low.slice(-n)
+    abbreviatedMarketData.close     = marketData.close.slice(-n)
+    abbreviatedMarketData.volume    = marketData.volume.slice(-n)
+  } else {
+    abbreviatedMarketData.close = marketData.close.slice(-n)
   }
   return abbreviatedMarketData
 }
@@ -279,6 +300,7 @@ module.exports = {
   marketDataFromCandles,
   marketDataAppendCandle,
   marketDataTake,
+  marketDataTakeLast,
   invertedMarketData,
   invertedAppend,
   invertedAppendCandle,
