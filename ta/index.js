@@ -74,6 +74,43 @@ function marketDataFromCandles(candles) {
 }
 
 /**
+ * Append one candle to an existing marketData struct
+ * @param {Object} candle - one candle
+ * @param {MarketData} md - a MarketData structure
+ * @returns {MarketData} a MarketData structure with one candle appended to it
+ */
+function marketDataAppendCandle(marketData, candle) {
+  marketData.timestamp.push(candle[0])
+  marketData.open.push(candle[1])
+  marketData.high.push(candle[2])
+  marketData.low.push(candle[3])
+  marketData.close.push(candle[4])
+  marketData.volume.push(candle[5])
+  return marketData
+}
+
+/**
+ * Reduce marketData to its first n values
+ * @param {MarketData} marketData - a MarketData structure
+ * @param {Number} n - number of values desired
+ * @returns {MarketData} a MarketData struct with n values per key
+ */
+function marketDataTake(marketData, n, wantAll) {
+  const abbreviatedMarketData = {}
+  if (wantAll) {
+    abbreviatedMarketData.timestamp = marketData.timestamp.slice(0, n)
+    abbreviatedMarketData.open      = marketData.open.slice(0, n)
+    abbreviatedMarketData.high      = marketData.high.slice(0, n)
+    abbreviatedMarketData.low       = marketData.low.slice(0, n)
+    abbreviatedMarketData.close     = marketData.close.slice(0, n)
+    abbreviatedMarketData.volume    = marketData.volume.slice(0, n)
+  } else {
+    abbreviatedMarketData.close = marketData.close.slice(0, n)
+  }
+  return abbreviatedMarketData
+}
+
+/**
  * Invert marketData such that index 0 is the newest value rather than the oldest value
  * @param {Object<Array<Number>>} marketData  - An object that has arrays for open, high, low, close and volume
  * @returns {Object<Array<Number>>}           - marketData but inverted
@@ -91,7 +128,7 @@ function invertedMarketData(marketData) {
  * @param {Object<Array<Number>>} invertedMarketData  - An object that has arrays for open, high, low, close and volume
  * @param {String} key                                - Key name for series data to be appended to invertedMarketData
  * @param {Array<Number>} data                        - A series of numerical data with oldest info first and newest info last
- * @returns {Object<Array<Number>>}                   - invertedMarketData with series from `data` appended to it
+ * @returns {Object<Array<Number>>}                   invertedMarketData with series from `data` appended to it
  */
 function invertedAppend(invertedMarketData, key, data) {
   invertedMarketData[key] = []
@@ -99,6 +136,22 @@ function invertedAppend(invertedMarketData, key, data) {
   for (let i = start; i >= 0; i--) {
     invertedMarketData[key].push(data[i])
   }
+  return invertedMarketData
+}
+
+/**
+ * Append one candle to an invertedMarketData struct
+ * @param {InvertedMarketData} invertedMarketData - an invertedMarketData struct
+ * @param {Candle} candle                         - one new candle
+ * @returns {InvertedMarketData} an updated invertedMarketData struct
+ */
+function invertedAppendCandle(invertedMarketData, candle) {
+  invertedMarketData.timestamp.unshift(candle[0])
+  invertedMarketData.open.unshift(candle[1])
+  invertedMarketData.high.unshift(candle[2])
+  invertedMarketData.low.unshift(candle[3])
+  invertedMarketData.close.unshift(candle[4])
+  invertedMarketData.volume.unshift(candle[5])
   return invertedMarketData
 }
 
@@ -224,8 +277,11 @@ const id = {
 module.exports = {
   loadCandles,
   marketDataFromCandles,
+  marketDataAppendCandle,
+  marketDataTake,
   invertedMarketData,
   invertedAppend,
+  invertedAppendCandle,
   invertedCandles,
   scan,
   id,

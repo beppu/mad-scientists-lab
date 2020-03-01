@@ -6,6 +6,7 @@ const ta        = require('../index')
 const time      = require('../time')
 const utils     = require('../utils')
 const pipeline  = require('../pipeline')
+const ix        = require('../indicators')
 const luxon     = require('luxon')
 const commander = require('commander')
 const talib     = require('talib')
@@ -59,8 +60,15 @@ async function main() {
     let ax2h = pipeline.aggregatorFn('2h')
     let ax4h = pipeline.aggregatorFn('4h')
     let ax1d = pipeline.aggregatorFn('1d')
+    let md = ta.marketDataFromCandles(history.default)
+    let imd1h = ta.invertedMarketData(md)
+    let sma20Calculator = ix.sma(20)
     while (candle != null) {
       history.default.push(candle)
+      // this is really fucking slow
+      md = ta.marketDataAppendCandle(md, candle)
+      imd1h = ta.invertedAppendCandle(imd1h, candle)
+      sma20Calculator(md, imd1h)
       let [candle2h, isBoundary2h] = ax2h(candle)
       if (isBoundary2h) {
         history['2h'].push(candle2h)
@@ -76,12 +84,13 @@ async function main() {
       let [candle1d, isBoundary1d] = ax1d(candle)
       if (isBoundary1d) {
         history['1d'].push(candle1d)
+        console.log(candle)
       } else {
         history['1d'][history['1d'].length-1] = candle1d
       }
       candle = await nextCandle()
     }
-    console.log(history.default.length, history['2h'].length, history['4h'].length, history['1d'].length)
+    console.log(history.default.length, history['2h'].length, history['4h'].length, history['1d'].length, imd1h.sma20.length)
   }
   catch (err) {
     console.error(err.stack)
