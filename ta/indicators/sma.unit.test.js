@@ -1,4 +1,5 @@
-const ta = require('./index')
+const ta = require('../index')
+const sma = require('./sma')
 
 let candles
 
@@ -36,19 +37,38 @@ beforeEach(() => {
   initializeCandles()
 })
 
-test('ta.marketDataFromCandles should be able to accept an empty array', () => {
-  const initialEmptyState = { timestamp: [], open: [], high: [], low: [], close: [], volume: [] }
-  expect(ta.marketDataFromCandles([])).toEqual(initialEmptyState)
+test('An SMA value should not be calculated if the number of candles is insufficent', () => {
+  const md = ta.marketDataFromCandles(candles)
+  const md2 = ta.marketDataTake(md, 19)
+  let imd2 = ta.invertedMarketData(md2)
+  const smaCalculator = sma(20)
+  smaCalculator(md2, imd2)
+  expect(imd2.sma2).toBeUndefined()
 })
 
-test('ta.marketDataFromCandles should not lose data when doing its transform', () => {
+test('An SMA value should be calculated if the number of candles is sufficent', () => {
   const md = ta.marketDataFromCandles(candles)
-  expect(md.close.length).toEqual(candles.length)
+  const md2 = ta.marketDataTake(md, 20)
+  let imd2 = ta.invertedMarketData(md2)
+  const smaCalculator = sma(20)
+  smaCalculator(md2, imd2)
+  expect(imd2.sma20).toBeDefined()
 })
 
-test('ta.marketDataTake should return the right data', () => {
-  const md = ta.marketDataFromCandles(candles)
-  const md2 = ta.marketDataTake(md, 5)
-  expect(md2.close[0]).toEqual(candles[0][4])
-  expect(md2.close[4]).toEqual(candles[4][4])
+test('SMA values should be appended as new candles arrive', () => {
+  let md = ta.marketDataFromCandles([])
+  let imd = ta.invertedMarketData(md)
+  const smaCalculator = sma(20)
+  candles.forEach((c) => {
+    md = ta.marketDataAppendCandle(md, c)
+    imd = ta.invertedAppendCandle(imd, c)
+    smaCalculator(md, imd)
+  })
+  // 20 to 25 inclusive which should be 6 values
+  const correctSMALength = candles.length - 20 + 1
+  const lastIndex = candles.length - 1
+  expect(imd.sma20).toHaveLength(correctSMALength)
+  // extra testing for ta.*AppendCandle
+  expect(md.close.length).toEqual(imd.close.length)
+  expect(md.close[lastIndex]).toEqual(imd.close[0])
 })

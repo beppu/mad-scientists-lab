@@ -11,7 +11,7 @@ const ta = require('../index')
 module.exports = function smaFn(period) {
   return function(md, imd) {
     if (md.close.length < period) return imd
-    const amd = ta.marketDataTake(md, period) // take the minimum number of periods to generate 1 value
+    const amd = ta.marketDataTakeLast(md, period) // take the minimum number of periods to generate 1 value
     const smaSettings = ta.id.sma(amd, period)
     const sma = talib.execute(smaSettings)
     const last = sma.result.outReal.slice(sma.result.outReal.length - 1) // take only the last value
