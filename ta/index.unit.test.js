@@ -52,3 +52,9 @@ test('ta.marketDataTake should return the right data', () => {
   expect(md2.close[0]).toEqual(candles[0][4])
   expect(md2.close[4]).toEqual(candles[4][4])
 })
+
+test('ta.marketDataTakeLast should be allowed to ask for more than what is available', () => {
+  const md = ta.marketDataFromCandles(candles)
+  const mdTooMuch = ta.marketDataTakeLast(md, candles.length * 2)
+  expect(mdTooMuch.close).toEqual(md.close)
+})
