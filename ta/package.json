@@ -36,5 +36,8 @@
     "pnl": "./bin/profit-loss",
     "horizontal": "./bin/horizontal",
     "guppy": "./bin/guppy"
+  },
+  "devDependencies": {
+    "jest": "^25.1.0"
   }
 }
