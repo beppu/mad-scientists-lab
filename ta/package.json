@@ -37,6 +37,9 @@
     "horizontal": "./bin/horizontal",
     "guppy": "./bin/guppy"
   },
+  "scripts": {
+    "test": "jest"
+  },
   "devDependencies": {
     "jest": "^25.1.0"
   }
