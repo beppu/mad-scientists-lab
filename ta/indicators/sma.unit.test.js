@@ -1,3 +1,4 @@
+const talib = require('talib')
 const ta = require('../index')
 const sma = require('./sma')
 
@@ -72,4 +73,26 @@ test('SMA values should be appended as new candles arrive', () => {
   expect(md.close.length).toEqual(imd.close.length)
   expect(md.close[lastIndex]).toEqual(imd.close[0])
   expect(md.close[lastIndex-1]).toEqual(imd.close[1])
+})
+
+test('SMA stream calculations should be consistent with SMA batch calculations', () => {
+  // stream calculation
+  let md = ta.marketDataFromCandles([])
+  let imd = ta.invertedMarketData(md)
+  const smaCalculator = sma(20)
+  candles.forEach((c) => {
+    md = ta.marketDataAppendCandle(md, c)
+    imd = ta.invertedAppendCandle(imd, c)
+    smaCalculator(md, imd)
+  })
+
+  // batch calculation copied and adapted from bin/price
+  const marketData         = ta.marketDataFromCandles(candles)
+  const indicatorSettings  = ta.id['sma'](marketData, 20)
+  const r                  = talib.execute(indicatorSettings)
+  const invertedMarketData = ta.invertedMarketData(marketData)
+  ta.invertedAppend(invertedMarketData, 'sma20', r.result.outReal)
+
+  // batch and stream should have the same values
+  expect(invertedMarketData.sma20).toEqual(imd.sma20)
 })
