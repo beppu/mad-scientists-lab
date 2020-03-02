@@ -39,10 +39,13 @@ beforeEach(() => {
 })
 
 test('EMA stream calculations should be consistent with EMA batch calculations', () => {
+  const period = 15
+  const key = `ema${period}`
+
   // stream calculation
   let md = ta.marketDataFromCandles([])
   let imd = ta.invertedMarketData(md)
-  const emaCalculator = ema(20)
+  const emaCalculator = ema(period)
   candles.forEach((c) => {
     md = ta.marketDataAppendCandle(md, c)
     imd = ta.invertedAppendCandle(imd, c)
@@ -51,12 +54,12 @@ test('EMA stream calculations should be consistent with EMA batch calculations',
 
   // batch calculation copied and adapted from bin/price
   const marketData         = ta.marketDataFromCandles(candles)
-  const indicatorSettings  = ta.id['ema'](marketData, 20)
+  const indicatorSettings  = ta.id['ema'](marketData, period)
   const r                  = talib.execute(indicatorSettings)
   const invertedMarketData = ta.invertedMarketData(marketData)
-  ta.invertedAppend(invertedMarketData, 'ema20', r.result.outReal)
+  ta.invertedAppend(invertedMarketData, key, r.result.outReal)
 
   // batch and stream should have the same values
-  // console.warn(invertedMarketData.ema20, imd.ema20)
-  expect(invertedMarketData.ema20).toEqual(imd.ema20)
+  // console.warn(invertedMarketData.emaperiod, imd.emaperiod)
+  expect(invertedMarketData[key]).toEqual(imd[key])
 })

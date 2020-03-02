@@ -9,24 +9,30 @@ const ta = require('../index')
  * @returns {Function} a function that takes marketData and invertedMarketData and appends an EMA calculation to it
  */
 module.exports = function emaFn(period) {
+  let lastEma
+  const multiplier = (2 / (period + 1))
+  const key = `ema${period}`
   return function(md, imd) {
     if (md.close.length < period) return imd
-    /*
-     Due to how EMA is calculated, it actually needs double the number of
-     candles to generate an accurate calculation in a streaming context. The
-     most recent EMA value recursively depends on the previous EMA value.
-     https://www.thebalance.com/simple-exponential-and-weighted-moving-averages-1031196
-    */
     const amd = ta.marketDataTakeLast(md, period * 2) // take the minimum number of periods to generate 1 value
-    const emaSettings = ta.id.ema(amd, period)
-    const ema = talib.execute(emaSettings)
-    const last = ema.result.outReal.slice(ema.result.outReal.length - 1) // take only the last value
-    const key = `ema${period}`
-    if (imd[key]) {
-      imd[key].unshift(last[0])
+    if (!lastEma) {
+      const emaSettings = ta.id.ema(amd, period)
+      const ema = talib.execute(emaSettings)
+      const last = ema.result.outReal.slice(ema.result.outReal.length - 1) // take only the last value
+      lastEma = last[0]
+      if (imd[key]) {
+        imd[key].unshift(last[0])
+      } else {
+        imd[key] = last
+      }
+      return imd
     } else {
-      imd[key] = last
+      // thanks to
+      // https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average
+      const newEma = lastEma + multiplier * (imd.close[0] - lastEma)
+      imd[key].unshift(newEma)
+      lastEma = newEma
+      return imd
     }
-    return imd
   }
 }
