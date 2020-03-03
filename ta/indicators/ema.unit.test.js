@@ -19,11 +19,12 @@ test('EMA stream calculations should be consistent with EMA batch calculations',
   // stream calculation
   let md = ta.marketDataFromCandles([])
   let imd = ta.invertedMarketData(md)
-  const emaCalculator = ema(period)
+  const [emaInsert, emaUpdate] = ema(period)
+  let state
   candles.forEach((c) => {
     md = ta.marketDataAppendCandle(md, c)
     imd = ta.invertedAppendCandle(imd, c)
-    emaCalculator(md, imd)
+    state = emaInsert(md, imd, state)
   })
 
   // batch calculation copied and adapted from bin/price
@@ -34,6 +35,6 @@ test('EMA stream calculations should be consistent with EMA batch calculations',
   ta.invertedAppend(invertedMarketData, key, r.result.outReal)
 
   // batch and stream should have the same values
-  // console.warn(invertedMarketData.emaperiod, imd.emaperiod)
+  //console.warn(invertedMarketData[key], imd[key])
   expect(invertedMarketData[key]).toEqual(imd[key])
 })

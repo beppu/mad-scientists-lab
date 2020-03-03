@@ -1,38 +1,44 @@
 const talib = require('talib')
 const ta = require('../index')
 
-// TODO - I want to try a support/resistance strategy with the 960 EMA.
-
 /**
- * Generate an EMA calculating function for the given period
+ * Generate functions for inserting and updating EMA into an InvertedMarketData struct
  * @param {Number} period - length of the simple moving average
- * @returns {Function} a function that takes marketData and invertedMarketData and appends an EMA calculation to it
+ * @returns {Array<Function>} an array with a function for inserting an EMA and a function for updating an EMA in that order
  */
 module.exports = function emaFn(period) {
-  let lastEma
   const multiplier = (2 / (period + 1))
   const key = `ema${period}`
-  return function(md, imd) {
+  const emaInsert = function(md, imd, state) {
     if (md.close.length < period) return imd
     const amd = ta.marketDataTakeLast(md, period * 2) // take the minimum number of periods to generate 1 value
-    if (!lastEma) {
+    if (!state.lastEma) {
       const emaSettings = ta.id.ema(amd, period)
       const ema = talib.execute(emaSettings)
       const last = ema.result.outReal.slice(ema.result.outReal.length - 1) // take only the last value
-      lastEma = last[0]
+      const newState = { lastEma: last[0] }
       if (imd[key]) {
         imd[key].unshift(last[0])
       } else {
         imd[key] = last
       }
-      return imd
+      return newState
     } else {
       // thanks to
       // https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average
+      let lastEma = state.lastEma
       const newEma = lastEma + multiplier * (imd.close[0] - lastEma)
       imd[key].unshift(newEma)
-      lastEma = newEma
-      return imd
+      const newState = { lastEma: newEma }
+      return newState
     }
   }
+  const emaUpdate = function(md, imd, state) {
+    let lastEma = state.lastEma
+    const newEma = lastEma + multiplier * (imd.close[0] - lastEma)
+    imd[key][0] = newEma
+    const newState = { lastEma: newEma }
+    return newState
+  }
+  return [emaInsert, emaUpdate]
 }
