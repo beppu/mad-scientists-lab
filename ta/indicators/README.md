@@ -90,17 +90,18 @@ I had tried it this way for streaming, but doing so prevents me from doing
 recalculation because each call of the closure mutates internal hidden state
 whereas I want to recalculate using the same state I used before. Recalculation
 of an unfinished candle is like being hypothetical. What if the candle closed
-like this? Recalculation is exploring possibilities before a candle is finished.
+like this? Recalculation is for exploring possibilities before a candle is
+finished.
 
 The new model is to return state as an object so that the caller can choose to
 reuse it or not at the caller's discretion. This lets me be hypothetical.
 
-## Notes on Initial Set of Indicators
+## Notes on the Initial Set of Indicators
 
 ### rsi.js
 
 RSI was the first indicator to implement the new streaming API. Since it uses
-Wilder's SMMA which is very similar to an EMA in how it's calculated, it really
+W.ilder's SMMA which is very similar to an EMA in how it's calculated, it really
 wanted a streaming implementation for both speed and accuracy.
 
 ### ema.js
@@ -113,6 +114,6 @@ calculated makes it desirable for speed and accuracy.
 These don't need a streaming implementation, because the data requirements for
 their calculations are constrained by their period lengths + 1. For the sake of
 my developer time, I can continue to use talib to calculate this without
-sacrificing accuracy. The sacrifice in speed relatively small too.  They will
+sacrificing accuracy. The sacrifice in speed is relatively small too. They will
 support the streaming API, but their internal implementation will continue to
 use talib for now.
