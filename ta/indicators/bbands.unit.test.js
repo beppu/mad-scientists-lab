@@ -16,11 +16,12 @@ test('BBANDS stream calculations should be consistent with BBANDS batch calculat
   // stream calculation
   let md = ta.marketDataFromCandles([])
   let imd = ta.invertedMarketData(md)
-  const bbandsCalculator = bbands(20)
+  const [bbandsInsert, bbandsUpdate] = bbands(20)
+  let state
   candles.forEach((c) => {
     md = ta.marketDataAppendCandle(md, c)
     imd = ta.invertedAppendCandle(imd, c)
-    bbandsCalculator(md, imd)
+    state = bbandsInsert(md, imd, state)
   })
 
   // batch calculation copied and adapted from bin/price
@@ -34,7 +35,7 @@ test('BBANDS stream calculations should be consistent with BBANDS batch calculat
 
   // batch and stream should have the same values
   // console.warn(invertedMarketData.bbands20, imd.bbands20)
-  expect(invertedMarketData.upperBand).toEqual(imd.upperBand20)
-  expect(invertedMarketData.middleBand).toEqual(imd.middleBand20)
-  expect(invertedMarketData.lowerBand).toEqual(imd.lowerBand20)
+  expect(invertedMarketData.upperBand).toEqual(imd.upperBand)
+  expect(invertedMarketData.middleBand).toEqual(imd.middleBand)
+  expect(invertedMarketData.lowerBand).toEqual(imd.lowerBand)
 })

@@ -1,25 +1,39 @@
 const talib = require('talib')
 const ta = require('../index')
 
-// TODO - I want to try a support/resistance strategy with the 960 SMA.
+function keySuffix(period) {
+  if (period === 20) {
+    return ''
+  } else {
+    return period.toString()
+  }
+}
+
+const EMPTY_STATE = {}
 
 /**
- * Generate an BBANDS calculating function for the given period
+ * Generate functions for inserting and updating Bollinger Band data into invertedMarketData
  * @param {Number} period - length of the simple moving average
- * @returns {Function} a function that takes marketData and invertedMarketData and appends an BBANDS calculation to it
+ * @returns {Array<Function>} An array of two functions for inserting and updating data
  */
 module.exports = function bbandsFn(period) {
-  return function(md, imd) {
-    if (md.close.length < period) return imd
+  const key1 = `upperBand${keySuffix(period)}`
+  const key2 = `middleBand${keySuffix(period)}`
+  const key3 = `lowerBand${keySuffix(period)}`
+
+  const bbandsIterate = function(md) {
     const amd = ta.marketDataTakeLast(md, period) // take the minimum number of periods to generate 1 value
     const bbandsSettings = ta.id.bbands(amd, period)
     const bbands = talib.execute(bbandsSettings)
     const lastUpperBand = bbands.result.outRealUpperBand.slice(bbands.result.outRealUpperBand.length - 1) // take only the last value
     const lastMiddleBand = bbands.result.outRealMiddleBand.slice(bbands.result.outRealMiddleBand.length - 1) // take only the last value
     const lastLowerBand = bbands.result.outRealLowerBand.slice(bbands.result.outRealLowerBand.length - 1) // take only the last value
-    const key1 = `upperBand${period}`
-    const key2 = `middleBand${period}`
-    const key3 = `lowerBand${period}`
+    return { lastUpperBand, lastMiddleBand, lastLowerBand }
+  }
+
+  const bbandsInsert = function(md, imd) {
+    if (md.close.length < period) return undefined
+    const {lastUpperBand, lastMiddleBand, lastLowerBand} = bbandsIterate(md)
     if (imd[key1]) {
       imd[key1].unshift(lastUpperBand[0])
       imd[key2].unshift(lastMiddleBand[0])
@@ -29,7 +43,16 @@ module.exports = function bbandsFn(period) {
       imd[key2] = lastMiddleBand
       imd[key3] = lastLowerBand
     }
-    return imd
+    return EMPTY_STATE
   }
+
+  const bbandsUpdate = function(md, imd) {
+    const {lastUpperBand, lastMiddleBand, lastLowerBand} = bbandsIterate(md)
+    imd[key1][0] = lastUpperBand[0]
+    imd[key2][0] = lastMiddleBand[0]
+    imd[key3][0] = lastLowerBand[0]
+    return EMPTY_STATE
+  }
+  return [bbandsInsert, bbandsUpdate]
 }
 
