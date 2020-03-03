@@ -15,7 +15,7 @@ beforeEach(() => {
 test('RSI stream calculations should be consistent with RSI batch calculations', () => {
   // stream calculation
   const period = 14
-  const key = `rsi${period}`
+  const key = `rsi`
   let md = ta.marketDataFromCandles([])
   let imd = ta.invertedMarketData(md)
   //const rsiCalculator = rsi(period)
@@ -32,7 +32,7 @@ test('RSI stream calculations should be consistent with RSI batch calculations',
   const indicatorSettings  = ta.id['rsi'](marketData, period)
   const r                  = talib.execute(indicatorSettings)
   const invertedMarketData = ta.invertedMarketData(marketData)
-  ta.invertedAppend(invertedMarketData, `rsi${period}`, r.result.outReal)
+  ta.invertedAppend(invertedMarketData, key, r.result.outReal)
 
   // batch and stream should have the same values
   //console.warn(invertedMarketData[key], imd[key])

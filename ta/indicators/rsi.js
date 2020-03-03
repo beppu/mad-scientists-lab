@@ -1,12 +1,25 @@
 const ta = require('../index')
 
 /**
+ * Return the key to use in invertedMarketData
+ * @param {Number} period - length of the simple moving average
+ * @returns {String} name of the key to use in invertedMarketData
+ */
+function keyName(period) {
+  if (period === 14) {
+    return 'rsi'
+  } else {
+    return `rsi${period}`
+  }
+}
+
+/**
  * Generate an RSI calculating function for the given period
  * @param {Number} period - length of the simple moving average
  * @returns {Function} a function that takes marketData and invertedMarketData and appends an EMA calculation to it
  */
 module.exports = function rsiFn(period) {
-  const key = `rsi${period}`
+  const key = keyName(period)
 
   // Calculate RSI for every iteration after the first one.
   const rsiIterate = function(md, state) {
