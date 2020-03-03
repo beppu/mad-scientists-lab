@@ -31,7 +31,7 @@ module.exports = function bbandsFn(period) {
     return { lastUpperBand, lastMiddleBand, lastLowerBand }
   }
 
-  const bbandsInsert = function(md, imd) {
+  const bbandsInsert = function(md, imd, state) {
     if (md.close.length < period) return undefined
     const {lastUpperBand, lastMiddleBand, lastLowerBand} = bbandsIterate(md)
     if (imd[key1]) {
@@ -46,7 +46,7 @@ module.exports = function bbandsFn(period) {
     return EMPTY_STATE
   }
 
-  const bbandsUpdate = function(md, imd) {
+  const bbandsUpdate = function(md, imd, state) {
     const {lastUpperBand, lastMiddleBand, lastLowerBand} = bbandsIterate(md)
     imd[key1][0] = lastUpperBand[0]
     imd[key2][0] = lastMiddleBand[0]
