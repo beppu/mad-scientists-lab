@@ -3,26 +3,43 @@ const ta = require('../index')
 
 // TODO - I want to try a support/resistance strategy with the 960 SMA.
 
+const EMPTY_STATE = {}
+
 /**
  * Generate an SMA calculating function for the given period
  * @param {Number} period - length of the simple moving average
  * @returns {Function} a function that takes marketData and invertedMarketData and appends an SMA calculation to it
  */
 module.exports = function smaFn(period) {
-  return function(md, imd) {
-    if (md.close.length < period) return imd
+  const key = `sma${period}`
+
+  const rsiIterate = function(md) {
     const amd = ta.marketDataTakeLast(md, period) // take the minimum number of periods to generate 1 value
     const smaSettings = ta.id.sma(amd, period)
     const sma = talib.execute(smaSettings)
     const last = sma.result.outReal.slice(sma.result.outReal.length - 1) // take only the last value
-    const key = `sma${period}`
+    return last
+  }
+
+  const rsiInsert = function(md, imd, state) {
+    if (md.close.length < period) return undefined
+    const last = rsiIterate(md)
     if (imd[key]) {
       imd[key].unshift(last[0])
     } else {
       imd[key] = last
     }
-    return imd
+    return EMPTY_STATE
   }
+
+  const rsiUpdate = function(md, imd, state) {
+    const last = rsiIterate(md)
+    const key = `sma${period}`
+    imd[key][0] = last[0]
+    return EMPTY_STATE
+  }
+
+  return [rsiInsert, rsiUpdate]
 }
 
 /*

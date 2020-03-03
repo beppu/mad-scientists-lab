@@ -16,28 +16,29 @@ test('An SMA value should not be calculated if the number of candles is insuffic
   const md = ta.marketDataFromCandles(candles)
   const md2 = ta.marketDataTake(md, 19)
   let imd2 = ta.invertedMarketData(md2)
-  const smaCalculator = sma(20)
-  smaCalculator(md2, imd2)
-  expect(imd2.sma2).toBeUndefined()
+  const [smaInsert, smaUpdate] = sma(20)
+  smaInsert(md2, imd2)
+  expect(imd2.sma20).toBeUndefined()
 })
 
 test('An SMA value should be calculated if the number of candles is sufficent', () => {
   const md = ta.marketDataFromCandles(candles)
   const md2 = ta.marketDataTake(md, 20)
   let imd2 = ta.invertedMarketData(md2)
-  const smaCalculator = sma(20)
-  smaCalculator(md2, imd2)
+  const [smaInsert, smaUpdate] = sma(20)
+  smaInsert(md2, imd2)
   expect(imd2.sma20).toBeDefined()
 })
 
 test('SMA values should be appended as new candles arrive', () => {
   let md = ta.marketDataFromCandles([])
   let imd = ta.invertedMarketData(md)
-  const smaCalculator = sma(20)
+  const [smaInsert, smaUpdate] = sma(20)
+  let state
   candles.forEach((c) => {
     md = ta.marketDataAppendCandle(md, c)
     imd = ta.invertedAppendCandle(imd, c)
-    smaCalculator(md, imd)
+    state = smaInsert(md, imd, state)
   })
   // 20 to 25 inclusive which should be 6 values
   const correctSMALength = candles.length - 20 + 1
@@ -53,11 +54,12 @@ test('SMA stream calculations should be consistent with SMA batch calculations',
   // stream calculation
   let md = ta.marketDataFromCandles([])
   let imd = ta.invertedMarketData(md)
-  const smaCalculator = sma(20)
+  const [smaInsert, smaUpdate] = sma(20)
+  let state
   candles.forEach((c) => {
     md = ta.marketDataAppendCandle(md, c)
     imd = ta.invertedAppendCandle(imd, c)
-    smaCalculator(md, imd)
+    state = smaInsert(md, imd, state)
   })
 
   // batch calculation copied and adapted from bin/price
