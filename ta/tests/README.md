@@ -13,18 +13,22 @@ Data used for testing will live under `tests/fixtures/`.
 
 # Running Tests
 
+Run these from the project root (one directory back).
+
+
 ```sh
+# Run all tests
 yarn test
 
-# Or
+# Or run all tests verbosely
 
 jest --verbose
 
-# Or
+# Or run one test verbosely
 
-jest --verbose ../index.unit.test.js
+jest --verbose index.unit.test.js
 
-# Or
+# Or run all tests verbosely and rerun tests when files change
 
 jest --verbose --watch
 ```
