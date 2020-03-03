@@ -1,4 +1,3 @@
-const talib = require('talib')
 const ta = require('../index')
 
 /**
@@ -7,23 +6,96 @@ const ta = require('../index')
  * @returns {Function} a function that takes marketData and invertedMarketData and appends an EMA calculation to it
  */
 module.exports = function rsiFn(period) {
-  return function(md, imd) {
-    if (md.close.length < period) return imd
+  const key = `rsi${period}`
+
+  // Calculate RSI for every iteration after the first one.
+  const rsiIterate = function(md, state) {
+    // ported from talib's ta_RSI.c
+    // https://github.com/oransel/node-talib/blob/master/src/lib/src/ta_func/ta_RSI.c#L396-L411
+    // that's why it's so mutatey
+    let prevLoss = state.avgD
+    let prevGain = state.avgU
+    let last = md.close.length - 1
+    let tempValue2 = md.close[last] - md.close[last - 1]
+    prevLoss *= (period - 1)
+    prevGain *= (period - 1)
+    if (tempValue2 < 0) {
+      prevLoss -= tempValue2
+    } else {
+      prevGain += tempValue2
+    }
+    prevLoss /= period
+    prevGain /= period
+    let tempValue1 = prevGain + prevLoss
+    let rsiValue = 100*(prevGain/tempValue1)
+    const newState = { rsiValue, avgU: prevGain, avgD: prevLoss }
+    return newState
+  }
+
+  // Insert a new candle to imd
+  const rsiCalculate = function(md, imd, state) {
     /*
       For RSI, you're supposed to need one candle more than the period length.
       https://www.macroption.com/rsi-calculation/
-      However, I seem to need more.
-     */
-    const amd = ta.marketDataTakeLast(md, period*2) // take the minimum number of periods to generate 1 value
-    const rsiSettings = ta.id.rsi(amd, period)
-    const rsi = talib.execute(rsiSettings)
-    const last = rsi.result.outReal.slice(rsi.result.outReal.length - 1) // take only the last value
-    const key = `rsi${period}`
-    if (imd[key]) {
-      imd[key].unshift(last[0])
+    */
+    if (md.close.length < period+1) return undefined
+    const amd = ta.marketDataTakeLast(md, period+1) // take the minimum number of periods to generate 1 value
+    let rsiValue
+    //console.log(arguments)
+    if (typeof state === 'undefined') {
+      // first time
+      const ud = upsAndDowns(amd.close)
+      const sumU = ud.up.reduce((m, a) => m + a)
+      const sumD = ud.down.reduce((m, a) => m + a)
+      const avgU = sumU / period
+      const avgD = sumD / period
+      const rs = avgU / avgD
+      const rsiValue = 100 - (100 / (1 + rs))
+      imd[key] = [ rsiValue ]
+      const newState = { rsiValue, avgU, avgD }
+      //console.log('first time', newState)
+      return newState
     } else {
-      imd[key] = last
+      // new candle on timeframe boundary
+      const newState = rsiIterate(md, state)
+      //console.log('next time', newState)
+      imd[key].unshift(newState.rsiValue)
+      return newState
     }
-    return imd
   }
+
+  // Overwrite last RSI value in imd
+  const rsiRecalculate = function(md, imd, state) {
+    const newState = rsiIterate(md, state)
+    imd[key][0] = newState.rsiValue
+    return newState
+  }
+  return [rsiCalculate, rsiRecalculate]
 }
+
+/**
+ * Calculate up and down values for RSI
+ * @param {Array<Candle>} candles - An array of candles in chronoligical order
+ * @returns {Object<String,Array<Number>>} An object containing up and down arrays
+ */
+function upsAndDowns(closes) {
+  const up = []
+  const down = []
+  let last
+  closes.forEach((close) => {
+    if (last === undefined) {
+      last = close
+    } else {
+      if (close < last) {
+        down.push(last - close)
+        up.push(0)
+      } else {
+        up.push(close - last)
+        down.push(0)
+      }
+      last = close
+    }
+  })
+  return {up, down}
+}
+

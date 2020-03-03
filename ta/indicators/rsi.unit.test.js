@@ -18,11 +18,13 @@ test('RSI stream calculations should be consistent with RSI batch calculations',
   const key = `rsi${period}`
   let md = ta.marketDataFromCandles([])
   let imd = ta.invertedMarketData(md)
-  const rsiCalculator = rsi(period)
+  //const rsiCalculator = rsi(period)
+  const [rsiCalculate, rsiRecalculate] = rsi(period)
+  let state = undefined
   candles.forEach((c) => {
     md = ta.marketDataAppendCandle(md, c)
     imd = ta.invertedAppendCandle(imd, c)
-    rsiCalculator(md, imd)
+    state = rsiCalculate(md, imd, state)
   })
 
   // batch calculation copied and adapted from bin/price
@@ -33,6 +35,6 @@ test('RSI stream calculations should be consistent with RSI batch calculations',
   ta.invertedAppend(invertedMarketData, `rsi${period}`, r.result.outReal)
 
   // batch and stream should have the same values
-  console.warn(invertedMarketData[key], imd[key])
-  //expect(invertedMarketData[key]).toEqual(imd[key])
+  //console.warn(invertedMarketData[key], imd[key])
+  expect(invertedMarketData[key]).toEqual(imd[key])
 })
