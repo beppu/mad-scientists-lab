@@ -79,6 +79,7 @@ module.exports = function rsiFn(period) {
 
   // Overwrite last RSI value in imd
   const rsiUpdate = function(md, imd, state) {
+    if (md.close.length < period+2) return undefined
     const newState = rsiIterate(md, state)
     imd[key][0] = newState.rsiValue
     return newState

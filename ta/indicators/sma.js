@@ -33,6 +33,7 @@ module.exports = function smaFn(period) {
   }
 
   function smaUpdate(md, imd, state) {
+    if (md.close.length < period+1) return undefined
     const last = smaIterate(md)
     const key = `sma${period}`
     imd[key][0] = last[0]

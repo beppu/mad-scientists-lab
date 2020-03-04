@@ -10,9 +10,9 @@ module.exports = function emaFn(period) {
   const multiplier = (2 / (period + 1))
   const key = `ema${period}`
   function emaInsert(md, imd, state) {
-    if (md.close.length < period) return imd
+    if (md.close.length < period) return undefined
     const amd = ta.marketDataTakeLast(md, period * 2) // take the minimum number of periods to generate 1 value
-    if (!state.lastEma) {
+    if (!state) {
       const emaSettings = ta.id.ema(amd, period)
       const ema = talib.execute(emaSettings)
       const last = ema.result.outReal.slice(ema.result.outReal.length - 1) // take only the last value
@@ -34,6 +34,7 @@ module.exports = function emaFn(period) {
     }
   }
   function emaUpdate(md, imd, state) {
+    if (md.close.length < period+1) return undefined
     let lastEma = state.lastEma
     const newEma = lastEma + multiplier * (imd.close[0] - lastEma)
     imd[key][0] = newEma
