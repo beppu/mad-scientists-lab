@@ -89,8 +89,44 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
       const [name, ...params] = spec
       state[indicatorsKey].push(indicators[name](...params))
     })
+
+    const aggregatorKey = `aggregator${tf}`
+    if (baseTimeframe === tf) {
+      state[aggregatorKey] = undefined
+    } else {
+      state[aggregatorKey] = aggregatorFn(tf)
+    }
   })
+
+  let lastTimestamp
   return function(candle) {
+    if (lastTimestamp === candle[0]) {
+    } else {
+      timeframes.forEach((tf) => {
+        const imdKey  = `imd${tf}`
+        const mdKey   = `md${tf}`
+        const imd = state[imdKey]
+        const md = state[mdKey]
+        ta.marketDataAppendCandle(md, candle)
+        ta.invertedAppendCandle(imd, candle)
+
+        const aggregatorKey = `aggregator${tf}`
+        const aggregator = state[aggregatorKey]
+        const [candleForTf, isBoundaryForTf] = aggregator
+          ? aggregator(candle)
+          : [candle, true]
+
+        const indicatorsKey = `indicators${tf}`
+        state[indicatorsKey].forEach(([insert, update, indicatorState], i) => {
+          if (isBoundaryForTf) {
+            let newIndicatorState = insert(md, imd, indicatorState)
+            state[indicatorsKey][i][2] = newIndicatorState
+          } else {
+            update(md, imd, indicatorState)
+          }
+        })
+      })
+    }
     return state
   }
 }
