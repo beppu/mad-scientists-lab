@@ -3,6 +3,7 @@ const fs = Bluebird.promisifyAll(require('fs'))
 const ta = require('./index')
 const time = require('./time')
 const utils = require('./utils')
+const indicators = require('./indicators')
 
 async function loadOHLCV(filename) {
   const buffer = await fs.readFileAsync(filename)
@@ -65,6 +66,35 @@ function aggregatorFn(desiredTimeframe) {
   }
 }
 
+/**
+ * Return a loop function that consumes candles and updates indicators
+ * @param {String} baseTimeframe - the timeframe of the candles being fed into the loop
+ * @param {IndicatorSpec} indicatorSpecs - Parameter description.
+ * @returns {Function} Return description.
+ */
+function mainLoopFn(baseTimeframe, indicatorSpecs) {
+  const state = {
+    baseTimeframe
+  }
+  const timeframes = Object.keys(indicatorSpecs)
+  timeframes.forEach((tf) => {
+    const imdKey  = `imd${tf}`
+    const mdKey   = `md${tf}`
+    state[mdKey]  = { timestamp: [], open: [], high: [], low: [], close: [], volume: [] } // empty marketData
+    state[imdKey] = { timestamp: [], open: [], high: [], low: [], close: [], volume: [] } // empty invertedMarketData
+
+    const indicatorsKey = `indicators${tf}`
+    state[indicatorsKey] = []
+    indicatorSpecs[tf].forEach((spec) => {
+      const [name, ...params] = spec
+      state[indicatorsKey].push(indicators[name](...params))
+    })
+  })
+  return function(candle) {
+    return state
+  }
+}
+
 // What's a nice API for declaring that I want stuff calculdated on various timeframes
 /*
 
@@ -105,4 +135,5 @@ module.exports = {
   loadCandlesFromFS,
   mergeCandle,
   aggregatorFn,
+  mainLoopFn,
 }
