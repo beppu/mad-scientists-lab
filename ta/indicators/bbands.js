@@ -21,7 +21,7 @@ module.exports = function bbandsFn(period) {
   const key2 = `middleBand${keySuffix(period)}`
   const key3 = `lowerBand${keySuffix(period)}`
 
-  const bbandsIterate = function(md) {
+  function bbandsIterate(md) {
     const amd = ta.marketDataTakeLast(md, period) // take the minimum number of periods to generate 1 value
     const bbandsSettings = ta.id.bbands(amd, period)
     const bbands = talib.execute(bbandsSettings)
@@ -31,7 +31,7 @@ module.exports = function bbandsFn(period) {
     return { lastUpperBand, lastMiddleBand, lastLowerBand }
   }
 
-  const bbandsInsert = function(md, imd, state) {
+  function bbandsInsert(md, imd, state) {
     if (md.close.length < period) return undefined
     const {lastUpperBand, lastMiddleBand, lastLowerBand} = bbandsIterate(md)
     if (imd[key1]) {
@@ -46,7 +46,7 @@ module.exports = function bbandsFn(period) {
     return EMPTY_STATE
   }
 
-  const bbandsUpdate = function(md, imd, state) {
+  function bbandsUpdate(md, imd, state) {
     const {lastUpperBand, lastMiddleBand, lastLowerBand} = bbandsIterate(md)
     imd[key1][0] = lastUpperBand[0]
     imd[key2][0] = lastMiddleBand[0]

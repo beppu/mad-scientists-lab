@@ -9,7 +9,7 @@ const ta = require('../index')
 module.exports = function emaFn(period) {
   const multiplier = (2 / (period + 1))
   const key = `ema${period}`
-  const emaInsert = function(md, imd, state) {
+  function emaInsert(md, imd, state) {
     if (md.close.length < period) return imd
     const amd = ta.marketDataTakeLast(md, period * 2) // take the minimum number of periods to generate 1 value
     if (!state.lastEma) {
@@ -33,7 +33,7 @@ module.exports = function emaFn(period) {
       return newState
     }
   }
-  const emaUpdate = function(md, imd, state) {
+  function emaUpdate(md, imd, state) {
     let lastEma = state.lastEma
     const newEma = lastEma + multiplier * (imd.close[0] - lastEma)
     imd[key][0] = newEma

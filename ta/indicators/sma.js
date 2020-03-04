@@ -13,7 +13,7 @@ const EMPTY_STATE = {}
 module.exports = function smaFn(period) {
   const key = `sma${period}`
 
-  const rsiIterate = function(md) {
+  function smaIterate(md) {
     const amd = ta.marketDataTakeLast(md, period) // take the minimum number of periods to generate 1 value
     const smaSettings = ta.id.sma(amd, period)
     const sma = talib.execute(smaSettings)
@@ -21,9 +21,9 @@ module.exports = function smaFn(period) {
     return last
   }
 
-  const rsiInsert = function(md, imd, state) {
+  function smaInsert(md, imd, state) {
     if (md.close.length < period) return undefined
-    const last = rsiIterate(md)
+    const last = smaIterate(md)
     if (imd[key]) {
       imd[key].unshift(last[0])
     } else {
@@ -32,14 +32,14 @@ module.exports = function smaFn(period) {
     return EMPTY_STATE
   }
 
-  const rsiUpdate = function(md, imd, state) {
-    const last = rsiIterate(md)
+  function smaUpdate(md, imd, state) {
+    const last = smaIterate(md)
     const key = `sma${period}`
     imd[key][0] = last[0]
     return EMPTY_STATE
   }
 
-  return [rsiInsert, rsiUpdate]
+  return [smaInsert, smaUpdate]
 }
 
 /*

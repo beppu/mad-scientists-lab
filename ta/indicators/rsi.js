@@ -46,7 +46,7 @@ module.exports = function rsiFn(period) {
   }
 
   // Insert a new candle to imd
-  const rsiCalculate = function(md, imd, state) {
+  const rsiInsert = function(md, imd, state) {
     /*
       For RSI, you're supposed to need one candle more than the period length.
       https://www.macroption.com/rsi-calculation/
@@ -78,12 +78,12 @@ module.exports = function rsiFn(period) {
   }
 
   // Overwrite last RSI value in imd
-  const rsiRecalculate = function(md, imd, state) {
+  const rsiUpdate = function(md, imd, state) {
     const newState = rsiIterate(md, state)
     imd[key][0] = newState.rsiValue
     return newState
   }
-  return [rsiCalculate, rsiRecalculate]
+  return [rsiInsert, rsiUpdate]
 }
 
 /**
