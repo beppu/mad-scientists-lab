@@ -1,4 +1,6 @@
 # Strategies
 
-A strategy is a combination of buying and selling techniques.
-Think of **technique** as a composable microstrategy for buying and selling.
+Strategy is a pure function.
+It's job is to take market data and decide whether to buy or sell.
+How it does arrives at that decision is up to you.
+
