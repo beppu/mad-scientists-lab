@@ -89,6 +89,17 @@ function marketDataAppendCandle(marketData, candle) {
   return marketData
 }
 
+function marketDataUpdateCandle(marketData, candle) {
+  const last = marketData.timestamp.length ? marketData.timestamp.length - 1 : 0
+  //marketData.timestamp[last] = candle.timestamp // should be same value so skip
+  marketData.open[last] = candle[1]
+  marketData.high[last] = candle[2]
+  marketData.low[last] = candle[3]
+  marketData.close[last] = candle[4]
+  marketData.volume[last] = candle[5]
+  return marketData
+}
+
 /**
  * Reduce marketData to its first n values
  * @param {MarketData} marketData - a MarketData structure
@@ -299,6 +310,7 @@ module.exports = {
   loadCandles,
   marketDataFromCandles,
   marketDataAppendCandle,
+  marketDataUpdateCandle,
   marketDataTake,
   marketDataTakeLast,
   invertedMarketData,

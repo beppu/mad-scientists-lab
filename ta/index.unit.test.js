@@ -32,3 +32,9 @@ test('ta.marketDataTakeLast should be allowed to ask for more than what is avail
   const mdTooMuch = ta.marketDataTakeLast(md, candles.length * 2)
   expect(mdTooMuch.close).toEqual(md.close)
 })
+
+test('ta.marketDataUpdateCandle should insert a value when called against an empty marketData struct', () => {
+  const md = ta.marketDataFromCandles([])
+  ta.marketDataUpdateCandle(md, candles[0])
+  expect(md.close).toHaveLength(1)
+})

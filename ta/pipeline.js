@@ -32,18 +32,23 @@ async function loadCandlesFromFS(dataDir, exchange, market, timeframe) {
   }
 }
 
+/**
+ * This function leaves timestamp and open alone, but updates high, low, close and volume as necessary.
+ * @param {Array<Number>} lastCandle - the previous candle
+ * @param {Array<Number>} candle - the current candle
+ * @returns {Array<Number>} a merged candle
+ */
 function mergeCandle(lastCandle, candle) {
-  const close = candle[4];
-  const newCandle = [...lastCandle];
-  if (newCandle[2] < close) {
-    newCandle[2] = close;
-  }
-  if (newCandle[3] > close) {
-    newCandle[3] = close;
-  }
-  newCandle[4] = close;
-  const newVolume = lastCandle[5] + newCandle[5];
-  newCandle[5] = newVolume;
+  const newCandle = [
+    lastCandle[0],  // timestamp
+    lastCandle[1],  // open
+    0,              // high
+    0,              // low
+    candle[4],      // close
+    lastCandle[5] + candle[5] // volume
+  ]
+  newCandle[2] = lastCandle[2] > candle[2] ? lastCandle[2] : candle[2]
+  newCandle[3] = lastCandle[3] < candle[3] ? lastCandle[3] : candle[3]
   return newCandle;
 }
 
