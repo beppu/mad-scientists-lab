@@ -33,3 +33,6 @@ global.binance = new ccxt.binance()
 
 // Where I like to store my temporary results from async functions.
 global.x = {}
+
+// I use this test fixture a lot
+global.candles = require('./tests/fixtures/candles.json')
