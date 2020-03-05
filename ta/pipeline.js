@@ -1,5 +1,6 @@
 const Bluebird = require('bluebird')
 const fs = Bluebird.promisifyAll(require('fs'))
+const uniq = require('lodash.uniq')
 const ta = require('./index')
 const time = require('./time')
 const utils = require('./utils')
@@ -81,7 +82,7 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
   const state = {
     baseTimeframe
   }
-  const timeframes = Object.keys(indicatorSpecs)
+  const timeframes = uniq([baseTimeframe].concat(Object.keys(indicatorSpecs)))
   timeframes.forEach((tf) => {
     const imdKey  = `imd${tf}`
     const mdKey   = `md${tf}`
@@ -112,14 +113,20 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
         const mdKey   = `md${tf}`
         const imd = state[imdKey]
         const md = state[mdKey]
-        ta.marketDataAppendCandle(md, candle)
-        ta.invertedAppendCandle(imd, candle)
 
         const aggregatorKey = `aggregator${tf}`
         const aggregator = state[aggregatorKey]
         const [candleForTf, isBoundaryForTf] = aggregator
           ? aggregator(candle)
           : [candle, true]
+
+        if (isBoundaryForTf) {
+          ta.marketDataAppendCandle(md, candleForTf)
+          ta.invertedAppendCandle(imd, candleForTf)
+        } else {
+          ta.marketDataUpdateCandle(md, candleForTf)
+          ta.invertedUpdateCandle(imd, candleForTf)
+        }
 
         const indicatorsKey = `indicators${tf}`
         state[indicatorsKey].forEach(([insert, update, indicatorState], i) => {
