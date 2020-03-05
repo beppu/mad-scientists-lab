@@ -92,7 +92,7 @@ function marketDataAppendCandle(marketData, candle) {
 function marketDataUpdateCandle(marketData, candle) {
   const last = marketData.timestamp.length ? marketData.timestamp.length - 1 : 0
   //marketData.timestamp[last] = candle.timestamp // should be same value so skip
-  marketData.open[last] = candle[1]
+  //marketData.open[last] = candle[1] // also skip, because open shouldn't change either.
   marketData.high[last] = candle[2]
   marketData.low[last] = candle[3]
   marketData.close[last] = candle[4]
@@ -184,6 +184,21 @@ function invertedAppendCandle(invertedMarketData, candle) {
   invertedMarketData.low.unshift(candle[3])
   invertedMarketData.close.unshift(candle[4])
   invertedMarketData.volume.unshift(candle[5])
+  return invertedMarketData
+}
+
+/**
+ * Update the most recent candle in invertedMarketData
+ * @param {InvertedMarketData} invertedMarketData - an invertedMarketData struct
+ * @param {Candle} candle                         - one updated candle
+ * @returns {InvertedMarketData} an updated invertedMarketData struct
+ */
+function invertedUpdateCandle(invertedMarketData, candle) {
+  // leave timestamp and open alone
+  invertedMarketData.high[0] = candle[2]
+  invertedMarketData.low[0] = candle[3]
+  invertedMarketData.close[0] = candle[4]
+  invertedMarketData.volume[0] = candle[5]
   return invertedMarketData
 }
 
@@ -316,6 +331,7 @@ module.exports = {
   invertedMarketData,
   invertedAppend,
   invertedAppendCandle,
+  invertedUpdateCandle,
   invertedCandles,
   scan,
   id,
