@@ -72,3 +72,8 @@ test("Aggregation should combine candles correctly", () => {
   // volume
   expect(candle2h[5]).toEqual(candles[0][5] + candles[1][5])
 })
+
+test("pipeline.mainLoopFn should be able to take an empty indicatorSpecs", () => {
+  let state
+  const s = pipeline.mainLoopFn('1h', {  })
+})

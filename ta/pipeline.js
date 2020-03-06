@@ -91,10 +91,13 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
 
     const indicatorsKey = `indicators${tf}`
     state[indicatorsKey] = []
-    indicatorSpecs[tf].forEach((spec) => {
-      const [name, ...params] = spec
-      state[indicatorsKey].push(indicators[name](...params))
-    })
+    const iSpecs = indicatorSpecs[tf]
+    if (iSpecs) {
+      iSpecs.forEach((spec) => {
+        const [name, ...params] = spec
+        state[indicatorsKey].push(indicators[name](...params))
+      })
+    }
 
     const aggregatorKey = `aggregator${tf}`
     if (baseTimeframe === tf) {
