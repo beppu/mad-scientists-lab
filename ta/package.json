@@ -9,6 +9,7 @@
     "bluebird": "^3.5.5",
     "cache-all": "^2.0.4",
     "ccxt": "^1.22.55",
+    "clone": "^2.1.2",
     "commander": "^3.0.1",
     "dotenv": "^8.1.0",
     "json-beautify": "^1.1.1",
