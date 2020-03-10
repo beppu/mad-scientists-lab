@@ -79,6 +79,44 @@ the same options and environment variables though.
 
 # Blog
 
+## 2020-03-10 Progress on Automated Trading
+
+Almost out of necessity, I've started taking auotmated trading more seriously in
+the last two weeks.  I still believe that strategy should be a function, and as of
+today, I've built the subsystem that can feed these strategy functions data.  This
+should be sufficient for backtesting strategies, and it's also a good foundation to
+build a forward testing and live trading system as well.
+
+I've done so much since the last entry
+
+- Out of necessity, I can do streaming indicator calculations now.
+- Candle aggregation is working
+- Streaming indicator calculation while aggregating candles is working.
+- I've learned how to use jest for unit tests.
+
+Tangentially related,
+
+- I can detect divergence.
+- I can detect Guppy EMA color changes.
+- I can calculate EMA and RSI without talib.  (For EMA, I still use it for the initial values, but I don't have to.)
+
+I have most of what I need to start writing strategies.  However, one big missing
+piece is a simulated exchange that takes signals from the strategy and executes paper trades.
+That should be my next priority -- a simulated exchange.
+
+This makes me think about state.
+
+The state that pipeline.mainLoopFn calculates represents the state of the market.
+However, a strategy can have its own state.  As the market moves, the strategy may change
+biases between long and short.  It can also decide to place an order, and the order may or
+may not fill.  The exchange needs to give feedback back to the strategy about order status.
+If an order is filled, a strategy may then employ a substrategy for closing the open position.
+A strategy could have a lot of state of its own.
+
+```
+[orders, strategyState] = strategy(strategyState, marketState)
+```
+
 ## 2020-01-11 How Should Trade Execution Engine Work?
 
 I have this recurring thought that analysis and trade execution is just a pure
