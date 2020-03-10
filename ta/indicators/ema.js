@@ -41,5 +41,5 @@ module.exports = function emaFn(period) {
     const newState = { lastEma: newEma }
     return newState
   }
-  return [emaInsert, emaUpdate]
+  return [emaInsert, emaUpdate, key]
 }
