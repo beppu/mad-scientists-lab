@@ -223,8 +223,23 @@ function invertedCandles(imd, indices) {
   }, [])
 }
 
+
+/**
+ * Go one candle back in time by removing the last index non-destructively from marketData and return the result
+ * @param {MarketData} md - current market data
+ * @returns {MarketData} previous market data
+ */
+function _previousMd(md) {
+  const newMd = {}
+  Object.keys(md).forEach((k) => {
+    const series = md[k].slice(0, md[k].length - 1)
+    newMd[k] = series
+  })
+  return newMd
+}
+
 // Go one candle back in time by removing index 0 non-destructively from invertedMarketData and return the result.
-function _previous(imd) {
+function _previousImd(imd) {
   const newImd = {}
   Object.keys(imd).forEach((k) => {
     const series = imd[k].slice(1)
@@ -234,14 +249,14 @@ function _previous(imd) {
 }
 
 /**
- * Return and imd that's $candles candles in the past.
+ * Return an imd that's $candles candles in the past.
  * @param {Object<Array<Number>>} imd - Parameter description.
  * @param {Number} candles - Parameter description.
  * @returns {Object<Array<Number>>} Return description.
  */
 function _goBack(imd, candles) {
   if (candles > 0) {
-    return _goBack(_previous(imd), candles - 1)
+    return _goBack(_previousImd(imd), candles - 1)
   } else {
     return imd
   }
@@ -273,7 +288,7 @@ function scan(imd, matchFn) {
       }
     }
     //if (results.length > 0) break
-    current = _previous(current)
+    current = _previousImd(current)
   }
   return results
 }
@@ -335,7 +350,8 @@ module.exports = {
   invertedCandles,
   scan,
   id,
-  _previous,
+  _previousMd,
+  _previousImd,
   _goBack
 };
 
