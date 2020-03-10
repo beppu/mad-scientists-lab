@@ -110,6 +110,7 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
   let lastTimestamp
   return function(candle) {
     if (lastTimestamp === candle[0]) {
+      // XXX - Why did I check lastTimestamp here?
     } else {
       timeframes.forEach((tf) => {
         const imdKey  = `imd${tf}`
@@ -132,12 +133,47 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
         }
 
         const indicatorsKey = `indicators${tf}`
-        state[indicatorsKey].forEach(([insert, update, indicatorState], i) => {
+        state[indicatorsKey].forEach(([insert, update, key, previousState, currentState], i) => {
           if (isBoundaryForTf) {
-            let newIndicatorState = insert(md, imd, indicatorState)
-            state[indicatorsKey][i][2] = newIndicatorState
+
+            // For timeframes that are aggregated (meaning they have to use the update function),
+            // the first iteration that generates a value has to be fixed,
+            // because update cannot be called with an undefined state
+            // like insert can.
+            let indicatorState
+            if (imd[key] && imd[key].length === 1) {
+              // fix the first value
+              // -clone and rewind md and imd
+              let md2 = ta._previousMd(md)
+              let imd2 = ta._previousImd(imd)
+              // -recalculate....
+              let fixedState = insert(md2, imd2, undefined)
+              // -replace broken values
+              let fixedValue = imd2[key][0]
+              imd[key][0] = fixedValue
+              indicatorState = fixedState
+              //console.log('fix', fixedState)
+              state[indicatorsKey][i][3] = fixedState
+            } else {
+              // On a normal iteration, currentState gets promoted to previousState on timeframe boundaries.
+              indicatorState = currentState
+              state[indicatorsKey][i][3] = currentState
+            }
+
+            // when inserting, use the last updateState to start the new candle
+            // however, if we're aggregating, we need to wait until the last partial candle and do a full insertion
+            // it would be nice if the very first insertion didn't need a special case.
+            state[indicatorsKey][i][4] = insert(md, imd, indicatorState)
+            //console.log('insert', indicatorState, '=>', state[indicatorsKey][i][4], imd.close[0])
           } else {
-            update(md, imd, indicatorState)
+            // when updating, repeatedly use the last known insertState as the base
+            // however, i need a special case when we're updating the very first value.
+            // - I don't know if the first value can be created with a partial insert and update.
+            // - I think the first value can only be inserted with a full candle
+            //const indicatorState = (key && imd[key] && imd[key].length === 1) ? undefined : insertState
+            const indicatorState = previousState
+            state[indicatorsKey][i][4] = update(md, imd, indicatorState)
+            //console.warn('update', indicatorState, '=>', state[indicatorsKey][i][4], imd.close[0])
           }
         })
       })

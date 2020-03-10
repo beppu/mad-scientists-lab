@@ -2,6 +2,7 @@ const {DateTime} = require('luxon')
 const talib = require('talib')
 const pipeline = require('./pipeline')
 const ta = require('./index')
+const ema = require('./indicators/ema')
 
 // This contains 25 1h candles
 let candles = require('./tests/fixtures/candles.json')
@@ -102,5 +103,34 @@ test("pipeline.mainLoopFn should return a function that calculates correctly", (
   const r                  = talib.execute(indicatorSettings)
   const invertedMarketData = ta.invertedMarketData(state.md2h)
   ta.invertedAppend(invertedMarketData, 'ema9', r.result.outReal)
+  //console.warn({ 'wasWrongButNotAnymore': state.imd2h.ema9, right: invertedMarketData.ema9 })
   expect(invertedMarketData.ema9).toEqual(state.imd2h.ema9)
 })
+
+/*
+
+let state
+baseTimeframe = '1h'
+indicatorSpecs = { '2h': [ ['ema', 9] ] }
+iterate = pipeline.mainLoopFn(baseTimeframe, indicatorSpecs)
+candles.forEach((c) => state = iterate(c))
+
+pipeline = reload('./pipeline'); state = undefined
+iterate = pipeline.mainLoopFn(baseTimeframe, indicatorSpecs)
+candles.forEach((c) => state = iterate(c))
+
+ema = require('./indicators').ema
+let md = ta.marketDataFromCandles([])
+let imd = ta.invertedMarketData(md)
+let [emaInsert, emaUpdate] = ema(9)
+let state2
+let minimumCandles = state.md2h.close.map((close) => [0, 0, 0, 0, close, 0])
+minimumCandles.forEach((c) => {
+md = ta.marketDataAppendCandle(md, c)
+imd = ta.invertedAppendCandle(imd, c)
+state2 = emaInsert(md, imd, state2)
+if (state2) console.log('auxiliary', c[4])
+})
+
+*/
+
