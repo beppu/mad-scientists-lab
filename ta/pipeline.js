@@ -1,9 +1,10 @@
-const Bluebird = require('bluebird')
-const fs = Bluebird.promisifyAll(require('fs'))
-const uniq = require('lodash.uniq')
-const ta = require('./index')
-const time = require('./time')
-const utils = require('./utils')
+const Bluebird   = require('bluebird')
+const fs         = Bluebird.promisifyAll(require('fs'))
+const kindOf     = require('kind-of')
+const uniq       = require('lodash.uniq')
+const ta         = require('./index')
+const time       = require('./time')
+const utils      = require('./utils')
 const indicators = require('./indicators')
 
 async function loadOHLCV(filename) {
@@ -40,6 +41,7 @@ async function loadCandlesFromFS(dataDir, exchange, market, timeframe) {
  * @returns {Array<Number>} a merged candle
  */
 function mergeCandle(lastCandle, candle) {
+  // This function is used during aggregation to make bigger candles out of smaller ones.
   const newCandle = [
     lastCandle[0],  // timestamp
     lastCandle[1],  // open
@@ -53,6 +55,11 @@ function mergeCandle(lastCandle, candle) {
   return newCandle;
 }
 
+/**
+ * This function will return another function that builds higher timeframe candles out of lower timeframe candles.
+ * @param {String} desiredTimeframe - a timeframe specificaiton
+ * @returns {Function} a function that takes lower timeframe candles and returns an aggregated candle
+ */
 function aggregatorFn(desiredTimeframe) {
   let ax = [0, 0, 0, 0, 0]
   // candle is assumed to come from a timeframe that's smaller and evenly divisible by desiredTimeframe
@@ -135,13 +142,20 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
         const indicatorsKey = `indicators${tf}`
         state[indicatorsKey].forEach(([insert, update, key, previousState, currentState], i) => {
           if (isBoundaryForTf) {
+            let k, kind
+            if (kindOf(key) === 'array') {
+              kind = 'array'
+              k = key[0]
+            } else {
+              k = key
+            }
 
             // For timeframes that are aggregated (meaning they have to use the update function),
             // the first iteration that generates a value has to be fixed,
             // because update cannot be called with an undefined state
             // like insert can.
             let indicatorState
-            if (imd[key] && imd[key].length === 1) {
+            if (imd[k] && imd[k].length === 1) {
               // fix the first value
               // -clone and rewind md and imd
               let md2 = ta._previousMd(md)
@@ -149,8 +163,13 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
               // -recalculate....
               let fixedState = insert(md2, imd2, undefined)
               // -replace broken values
-              let fixedValue = imd2[key][0]
-              imd[key][0] = fixedValue
+              if (kind === 'array') {
+                let fixedValues = key.map((name) => imd2[name][0])
+                key.forEach((name, i) => imd[name][0] = fixedValues[i])
+              } else {
+                let fixedValue = imd2[k][0]
+                imd[k][0] = fixedValue
+              }
               indicatorState = fixedState
               //console.log('fix', fixedState)
               state[indicatorsKey][i][3] = fixedState
@@ -169,8 +188,7 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
             // when updating, repeatedly use the last known insertState as the base
             // however, i need a special case when we're updating the very first value.
             // - I don't know if the first value can be created with a partial insert and update.
-            // - I think the first value can only be inserted with a full candle
-            //const indicatorState = (key && imd[key] && imd[key].length === 1) ? undefined : insertState
+            // - I think the first value can only be inserted correctly with a full candle
             const indicatorState = previousState
             state[indicatorsKey][i][4] = update(md, imd, indicatorState)
             //console.warn('update', indicatorState, '=>', state[indicatorsKey][i][4], imd.close[0])
