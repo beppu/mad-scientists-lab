@@ -84,7 +84,7 @@ module.exports = function rsiFn(period) {
     imd[key][0] = newState.rsiValue
     return newState
   }
-  return [rsiInsert, rsiUpdate]
+  return [rsiInsert, rsiUpdate, key]
 }
 
 /**

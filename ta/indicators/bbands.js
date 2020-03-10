@@ -54,6 +54,7 @@ module.exports = function bbandsFn(period) {
     imd[key3][0] = lastLowerBand[0]
     return EMPTY_STATE
   }
-  return [bbandsInsert, bbandsUpdate]
+  // FIXME - Actually, in pipeline.js, be able to handle an array of keys.
+  return [bbandsInsert, bbandsUpdate, [key1, key2, key3]]
 }
 

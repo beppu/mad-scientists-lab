@@ -40,7 +40,7 @@ module.exports = function smaFn(period) {
     return EMPTY_STATE
   }
 
-  return [smaInsert, smaUpdate]
+  return [smaInsert, smaUpdate, key]
 }
 
 /*
