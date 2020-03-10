@@ -111,11 +111,14 @@ However, a strategy can have its own state.  As the market moves, the strategy m
 biases between long and short.  It can also decide to place an order, and the order may or
 may not fill.  The exchange needs to give feedback back to the strategy about order status.
 If an order is filled, a strategy may then employ a substrategy for closing the open position.
-A strategy could have a lot of state of its own.
+Thus, a strategy could have a lot of state of its own.
 
 ```
 [orders, strategyState] = strategy(strategyState, marketState)
 ```
+
+It would be cool if I could step through a strategy as if I were debugging it.  I'd like to know
+when it makes the decisions it does and why by examining the state at that instant in time.
 
 ## 2020-01-11 How Should Trade Execution Engine Work?
 
