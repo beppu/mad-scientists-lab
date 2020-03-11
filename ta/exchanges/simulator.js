@@ -1,3 +1,5 @@
+const clone = require('clone')
+
 /*
 
   A simulated exchange takes price action and orders as inputs.
@@ -32,10 +34,33 @@
 
  */
 
-function executeOrders(orderBook, candle) {
-  let newOrderBook = {}
+/*
+
+  For simulated order execution, follow these rules:
+
+  1. If the bar’s high is closer to bar’s open than the bar’s low, the broker emulator assumes that intrabar price was moving this way: open → high → low → close.
+  2. If the bar’s low is closer to bar’s open than the bar’s high, the broker emulator assumes that intrabar price was moving this way: open → low → high → close.
+  3. The broker emulator assumes that there are no gaps inside bars, meaning the full range of intrabar prices is available for order execution.
+
+  credit: https://www.tradingview.com/pine-script-docs/en/v4/essential/Strategies.html
+
+ */
+
+function executeOrders(state, candle) {
+  let newState = {}
   let executedOrders = []
-  return [newOrderBook, executedOrders]
+  // 0:t 1:o 2:h 3:l 4:c 5:v
+  const [timestamp, open, high, low, close, volume] = candle
+  const openToHigh = high - open
+  const openToLow  = open - low
+  if (openToLow > openToHigh) {
+    // 1: o->h->l->c
+    // search the orderbook for orders to execute
+    // i just realized that stop orders should not be in the order book but a seperate data structure.
+  } else {
+    // 2: o->l->h->c
+  }
+  return [newState, executedOrders]
 }
 
 /**
@@ -48,11 +73,10 @@ function create(opts) {
   // What is the internal state of the exchange?
   /*
   let state = {
-    orderBook: {
-      buy: [],
-      sell: []
-    },
-    positions: []
+    limitOrders: [],
+    stopOrders: [],
+    marketOrders: [],
+    positions: [] // The strategy should track what positions its holding, but the simulator will do it internally as well.
   }
   */
 
@@ -70,12 +94,13 @@ function create(opts) {
    * @returns {Array<Object>} an array containing updated state and a list of actions that happened in this iteration.
    */
   return function simulator(state, orders, candle) {
-    if (candle)
+    if (candle) {
+      let [newOrderBook, executedOrders] = executeOrders(state.orderBook, candle)
       lastCandle = candle
+    }
     return [state, actions]
   }
 }
-
 
 module.exports = {
   create,
