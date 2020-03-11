@@ -34,6 +34,46 @@ const clone = require('clone')
 
  */
 
+function executeMarketOrders(state, candle) {
+  const [timestamp, open, high, low, close, volume] = candle
+  let executedOrders = []
+  let newState = clone(state)
+  state.marketOrders.forEach((o) => {
+    if (o.action === 'buy') {
+      let price = open // should do something fancier here
+      if (o.quantity * price < state.balance) {
+        newState.balance -= o.quantity * price
+        newState.position += o.quantity
+        let marketBuy = clone(o)
+        marketBuy.status = 'filled'
+        executedOrders.push(marketBuy)
+      } else {
+        // rejected due to insufficient balance
+        let rejection = clone(o)
+        rejection.status = 'rejected'
+        rejection.reason = 'insufficient funds'
+        executedOrders.push(rejection)
+      }
+    } else {
+      let price = open
+      if (o.quantity * price < state.balance) {
+        newState.balance -= o.quantity * price
+        newState.position -= o.quantity
+        let marketSell = clone(o)
+        marketSell.status = 'filled'
+        executedOrders.push(marketSell)
+      } else {
+        let rejection = clone(o)
+        rejection.status = 'rejected'
+        rejection.reason = 'insufficient funds'
+        executedOrders.push(rejection)
+      }
+    }
+  })
+  newState.marketOrders = []
+  return [newState, executedOrders]
+}
+
 /*
 
   For simulated order execution, follow these rules:
@@ -47,20 +87,44 @@ const clone = require('clone')
  */
 
 function executeOrders(state, candle) {
-  let newState = {}
   let executedOrders = []
   // 0:t 1:o 2:h 3:l 4:c 5:v
   const [timestamp, open, high, low, close, volume] = candle
+
   const openToHigh = high - open
   const openToLow  = open - low
+
+  // market orders executed immediately
+  let [s0, executedMarketOrders] = executeMarketOrders(state, candle)
+  executedOrders = executedOrders.concat(executedMarketOrders)
+
   if (openToLow > openToHigh) {
     // 1: o->h->l->c
+
     // search the orderbook for orders to execute
     // i just realized that stop orders should not be in the order book but a seperate data structure.
   } else {
     // 2: o->l->h->c
+
+    // limit orders: o->l
+    // limit orders: l->h
+    // limit orders: h->c
   }
   return [newState, executedOrders]
+}
+
+/**
+ * Create a pristine simulator exchange state
+ * @returns {Object} exchange state
+ */
+function initialState(balance) {
+  return {
+    limitOrders: [],
+    stopOrders: [],
+    marketOrders: [],
+    position: 0, // + for long, - for short
+    balance: balance || 0,
+  }
 }
 
 /**
@@ -80,10 +144,6 @@ function create(opts) {
   }
   */
 
-  // What are the actions that happened to change the exchange state in this iteration?
-  // This is where filled orders would be noted so that strategies can know how what's happening with their orders.
-  let actions = []
-
   let lastCandle
 
   /**
@@ -94,11 +154,29 @@ function create(opts) {
    * @returns {Array<Object>} an array containing updated state and a list of actions that happened in this iteration.
    */
   return function simulator(state, orders, candle) {
-    if (candle) {
-      let [newOrderBook, executedOrders] = executeOrders(state.orderBook, candle)
-      lastCandle = candle
+    // let's get a state we can work with
+    let newState = state ? clone(state) : initialState(opts.balance)
+
+    // If orders were given, put them in state as appropriate
+    if (orders && orders.length) {
+      let limitOrders = orders.filter((o) => o.type === 'limit')
+      if (limitOrders.length)
+        newState.limitOrders = newState.limitOrders.concat(limitOrders)
+      let marketOrders = orders.filter((o) => o.type === 'market')
+      if (marketOrders.length)
+        newState.marketOrders = newState.marketOrders.concat(marketOrders)
+      let stopOrders = orders.filter((o) => o.type.match(/^stop-/))
+      if (stopOrders.length)
+        newState.stopOrders = newState.stopOrders.concat(stopOrders)
     }
-    return [state, actions]
+
+    if (candle) {
+      let [newNewState, executedOrders] = executeOrders(newState, candle)
+      lastCandle = candle
+      return [newNewState, executedOrders]
+    } else {
+      return [newState, []]
+    }
   }
 }
 
