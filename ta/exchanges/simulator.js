@@ -38,9 +38,15 @@ function executeOrders(orderBook, candle) {
   return [newOrderBook, executedOrders]
 }
 
+/**
+ * Create the simulated exchange function
+ * @param {Object} opts - customization specific to the simulated exchange
+ * @returns {Function} a function that updates the state of the exchange.
+ */
 function create(opts) {
 
   // What is the internal state of the exchange?
+  /*
   let state = {
     orderBook: {
       buy: [],
@@ -48,6 +54,7 @@ function create(opts) {
     },
     positions: []
   }
+  */
 
   // What are the actions that happened to change the exchange state in this iteration?
   // This is where filled orders would be noted so that strategies can know how what's happening with their orders.
@@ -55,8 +62,16 @@ function create(opts) {
 
   let lastCandle
 
-  return function simulator(orders, candle) {
-    lastCandle = candle
+  /**
+   * Update the state of the simulated exchange
+   * @param {Object} state - simulated exchange state
+   * @param {Array<Object>} orders - an array of orders to apply to the order book
+   * @param {Object} candle - a candle
+   * @returns {Array<Object>} an array containing updated state and a list of actions that happened in this iteration.
+   */
+  return function simulator(state, orders, candle) {
+    if (candle)
+      lastCandle = candle
     return [state, actions]
   }
 }
