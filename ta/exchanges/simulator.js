@@ -35,6 +35,19 @@ const sortBy = require('lodash.sortby')
 
  */
 
+/**
+ * Create a rejected order
+ * @param {Object} o - an order
+ * @param {String} reason - why the order was rejected
+ * @returns {Object} a clone of the order with a rejected status and reason
+ */
+function rejectOrder(o, reason) {
+  const rejection = clone(o)
+  o.status = 'rejected'
+  o.reason = reason || 'unknown'
+  return o
+}
+
 function executeMarketOrders(state, candle) {
   const [timestamp, open, high, low, close, volume] = candle
   let executedOrders = []
@@ -50,9 +63,7 @@ function executeMarketOrders(state, candle) {
         executedOrders.push(marketBuy)
       } else {
         // rejected due to insufficient balance
-        let rejection = clone(o)
-        rejection.status = 'rejected'
-        rejection.reason = 'insufficient funds'
+        let rejection = rejectOrder(o, 'insufficient funds')
         executedOrders.push(rejection)
       }
     } else {
@@ -64,9 +75,7 @@ function executeMarketOrders(state, candle) {
         marketSell.status = 'filled'
         executedOrders.push(marketSell)
       } else {
-        let rejection = clone(o)
-        rejection.status = 'rejected'
-        rejection.reason = 'insufficient funds'
+        let rejection = rejectOrder(o, 'insufficient funds')
         executedOrders.push(rejection)
       }
     }
@@ -118,15 +127,35 @@ function executeStopAndLimitOrders(state, a, b) {
       case 'buy':
         break;
       case 'sell':
-        if (newState.position >= o.quantity) {
-          newState.position -= o.quantity
-          newState.balance += o.price * o.quantity
-          const limitSell = clone(o)
-          limitSell.status = 'filled'
-          executedOrders.push(limitSell)
-        } else {
-          // insufficient funds
+        // check if the order has the reduceOnly option
+        if (o.options && o.options.reduceOnly) {
+          if (newState.position <= o.quantity) {
+            let rejection = rejectOrder(o, 'reduceOnly orders may only close a position')
+            executedOrders.push(rejection)
+            break;
+          }
         }
+        // check if there are sufficient funds
+        if (newState.position > 0) {
+          // reduce long position
+          if (newState.position < o.quantity) {
+            let rejection = rejectOrder(o, 'insufficient position for sell order')
+            executedOrders.push(rejection)
+            break;
+          }
+        } else {
+          // short
+          if (newState.balance <= (o.price * o.quantity)) {
+            let rejection = rejectOrder(o, 'insufficient funds')
+            executedOrders.push(rejection)
+            break;
+          }
+        }
+        newState.position -= o.quantity
+        newState.balance += o.price * o.quantity
+        const limitSell = clone(o)
+        limitSell.status = 'filled'
+        executedOrders.push(limitSell)
       }
       break;
     case 'stop-limit':

@@ -92,8 +92,9 @@ test("limit orders should fill when their price is reached", () => {
       type: 'limit',
       action: 'sell',
       quantity: 5,
-      price: 7005
-    }
+      price: 7005,
+      options: { reduceOnly: true }
+    },
   ]
   let candles = [
     [0, 7000, 7100, 6990, 7010, 10000],
