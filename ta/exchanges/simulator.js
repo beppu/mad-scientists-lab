@@ -1,5 +1,6 @@
 const clone = require('clone')
 const sortBy = require('lodash.sortby')
+const partition = require('lodash.partition')
 
 /*
 
@@ -105,9 +106,13 @@ function executeStopAndLimitOrders(state, a, b) {
     // low value to high value (positive slope)
     //console.log(`a:${a} < b:${b}`)
     // find all stop orders between a and b
-    const stopOrders = state.stopOrders.filter((o) => a <= o.stopPrice && o.stopPrice <= b)
+    //const stopOrders = state.stopOrders.filter((o) => a <= o.stopPrice && o.stopPrice <= b)
+    const [stopOrders, remainingStopOrders] = partition(state.stopOrders, (o) => a <= o.stopPrice && o.stopPrice <= b)
+    newState.stopOrders = remainingStopOrders
     // find all limit orders between a and b
-    const limitOrders = state.limitOrders.filter((o) => a <= o.price && o.price <= b)
+    //const limitOrders = state.limitOrders.filter((o) => a <= o.price && o.price <= b)
+    const [limitOrders, remainingLimitOrders] = partition(state.limitOrders, (o) => a <= o.price && o.price <= b)
+    newState.limitOrders = remainingLimitOrders
     mergedOrders = sortBy(stopOrders.concat(limitOrders), (o) => {
       if (o.type.match(/^stop/)) {
         return o.stopPrice
@@ -120,9 +125,11 @@ function executeStopAndLimitOrders(state, a, b) {
     // high value to low value (negative slope)
     //console.log(`a:${a} >= b:${b}`)
     // find all stop orders between a and b
-    const stopOrders = state.stopOrders.filter((o) => b <= o.stopPrice && o.stopPrice <= a)
+    const [stopOrders, remainingStopOrders] = partition(state.stopOrders, (o) => b <= o.stopPrice && o.stopPrice <= a)
+    newState.stopOrders = remainingStopOrders
     // find all limit orders between a and b
-    const limitOrders = state.limitOrders.filter((o) => b <= o.price && o.price <= a)
+    const [limitOrders, remainingLimitOrders] = partition(state.limitOrders, (o) => b <= o.price && o.price <= a)
+    newState.limitOrders = remainingLimitOrders
     mergedOrders = sortBy(stopOrders.concat(limitOrders), (o) => {
       if (o.type.match(/^stop/)) {
         return o.stopPrice
