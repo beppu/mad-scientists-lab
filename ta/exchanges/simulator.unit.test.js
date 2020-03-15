@@ -95,6 +95,13 @@ test("limit orders should fill when their price is reached", () => {
       price: 7005,
       options: { reduceOnly: true }
     },
+    {
+      type: 'limit',
+      action: 'sell',
+      quantity: 5,
+      price: 7010,
+      options: { reduceOnly: true }
+    },
   ]
   let candles = [
     [0, 7000, 7100, 6990, 7010, 10000],
@@ -103,7 +110,7 @@ test("limit orders should fill when their price is reached", () => {
   let r = sx(undefined, orders, candles[0])
   expect(r[1]).toHaveLength(1)
   let r2 = sx(r[0], limitOrders, candles[1])
-  //console.log(r2)
+  console.log(r2)
   expect(r2[0].limitOrders).toHaveLength(0)
-  expect(r2[1]).toHaveLength(1)
+  expect(r2[1]).toHaveLength(2)
 })

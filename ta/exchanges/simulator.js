@@ -147,7 +147,7 @@ function executeStopAndLimitOrders(state, a, b) {
       case 'buy':
         // check if the order has the reduceOnly option
         if (o.options && o.options.reduceOnly) {
-          if (newState.position <= o.quantity) {
+          if (newState.position < o.quantity) {
             let rejection = rejectOrder(o, 'reduceOnly orders may only close a position')
             executedOrders.push(rejection)
             break;
@@ -178,7 +178,7 @@ function executeStopAndLimitOrders(state, a, b) {
       case 'sell':
         // check if the order has the reduceOnly option
         if (o.options && o.options.reduceOnly) {
-          if (newState.position <= o.quantity) {
+          if (newState.position < o.quantity) {
             let rejection = rejectOrder(o, 'reduceOnly orders may only close a position')
             executedOrders.push(rejection)
             break;
