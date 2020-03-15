@@ -48,6 +48,12 @@ function rejectOrder(o, reason) {
   return o
 }
 
+/**
+ * Execute any existing market orders and return the new state of the exchange
+ * @param {Object} state - exchange state
+ * @param {Array<Number>} candle - the current candle
+ * @returns {Object} exchange state after market orders have been executed
+ */
 function executeMarketOrders(state, candle) {
   const [timestamp, open, high, low, close, volume] = candle
   let executedOrders = []
@@ -84,13 +90,20 @@ function executeMarketOrders(state, candle) {
   return [newState, executedOrders]
 }
 
+/**
+ * Execute limit and stop orders as price goes from a to b
+ * @param {Object} state - exchange state
+ * @param {Number} a - price to begin at
+ * @param {Number} b - price to end at
+ * @returns {Return Type} exchange state after orders between price a and b have been executed
+ */
 function executeStopAndLimitOrders(state, a, b) {
   const newState = clone(state)
   let executedOrders = []
   let mergedOrders
   if (a < b) {
     // low value to high value (positive slope)
-    console.log(`a:${a} < b:${b}`)
+    //console.log(`a:${a} < b:${b}`)
     // find all stop orders between a and b
     const stopOrders = state.stopOrders.filter((o) => a <= o.stopPrice && o.stopPrice <= b)
     // find all limit orders between a and b
@@ -102,10 +115,10 @@ function executeStopAndLimitOrders(state, a, b) {
         return o.price
       }
     })
-    console.log('merged a < b', mergedOrders)
+    //console.log('merged a < b', mergedOrders)
   } else {
     // high value to low value (negative slope)
-    console.log(`a:${a} >= b:${b}`)
+    //console.log(`a:${a} >= b:${b}`)
     // find all stop orders between a and b
     const stopOrders = state.stopOrders.filter((o) => b <= o.stopPrice && o.stopPrice <= a)
     // find all limit orders between a and b
@@ -117,12 +130,12 @@ function executeStopAndLimitOrders(state, a, b) {
         return o.price
       }
     })
-    console.log('merged a >= b', mergedOrders)
+    //console.log('merged a >= b', mergedOrders)
   }
   mergedOrders.forEach((o) => {
     switch (o.type) {
     case 'limit':
-      console.log('limit', o)
+      //console.log('limit', o)
       switch (o.action) {
       case 'buy':
         break;
@@ -179,11 +192,17 @@ function executeStopAndLimitOrders(state, a, b) {
 
  */
 
+/**
+ * Execute orders
+ * @param {Object} state - exchange state
+ * @param {Array<Number>} candle - the current candle
+ * @returns {Object} exchange state after orders have been executed for the current candle
+ */
 function executeOrders(state, candle) {
   let executedOrders = []
   // 0:t 1:o 2:h 3:l 4:c 5:v
   const [timestamp, open, high, low, close, volume] = candle
-  console.log({timestamp})
+  //console.log({timestamp})
 
   const openToHigh = high - open
   const openToLow  = open - low
@@ -196,11 +215,11 @@ function executeOrders(state, candle) {
   executedOrders = executedOrders.concat(tmpExecutions)
   states.unshift(tmpState)
 
-  console.log({ openToLow, openToHigh, open, high, low })
+  //console.log({ openToLow, openToHigh, open, high, low })
   if (openToLow > openToHigh) {
     // 1: o->h->l->c
     // o->h
-    console.log(1);
+    //console.log(1);
     [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], open, high)
     states.unshift(tmpState)
     executedOrders = executedOrders.concat(tmpExecutions)
@@ -209,7 +228,7 @@ function executeOrders(state, candle) {
   } else {
     // 2: o->l->h->c
     // o->l
-    console.log(2, 'openToLow <= openToHigh');
+    //console.log(2, 'openToLow <= openToHigh');
     [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], open, low)
     states.unshift(tmpState)
     executedOrders = executedOrders.concat(tmpExecutions)
@@ -297,5 +316,8 @@ function create(opts) {
 
 module.exports = {
   create,
+  rejectOrder,
+  executeMarketOrders,
+  executeStopAndLimitOrders,
   executeOrders
 }
