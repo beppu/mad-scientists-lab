@@ -61,23 +61,43 @@ function executeMarketOrders(state, candle) {
   let newState = clone(state)
   state.marketOrders.forEach((o) => {
     if (o.action === 'buy') {
-      let price = open // should do something fancier here
-      if (o.quantity * price < state.balance) {
-        newState.balance -= o.quantity * price
-        newState.position += o.quantity
-        let marketBuy = clone(o)
-        marketBuy.status = 'filled'
-        executedOrders.push(marketBuy)
+      // are we opening a long or closing a short?
+      if (state.position >= 0) {
+        // long
+        let price = open // should do something fancier here
+        if (o.quantity * price < state.balance) {
+          newState.balance -= o.quantity * price
+          newState.position += o.quantity
+          let marketBuy = clone(o)
+          marketBuy.status = 'filled'
+          executedOrders.push(marketBuy)
+        } else {
+          // rejected due to insufficient balance
+          let rejection = rejectOrder(o, 'insufficient funds')
+          executedOrders.push(rejection)
+        }
       } else {
-        // rejected due to insufficient balance
-        let rejection = rejectOrder(o, 'insufficient funds')
-        executedOrders.push(rejection)
+        // closing short
+        let price = open
+        let position = Math.abs(state.position)
+        if (o.quantity <= position) {
+          let difference = (position * state.averageEntryPrice) - (position * price)
+          //console.log({price, entry: state.averageEntryPrice, position, difference })
+          newState.balance += Math.abs(state.position) * state.averageEntryPrice + difference
+          newState.position += o.quantity
+          let marketBuy = clone(o)
+          marketBuy.status = 'filled'
+          executedOrders.push(marketBuy)
+        } else {
+          // closing short and opening a long
+        }
       }
     } else {
       let price = open
       if (o.quantity * price < state.balance) {
         newState.balance -= o.quantity * price
         newState.position -= o.quantity
+        newState.averageEntryPrice = price // FIXME - calculate a running average
         let marketSell = clone(o)
         marketSell.status = 'filled'
         executedOrders.push(marketSell)

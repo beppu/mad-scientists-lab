@@ -79,7 +79,8 @@ test("market orders should fill immediately when a candle is given", () => {
 })
 
 test("limit orders should fill when their price is reached", () => {
-  const sx = simulator.create({ balance: 100000 })
+  const balance = 100000
+  const sx = simulator.create({ balance: balance })
   const orders = [
     {
       type: 'market',
@@ -110,7 +111,39 @@ test("limit orders should fill when their price is reached", () => {
   let r = sx(undefined, orders, candles[0])
   expect(r[1]).toHaveLength(1)
   let r2 = sx(r[0], limitOrders, candles[1])
-  console.log(r2)
+  //console.log(r2)
+  const newBalance = r2[0].balance
   expect(r2[0].limitOrders).toHaveLength(0)
   expect(r2[1]).toHaveLength(2)
+  expect(newBalance).toBeGreaterThan(balance)
+})
+
+test("short positions should be possible", () => {
+  const balance = 100000
+  const sx = simulator.create({ balance: 100000 })
+  const shortOrders = [
+    {
+      type: 'market',
+      action: 'sell',
+      quantity: 10
+    }
+  ]
+  const closeOrders = [
+    {
+      type: 'market',
+      action: 'buy',
+      quantity: 10
+    }
+  ]
+  let candles = [
+    [0, 7000, 7100, 6990, 7010, 10000],
+    [1, 7010, 9500, 7000, 7900, 10000]
+  ]
+  let r = sx(undefined, shortOrders, candles[0])
+  //console.log(r[0])
+  expect(r[0].position).toBeLessThan(0)
+  let r2 = sx(r[0], closeOrders, candles[1])
+  //console.log(r2)
+  expect(r2[0].balance).toBeLessThan(balance) // this trade should lose money
+  expect(r2[1]).toHaveLength(1)
 })
