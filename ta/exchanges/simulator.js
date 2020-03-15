@@ -138,6 +138,35 @@ function executeStopAndLimitOrders(state, a, b) {
       //console.log('limit', o)
       switch (o.action) {
       case 'buy':
+        // check if the order has the reduceOnly option
+        if (o.options && o.options.reduceOnly) {
+          if (newState.position <= o.quantity) {
+            let rejection = rejectOrder(o, 'reduceOnly orders may only close a position')
+            executedOrders.push(rejection)
+            break;
+          }
+        }
+        // check if there are sufficient funds
+        if (newState.position < 0) {
+          // reduce short position
+          if (newState.position < o.quantity) {
+            let rejection = rejectOrder(o, 'insufficient position for buy order')
+            executedOrders.push(rejection)
+            break;
+          }
+        } else {
+          // long
+          if (newState.balance <= (o.price * o.quantity)) {
+            let rejection = rejectOrder(o, 'insufficient funds')
+            executedOrders.push(rejection)
+            break;
+          }
+        }
+        newState.position += o.quantity
+        newState.balance -= o.price * o.quantity
+        const limitBuy = clone(o)
+        limitBuy.status = 'filled'
+        executedOrders.push(limitBuy)
         break;
       case 'sell':
         // check if the order has the reduceOnly option
