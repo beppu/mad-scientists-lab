@@ -118,7 +118,7 @@ test("limit orders should fill when their price is reached", () => {
   expect(newBalance).toBeGreaterThan(balance)
 })
 
-test("short positions should be possible", () => {
+test("short positions should be possible with market orders", () => {
   const balance = 100000
   const sx = simulator.create({ balance: 100000 })
   const shortOrders = [
@@ -146,4 +146,38 @@ test("short positions should be possible", () => {
   //console.log(r2)
   expect(r2[0].balance).toBeLessThan(balance) // this trade should lose money
   expect(r2[1]).toHaveLength(1)
+})
+
+test("short positions should be possible with limit orders", () => {
+  const balance = 100000
+  const sx = simulator.create({ balance: 100000 })
+  const shortOrders = [
+    {
+      type: 'limit',
+      action: 'sell',
+      quantity: 10,
+      price: 9400
+    }
+  ]
+  const closeOrders = [
+    {
+      type: 'limit',
+      action: 'buy',
+      quantity: 10,
+      price: 8000
+    }
+  ]
+  let candles = [
+    [0, 7000, 9400, 6990, 9010, 10000],
+    [1, 9010, 9500, 7000, 7900, 10000]
+  ]
+  let r = sx(undefined, shortOrders, candles[0])
+  expect(r[1]).toHaveLength(1)             // the short should be executed on this candle
+  expect(r[0].limitOrders).toHaveLength(0)
+  //console.log(r[0])
+  let r2 = sx(r[0], closeOrders, candles[1])
+  expect(r2[1]).toHaveLength(1) // the previous short order and the take profit order should fill in the same candle
+  expect(r2[0].balance).toBeGreaterThan(balance) // this should be a profitable short trade
+  expect(r2[0].position).toBe(0) // we should have no position after all trades have executed
+  //console.log(r2[0].balance, r2[0].position)
 })

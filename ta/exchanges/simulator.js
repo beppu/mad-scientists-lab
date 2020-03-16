@@ -38,9 +38,7 @@ const partition = require('lodash.partition')
 
 /**
  * Create a rejected order
- * @param {Object} o - an order
  * @param {String} reason - why the order was rejected
- * @returns {Object} a clone of the order with a rejected status and reason
  */
 function rejectOrder(o, reason) {
   const rejection = clone(o)
@@ -48,6 +46,20 @@ function rejectOrder(o, reason) {
   o.reason = reason || 'unknown'
   return o
 }
+
+/**
+ * Create a filled order
+ * @param {Object} o - an order
+ * @returns {Object} a clone of the order with a filled status
+ */
+function fillOrder(o) {
+  const filledOrder = clone(o)
+  filledOrder.status = 'filled'
+  return filledOrder
+}
+
+// How to calculate profits/losses for shorts:
+// https://www.investopedia.com/ask/answers/05/maxreturnshortsale.asp
 
 /**
  * Execute any existing market orders and return the new state of the exchange
@@ -61,15 +73,15 @@ function executeMarketOrders(state, candle) {
   let newState = clone(state)
   state.marketOrders.forEach((o) => {
     if (o.action === 'buy') {
-      // are we opening a long or closing a short?
+      // BUY
+      // but are we opening a long or closing a short?
       if (state.position >= 0) {
         // long
         let price = open // should do something fancier here
         if (o.quantity * price < state.balance) {
           newState.balance -= o.quantity * price
           newState.position += o.quantity
-          let marketBuy = clone(o)
-          marketBuy.status = 'filled'
+          let marketBuy = fillOrder(o)
           executedOrders.push(marketBuy)
         } else {
           // rejected due to insufficient balance
@@ -85,21 +97,22 @@ function executeMarketOrders(state, candle) {
           //console.log({price, entry: state.averageEntryPrice, position, difference })
           newState.balance += Math.abs(state.position) * state.averageEntryPrice + difference
           newState.position += o.quantity
-          let marketBuy = clone(o)
-          marketBuy.status = 'filled'
+          let marketBuy = fillOrder(o)
           executedOrders.push(marketBuy)
         } else {
-          // closing short and opening a long
+          // closing short and opening a long simultaneously
+          // TODO check for sufficient funds
         }
       }
     } else {
+      // SELL
+      // Is it possible that selling works the same whether we're closing a long or opening a short?
       let price = open
       if (o.quantity * price < state.balance) {
         newState.balance -= o.quantity * price
         newState.position -= o.quantity
         newState.averageEntryPrice = price // FIXME - calculate a running average
-        let marketSell = clone(o)
-        marketSell.status = 'filled'
+        let marketSell = fillOrder(o)
         executedOrders.push(marketSell)
       } else {
         let rejection = rejectOrder(o, 'insufficient funds')
@@ -176,7 +189,7 @@ function executeStopAndLimitOrders(state, a, b) {
         // check if there are sufficient funds
         if (newState.position < 0) {
           // reduce short position
-          if (newState.position < o.quantity) {
+          if ((newState.position < 0) && Math.abs(newState.position) < o.quantity) {
             let rejection = rejectOrder(o, 'insufficient position for buy order')
             executedOrders.push(rejection)
             break;
@@ -189,11 +202,29 @@ function executeStopAndLimitOrders(state, a, b) {
             break;
           }
         }
-        newState.position += o.quantity
-        newState.balance -= o.price * o.quantity
-        const limitBuy = clone(o)
-        limitBuy.status = 'filled'
-        executedOrders.push(limitBuy)
+        // are we closing a short position or opening a long position?
+        if (state.position >= 0) {
+          console.log('before', { p: newState.position, q: o.quantity, b: newState.balance })
+          newState.position += o.quantity
+          newState.balance -= o.price * o.quantity
+          console.log('after ', { p: newState.position, q: o.quantity, b: newState.balance })
+          const limitBuy = fillOrder(o)
+          executedOrders.push(limitBuy)
+        } else {
+          let price = o.price
+          let position = Math.abs(state.position)
+          if (o.quantity <= position) {
+            let difference = (position * state.averageEntryPrice) - (position * price)
+            //console.log({price, entry: state.averageEntryPrice, position, difference })
+            newState.balance += Math.abs(state.position) * state.averageEntryPrice + difference
+            newState.position += o.quantity
+            let marketBuy = fillOrder(o)
+            executedOrders.push(marketBuy)
+          } else {
+            // closing short and opening a long simultaneously
+            // TODO check for sufficient funds
+          }
+        }
         break;
       case 'sell':
         // check if the order has the reduceOnly option
@@ -212,6 +243,12 @@ function executeStopAndLimitOrders(state, a, b) {
             executedOrders.push(rejection)
             break;
           }
+          // go ahead and reduce long position
+          newState.position -= o.quantity
+          newState.balance += o.price * o.quantity
+          const limitSell = fillOrder(o)
+          executedOrders.push(limitSell)
+          break;
         } else {
           // short
           if (newState.balance <= (o.price * o.quantity)) {
@@ -219,12 +256,15 @@ function executeStopAndLimitOrders(state, a, b) {
             executedOrders.push(rejection)
             break;
           }
+          // go ahead and open a new short position
+          let price = o.price
+          newState.balance -= o.quantity * price
+          newState.position -= o.quantity
+          newState.averageEntryPrice = price // FIXME - calculate a running average
+          //console.log('opening a new short position', newState.balance, newState.position)
+          let limitSell = fillOrder(o)
+          executedOrders.push(limitSell)
         }
-        newState.position -= o.quantity
-        newState.balance += o.price * o.quantity
-        const limitSell = clone(o)
-        limitSell.status = 'filled'
-        executedOrders.push(limitSell)
       }
       break;
     case 'stop-limit':
@@ -278,26 +318,36 @@ function executeOrders(state, candle) {
     //console.log(1);
     [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], open, high)
     states.unshift(tmpState)
-    executedOrders = executedOrders.concat(tmpExecutions)
+    executedOrders = executedOrders.concat(tmpExecutions);
+    //console.log('o->h', executedOrders); // these semicolons seem necessary.  It's the destructured assignment without (var, let, or const) that's forcing the semicolon.
     // h->l
+    [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], high, low)
+    states.unshift(tmpState)
+    executedOrders = executedOrders.concat(tmpExecutions);
+    //console.log('h->l', executedOrders);
     // l->c
+    [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], low, close)
+    states.unshift(tmpState)
+    executedOrders = executedOrders.concat(tmpExecutions);
+    //console.log('l->c', executedOrders);
   } else {
     // 2: o->l->h->c
     // o->l
     //console.log(2, 'openToLow <= openToHigh');
     [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], open, low)
     states.unshift(tmpState)
-    executedOrders = executedOrders.concat(tmpExecutions)
-    /*
+    executedOrders = executedOrders.concat(tmpExecutions);
+    //console.log('o->l', executedOrders); // these semicolons seem necessary
     // l->h
     [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], low, high)
     states.unshift(tmpState)
-    executedOrders = executedOrders.concat(tmpExecutions)
+    executedOrders = executedOrders.concat(tmpExecutions);
+    //console.log('l->h', executedOrders);
     // h->c
     [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], high, close)
     states.unshift(tmpState)
-    executedOrders = executedOrders.concat(tmpExecutions)
-    */
+    executedOrders = executedOrders.concat(tmpExecutions);
+    //console.log('h->c', executedOrders);
   }
   const newState = states[0]
   return [newState, executedOrders]
