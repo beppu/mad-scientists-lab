@@ -276,6 +276,30 @@ function executeStopAndLimitOrders(state, a, b) {
   return [newState, executedOrders]
 }
 
+function convertLateLimitOrdersToMarketOrders(state, candle) {
+  let open = candle[1]
+  let newState = clone(state)
+  // find limit buys that are higher than the open price
+  // find limit sells that are lower than the open price also
+  let [mustExecute, rest] = partition(state.limitOrders, (o) => {
+    if (o.action === 'buy' && o.price > open) {
+      return true
+    } else if (o.action === 'sell' && o.price < open) {
+      return true
+    } else {
+      return false
+    }
+  })
+  newState.limitOrders = rest
+  let additionalMarketOrders = mustExecute.map((o) => {
+    o.oldType = 'limit'
+    o.type = 'market'
+    return o
+  })
+  newState.marketOrders = state.marketOrders.concat(additionalMarketOrders)
+  return newState
+}
+
 /*
 
   For simulated order execution, follow these rules:
@@ -304,10 +328,13 @@ function executeOrders(state, candle) {
   const openToLow  = open - low
 
   // TODO - Convert limit orders that have been overtaken by price action to market orders like BitMEX
+  let states = []
+  let tmpExecutions
+  let tmpState = convertLateLimitOrdersToMarketOrders(state, candle)
+  states.unshift(tmpState);
 
   // market orders executed immediately
-  let states = []
-  let [tmpState, tmpExecutions] = executeMarketOrders(state, candle)
+  [tmpState, tmpExecutions] = executeMarketOrders(states[0], candle)
   executedOrders = executedOrders.concat(tmpExecutions)
   states.unshift(tmpState)
 

@@ -93,14 +93,14 @@ test("limit orders should fill when their price is reached", () => {
       type: 'limit',
       action: 'sell',
       quantity: 5,
-      price: 7005,
+      price: 8000,
       options: { reduceOnly: true }
     },
     {
       type: 'limit',
       action: 'sell',
       quantity: 5,
-      price: 7010,
+      price: 9400,
       options: { reduceOnly: true }
     },
   ]
@@ -181,3 +181,41 @@ test("short positions should be possible with limit orders", () => {
   expect(r2[0].position).toBe(0) // we should have no position after all trades have executed
   //console.log(r2[0].balance, r2[0].position)
 })
+
+test("limit buys orders priced higher than the current price should be turned into market buys", () => {
+  // The purpose of this is to simulate BitMEX's behavior which I find very convenient especially in market that's moving very quickly.
+  const balance = 100000
+  const sx = simulator.create({ balance: 100000 })
+  const buyOrders = [
+    {
+      type: 'limit',
+      action: 'buy',
+      quantity: 1,
+      price: 11000
+    }
+  ]
+  let candles = [
+    [0, 7000, 9400, 6990, 9010, 10000],
+  ]
+  // the limit buy order should turn into a market buy that fills immediately
+  let r = sx(undefined, buyOrders, candles[0])
+  expect(r[1]).toHaveLength(1)
+  expect(r[1][0].type).toBe('market')
+  expect(r[1][0].oldType).toBe('limit')
+})
+
+test("limit sell orders that are lower than the current price should be turned into market sells", () => {
+})
+
+test("stop market orders should work", () => {
+  const balance = 100000
+  const sx = simulator.create({ balance: 100000 })
+})
+
+test("unexecuted orders should be editable", () => {
+  const balance = 100000
+  const sx = simulator.create({ balance: 100000 })
+})
+
+// After I get up to here, I have enough to move on to strategy implementation.
+// I don't need stop-limit or trailing-stop.
