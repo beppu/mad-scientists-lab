@@ -82,6 +82,7 @@ function executeMarketOrders(state, candle) {
           newState.balance -= o.quantity * price
           newState.position += o.quantity
           let marketBuy = fillOrder(o)
+          marketBuy.fillPrice = price
           executedOrders.push(marketBuy)
         } else {
           // rejected due to insufficient balance
@@ -98,6 +99,7 @@ function executeMarketOrders(state, candle) {
           newState.balance += Math.abs(state.position) * state.averageEntryPrice + difference
           newState.position += o.quantity
           let marketBuy = fillOrder(o)
+          marketBuy.fillPrice = price
           executedOrders.push(marketBuy)
         } else {
           // closing short and opening a long simultaneously
@@ -113,6 +115,7 @@ function executeMarketOrders(state, candle) {
         newState.position -= o.quantity
         newState.averageEntryPrice = price // FIXME - calculate a running average
         let marketSell = fillOrder(o)
+        marketSell.fillPrice = price
         executedOrders.push(marketSell)
       } else {
         let rejection = rejectOrder(o, 'insufficient funds')
