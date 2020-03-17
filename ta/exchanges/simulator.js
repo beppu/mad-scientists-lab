@@ -276,6 +276,12 @@ function executeStopAndLimitOrders(state, a, b) {
   return [newState, executedOrders]
 }
 
+/**
+ * Convert late limit orders to market orders
+ * @param {Object} state - exchange state
+ * @param {Array<Number>} candle - the current candle
+ * @returns {Object} updated exchange state with late limit orders converted to market orders
+ */
 function convertLateLimitOrdersToMarketOrders(state, candle) {
   let open = candle[1]
   let newState = clone(state)
