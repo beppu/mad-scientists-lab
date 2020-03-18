@@ -65,8 +65,9 @@ function fillOrder(o) {
  * @param {Number} quantity - amount of asset bought at the given price
  * @returns {Number} the new averageEntryPrice
  */
-function calculateAverageEntryPrice(state, price, quantity) {
-  return ((Math.abs(state.position) * state.averageEntryPrice) + (quantity * price)) / (Math.abs(state.position) + quantity)
+function calculateAverageEntryPrice(previousAverage, previousPosition, price, quantity) {
+  //console.log (`${Math.abs(previousPosition)} * ${previousAverage} + ${quantity} * ${price} / ${Math.abs(previousPosition)} + ${quantity}`)
+  return ((Math.abs(previousPosition) * previousAverage) + (quantity * price)) / (Math.abs(previousPosition) + quantity)
 }
 
 // How to calculate profits/losses for shorts:
@@ -90,9 +91,11 @@ function executeMarketOrders(state, candle) {
         // long
         let price = open // should do something fancier here
         if (o.quantity * price < state.balance) {
+          let previousPosition = newState.position
+          let previousAverage = newState.averageEntryPrice
           newState.balance -= o.quantity * price
           newState.position += o.quantity
-          newState.averageEntryPrice = calculateAverageEntryPrice(state, price, o.quantity)
+          newState.averageEntryPrice = calculateAverageEntryPrice(previousAverage, previousPosition, price, o.quantity)
           let marketBuy = fillOrder(o)
           marketBuy.fillPrice = price
           executedOrders.push(marketBuy)
@@ -123,9 +126,11 @@ function executeMarketOrders(state, candle) {
       // Is it possible that selling works the same whether we're closing a long or opening a short?
       let price = open
       if (o.quantity * price < state.balance) {
+        let previousPosition = newState.position
+        let previousAverage = newState.averageEntryPrice
         newState.balance -= o.quantity * price
         newState.position -= o.quantity
-        newState.averageEntryPrice = calculateAverageEntryPrice(state, price, o.quantity)
+        newState.averageEntryPrice = calculateAverageEntryPrice(previousAverage, previousPosition, price, o.quantity)
         let marketSell = fillOrder(o)
         marketSell.fillPrice = price
         executedOrders.push(marketSell)
@@ -253,7 +258,6 @@ function executeStopAndLimitOrders(state, a, b) {
             break;
           }
         }
-        // check if there are sufficient funds
         if (newState.position > 0) {
           // reduce long position
           if (newState.position < o.quantity) {
@@ -274,13 +278,13 @@ function executeStopAndLimitOrders(state, a, b) {
             executedOrders.push(rejection)
             break;
           }
-          // go ahead and open a new short position
           if (state.position <= 0) {
             // opening or extending a short
             let price = o.price
+            let previousPosition = newState.position
             newState.balance -= o.quantity * price
             newState.position -= o.quantity
-            newState.averageEntryPrice = calculateAverageEntryPrice(state, price, o.quantity)
+            newState.averageEntryPrice = calculateAverageEntryPrice(newState.averageEntryPrice, previousPosition, price, o.quantity)
             //console.log('opening a new short position', newState.balance, newState.position)
             let limitSell = fillOrder(o)
             executedOrders.push(limitSell)

@@ -232,6 +232,39 @@ test("limit sell orders that are lower than the current price should be turned i
 test("all sells that increase a position should adjust the averageEntryPrice", () => {
   const balance = 100000
   const sx = simulator.create({ balance })
+  let candles = [
+    [0, 1000, 5000, 1000, 5000, 10000],
+  ]
+  const sellOrders = [
+    {
+      type: 'limit',
+      action: 'sell',
+      quantity: 1,
+      price: 2000
+    },
+    {
+      type: 'limit',
+      action: 'sell',
+      quantity: 2,
+      price: 3000
+    },
+    {
+      type: 'limit',
+      action: 'sell',
+      quantity: 3,
+      price: 4000
+    }
+  ]
+  const r = sx(undefined, sellOrders, candles[0])
+  const [absolutePosition, totalCost] = sellOrders.reduce((m, a) => {
+    if (m.length) {
+      return [m[0] + a.quantity, m[1] + (a.quantity * a.price)]
+    } else {
+      return [a.quantity, a.price]
+    }
+  }, [])
+  const correctAverage = totalCost / absolutePosition
+  expect(r[0].averageEntryPrice).toBe(correctAverage)
 })
 
 test("all buys that increase a position should adjust the averageEntryPrice", () => {
