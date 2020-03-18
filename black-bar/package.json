@@ -1,0 +1,15 @@
+{
+  "name": "black-bar",
+  "version": "1.0.0",
+  "description": "draw a black rectangle on an image",
+  "main": "index.js",
+  "author": "John BEPPU <john.beppu@gmail.com>",
+  "license": "MIT",
+  "bin": {
+    "black-bar": "./bin/black-bar"
+  },
+  "dependencies": {
+    "commander": "^5.0.0",
+    "jimp": "^0.9.5"
+  }
+}

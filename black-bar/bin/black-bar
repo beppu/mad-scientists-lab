@@ -1,0 +1,33 @@
+#!/usr/bin/env node
+const blackBar = require('../index')
+const commander = require('commander')
+const pkg = require('../package')
+
+function parseIntBase10(n) {
+  return parseInt(n, 10)
+}
+
+async function main() {
+  const program = new commander.Command();
+  program
+    .version(pkg.version)
+    .usage("[option] <file>")
+    .description('Draw a black rectangle on an image')
+    .option('-x <OFFSET>', 'x offset', parseIntBase10, 5)
+    .option('-y <OFFSET>', 'y offset', parseIntBase10, 10)
+    .option('-w, --width <WIDTH>', 'width of black bar', parseIntBase10, 67)
+    .option('-h, --height <HEIGHT>', 'height of black bar', parseIntBase10, 21)
+    .option('-o, --output <FILENAME>', 'output result to filename', 'test.png')
+
+  program.parse(process.argv)
+  if (program.args.length == 0) {
+    console.warn("Files Needed")
+    process.exit(-1)
+  }
+  const filename = program.args[0]
+  //console.log(filename, program.X, program.Y, program.width, program.height)
+  const censoredImage = await blackBar.censor(filename, program.X, program.Y, program.width, program.height)
+  await censoredImage.writeAsync(program.output)
+}
+
+main()
