@@ -61,7 +61,8 @@ test("orders should show up in the simulator state and NOT EXECUTE if no candle 
 })
 
 test("market orders should fill immediately when a candle is given", () => {
-  const sx = simulator.create({ balance: 100000 })
+  const balance = 100000
+  const sx = simulator.create({ balance })
   const orders = [
     {
       type: 'market',
@@ -80,7 +81,7 @@ test("market orders should fill immediately when a candle is given", () => {
 
 test("limit orders should fill when their price is reached", () => {
   const balance = 100000
-  const sx = simulator.create({ balance: balance })
+  const sx = simulator.create({ balance })
   const orders = [
     {
       type: 'market',
@@ -120,7 +121,7 @@ test("limit orders should fill when their price is reached", () => {
 
 test("short positions should be possible with market orders", () => {
   const balance = 100000
-  const sx = simulator.create({ balance: 100000 })
+  const sx = simulator.create({ balance })
   const shortOrders = [
     {
       type: 'market',
@@ -150,7 +151,7 @@ test("short positions should be possible with market orders", () => {
 
 test("short positions should be possible with limit orders", () => {
   const balance = 100000
-  const sx = simulator.create({ balance: 100000 })
+  const sx = simulator.create({ balance })
   const shortOrders = [
     {
       type: 'limit',
@@ -185,7 +186,7 @@ test("short positions should be possible with limit orders", () => {
 test("limit buys orders priced higher than the current price should be turned into market buys", () => {
   // The purpose of this is to simulate BitMEX's behavior which I find very convenient especially in market that's moving very quickly.
   const balance = 100000
-  const sx = simulator.create({ balance: 100000 })
+  const sx = simulator.create({ balance })
   const buyOrders = [
     {
       type: 'limit',
@@ -207,7 +208,7 @@ test("limit buys orders priced higher than the current price should be turned in
 test("limit sell orders that are lower than the current price should be turned into market sells", () => {
   // The purpose of this is to simulate BitMEX's behavior which I find very convenient especially in market that's moving very quickly.
   const balance = 100000
-  const sx = simulator.create({ balance: 100000 })
+  const sx = simulator.create({ balance })
   const sellOrders = [
     {
       type: 'limit',
@@ -221,20 +222,31 @@ test("limit sell orders that are lower than the current price should be turned i
   ]
   // the limit buy order should turn into a market buy that fills immediately
   let r = sx(undefined, sellOrders, candles[0])
-  console.log(r)
+  //console.log(r)
   expect(r[1]).toHaveLength(1)
   expect(r[1][0].type).toBe('market')
   expect(r[1][0].oldType).toBe('limit')
+  expect(r[1][0].fillPrice).toBeGreaterThan(0)
+})
+
+test("all sells that increase a position should adjust the averageEntryPrice", () => {
+  const balance = 100000
+  const sx = simulator.create({ balance })
+})
+
+test("all buys that increase a position should adjust the averageEntryPrice", () => {
+  const balance = 100000
+  const sx = simulator.create({ balance })
 })
 
 test("stop market orders should work", () => {
   const balance = 100000
-  const sx = simulator.create({ balance: 100000 })
+  const sx = simulator.create({ balance })
 })
 
 test("unexecuted orders should be editable", () => {
   const balance = 100000
-  const sx = simulator.create({ balance: 100000 })
+  const sx = simulator.create({ balance })
 })
 
 // After I get up to here, I have enough to move on to strategy implementation.
