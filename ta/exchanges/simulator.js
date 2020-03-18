@@ -58,6 +58,17 @@ function fillOrder(o) {
   return filledOrder
 }
 
+/**
+ * Calculate the new averageEntryPrice
+ * @param {Object} state - previous exchange state
+ * @param {Number} price - price of asset
+ * @param {Number} quantity - amount of asset bought at the given price
+ * @returns {Number} the new averageEntryPrice
+ */
+function calculateAverageEntryPrice(state, price, quantity) {
+  return ((Math.abs(state.position) * state.averageEntryPrice) + (quantity * price)) / (Math.abs(state.position) + quantity)
+}
+
 // How to calculate profits/losses for shorts:
 // https://www.investopedia.com/ask/answers/05/maxreturnshortsale.asp
 
@@ -81,6 +92,7 @@ function executeMarketOrders(state, candle) {
         if (o.quantity * price < state.balance) {
           newState.balance -= o.quantity * price
           newState.position += o.quantity
+          newState.averageEntryPrice = calculateAverageEntryPrice(state, price, o.quantity)
           let marketBuy = fillOrder(o)
           marketBuy.fillPrice = price
           executedOrders.push(marketBuy)
@@ -113,7 +125,7 @@ function executeMarketOrders(state, candle) {
       if (o.quantity * price < state.balance) {
         newState.balance -= o.quantity * price
         newState.position -= o.quantity
-        newState.averageEntryPrice = price // FIXME - calculate a running average
+        newState.averageEntryPrice = calculateAverageEntryPrice(state, price, o.quantity)
         let marketSell = fillOrder(o)
         marketSell.fillPrice = price
         executedOrders.push(marketSell)
@@ -205,15 +217,18 @@ function executeStopAndLimitOrders(state, a, b) {
             break;
           }
         }
-        // are we closing a short position or opening a long position?
+        // are we closing a short position or opening (or extending) a long position?
         if (state.position >= 0) {
+          // opening or extending a long position
           console.log('before', { p: newState.position, q: o.quantity, b: newState.balance })
           newState.position += o.quantity
           newState.balance -= o.price * o.quantity
+          newState.averageEntryPrice = calculateAverageEntryPrice(state, o.price, o.quantity)
           console.log('after ', { p: newState.position, q: o.quantity, b: newState.balance })
           const limitBuy = fillOrder(o)
           executedOrders.push(limitBuy)
         } else {
+          // closing or reducing a short position
           let price = o.price
           let position = Math.abs(state.position)
           if (o.quantity <= position) {
@@ -260,13 +275,24 @@ function executeStopAndLimitOrders(state, a, b) {
             break;
           }
           // go ahead and open a new short position
-          let price = o.price
-          newState.balance -= o.quantity * price
-          newState.position -= o.quantity
-          newState.averageEntryPrice = price // FIXME - calculate a running average
-          //console.log('opening a new short position', newState.balance, newState.position)
-          let limitSell = fillOrder(o)
-          executedOrders.push(limitSell)
+          if (state.position <= 0) {
+            // opening or extending a short
+            let price = o.price
+            newState.balance -= o.quantity * price
+            newState.position -= o.quantity
+            newState.averageEntryPrice = calculateAverageEntryPrice(state, price, o.quantity)
+            //console.log('opening a new short position', newState.balance, newState.position)
+            let limitSell = fillOrder(o)
+            executedOrders.push(limitSell)
+          } else {
+            // closing or reducing a long
+            let price = o.price
+            newState.balance -= o.quantity * price
+            newState.position -= o.quantity
+            //console.log('opening a new short position', newState.balance, newState.position)
+            let limitSell = fillOrder(o)
+            executedOrders.push(limitSell)
+          }
         }
       }
       break;
@@ -400,6 +426,7 @@ function initialState(balance) {
     marketOrders: [],
     position: 0, // + for long, - for short
     balance: balance || 0,
+    averageEntryPrice: 0,
   }
 }
 
