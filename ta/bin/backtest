@@ -82,7 +82,8 @@ async function main() {
 
     // What's the damage?
     console.log(exchangeState)
-    const close = marketState.imd1d.close[0]
+    const key = `imd${program.timeframe}`
+    const close = marketState[key].close[0]
     console.log('Equity', (close * exchangeState.position) + exchangeState.balance)
   }
   catch (err) {
