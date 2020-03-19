@@ -8,13 +8,22 @@
 
 module.exports = function BuyAndHoldFn(baseTimeframe, opts) {
   const indicatorSpecs = {}
-  indicatorSpecs[baseTimeframe] = {}
+  indicatorSpecs[baseTimeframe] = []
   const imdKey = `imd${baseTimeframe}`
   const buyAndHold = function(state) {
     if (state[imdKey].close.length === 1) {
-      return { signal: 'BUY' }
+      const close = state[imdKey].close[0]
+      const adjustedClose = close + (close * 0.05) // assume a higher price so that we don't buy more than we can afford on the market buy
+      return [
+        {
+          id: 'almost-all-in',
+          type: 'market',
+          action: 'buy',
+          quantity: opts.balance / adjustedClose
+        }
+      ]
     } else {
-      return { signal: undefined }
+      return []
     }
   }
   return [indicatorSpecs, buyAndHold]
