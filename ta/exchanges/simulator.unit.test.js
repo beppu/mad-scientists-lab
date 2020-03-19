@@ -270,9 +270,77 @@ test("all sells that increase a position should adjust the averageEntryPrice", (
 test("all buys that increase a position should adjust the averageEntryPrice", () => {
   const balance = 100000
   const sx = simulator.create({ balance })
+  let candles = [
+    [0, 10000, 10000, 1000, 5000, 10000],
+  ]
+  const sellOrders = [
+    {
+      type: 'limit',
+      action: 'buy',
+      quantity: 1,
+      price: 2000
+    },
+    {
+      type: 'limit',
+      action: 'buy',
+      quantity: 2,
+      price: 3000
+    },
+    {
+      type: 'limit',
+      action: 'buy',
+      quantity: 3,
+      price: 4000
+    }
+  ]
+  const r = sx(undefined, sellOrders, candles[0])
+  const [absolutePosition, totalCost] = sellOrders.reduce((m, a) => {
+    if (m.length) {
+      return [m[0] + a.quantity, m[1] + (a.quantity * a.price)]
+    } else {
+      return [a.quantity, a.price]
+    }
+  }, [])
+  const correctAverage = totalCost / absolutePosition
+  expect(r[0].averageEntryPrice).toBe(correctAverage)
 })
 
-test("stop market orders should work", () => {
+test("stop market orders should be able to close positions", () => {
+  const balance = 100000
+  const sx = simulator.create({ balance })
+  let candles = [
+    [0, 10000, 10000, 1000, 5000, 10000],
+  ]
+  // This test intends to open a long position that gets stopped out before its target is hit.
+  const orders = [
+    {
+      type: 'limit',
+      action: 'buy',
+      quantity: 1,
+      price: 3000
+    },
+    /*
+    {
+      type: 'limit',
+      action: 'sell',
+      quantity: 1,
+      price: 6000,
+      options: { reduceOnly: true } // you need to have a position before putting in a reduceOnly order so this should've been rejected; make a separate test for this case.
+    },
+    */
+    {
+      type: 'stop-market',
+      action: 'sell',
+      quantity: 1,
+      stopPrice: 2000
+    }
+  ]
+  const [state, executedOrders] = sx(undefined, orders, candles[0])
+  expect(state.balance).toBe(balance - (orders[0].price - orders[1].stopPrice))
+  expect(state.averageEntryPrice).toBe(0)
+})
+
+test("stop market orders should be able to open positions", () => {
   const balance = 100000
   const sx = simulator.create({ balance })
 })
