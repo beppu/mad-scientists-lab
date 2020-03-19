@@ -174,37 +174,25 @@ function executeStopAndLimitOrders(state, a, b) {
     // low value to high value (positive slope)
     //console.log(`a:${a} < b:${b}`)
     // find all stop orders between a and b
-    //const stopOrders = state.stopOrders.filter((o) => a <= o.stopPrice && o.stopPrice <= b)
-    const [stopOrders, remainingStopOrders] = partition(state.stopOrders, (o) => a <= o.stopPrice && o.stopPrice <= b)
+    //const stopOrders = state.stopOrders.filter((o) => a <= o.price && o.price <= b)
+    const [stopOrders, remainingStopOrders] = partition(state.stopOrders, (o) => a <= o.price && o.price <= b)
     newState.stopOrders = remainingStopOrders
     // find all limit orders between a and b
     //const limitOrders = state.limitOrders.filter((o) => a <= o.price && o.price <= b)
     const [limitOrders, remainingLimitOrders] = partition(state.limitOrders, (o) => a <= o.price && o.price <= b)
     newState.limitOrders = remainingLimitOrders
-    mergedOrders = sortBy(stopOrders.concat(limitOrders), (o) => {
-      if (o.type.match(/^stop/)) {
-        return o.stopPrice
-      } else {
-        return o.price
-      }
-    })
+    mergedOrders = sortBy(stopOrders.concat(limitOrders), ['price'])
     //console.log('merged a < b', mergedOrders)
   } else {
     // high value to low value (negative slope)
     //console.log(`a:${a} >= b:${b}`)
     // find all stop orders between a and b
-    const [stopOrders, remainingStopOrders] = partition(state.stopOrders, (o) => b <= o.stopPrice && o.stopPrice <= a)
+    const [stopOrders, remainingStopOrders] = partition(state.stopOrders, (o) => b <= o.price && o.price <= a)
     newState.stopOrders = remainingStopOrders
     // find all limit orders between a and b
     const [limitOrders, remainingLimitOrders] = partition(state.limitOrders, (o) => b <= o.price && o.price <= a)
     newState.limitOrders = remainingLimitOrders
-    mergedOrders = sortBy(stopOrders.concat(limitOrders), (o) => {
-      if (o.type.match(/^stop/)) {
-        return o.stopPrice
-      } else {
-        return o.price
-      }
-    })
+    mergedOrders = sortBy(stopOrders.concat(limitOrders), ['price'])
     mergedOrders.reverse() // XXX mutation
     //console.log('merged a >= b', mergedOrders)
   }
@@ -318,7 +306,6 @@ function executeStopAndLimitOrders(state, a, b) {
     case 'stop-market':
       o.oldType = 'stop-market'
       o.type = 'market'
-      o.price = o.stopPrice
       const fakeCandle = [0, o.price, o.price, o.price, o.price, 0]
       newState.marketOrders.push(o)
       const [s, x] = executeMarketOrders(newState, fakeCandle)

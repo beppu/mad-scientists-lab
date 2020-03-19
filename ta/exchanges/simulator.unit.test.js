@@ -44,14 +44,14 @@ test("orders should show up in the simulator state and NOT EXECUTE if no candle 
       type: 'stop-market',
       action: 'sell',
       quantity: 10000,
-      stopPrice: 7800 // stopPrice == price for stop-market orders
+      price: 7800
     },
     {
       type: 'stop-limit',
       action: 'sell',
       quantity: 10000,
       price: 7750,
-      stopPrice: 7700
+      price: 7700
     },
   ]
   let [state, actions] = sx(undefined, orders, undefined)
@@ -332,11 +332,11 @@ test("stop market orders should be able to close positions", () => {
       type: 'stop-market',
       action: 'sell',
       quantity: 1,
-      stopPrice: 2000
+      price: 2000
     }
   ]
   const [state, executedOrders] = sx(undefined, orders, candles[0])
-  expect(state.balance).toBe(balance - (orders[0].price - orders[1].stopPrice))
+  expect(state.balance).toBe(balance - (orders[0].price - orders[1].price))
   expect(state.averageEntryPrice).toBe(0)
 })
 
@@ -351,14 +351,14 @@ test("stop market orders should be able to open positions", () => {
       type: 'stop-market',
       action: 'sell',
       quantity: 1,
-      stopPrice: 9000
+      price: 9000
     },
   ]
   const [state, executedOrders] = sx(undefined, orders, candles[0])
   //console.log(state, executedOrders)
   expect(executedOrders).toHaveLength(1)
   expect(state.position).toBe(-orders[0].quantity)
-  expect(state.balance).toBe(balance - orders[0].stopPrice * orders[0].quantity)
+  expect(state.balance).toBe(balance - orders[0].price * orders[0].quantity)
 })
 
 test("unexecuted orders should be editable", () => {
