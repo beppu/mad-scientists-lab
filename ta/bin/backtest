@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 // Does the potential for regular divergence exist?
-const dotenv    = require('dotenv').config()
-const pkg       = require('../package.json')
-const ta        = require('../index')
-const time      = require('../time')
-const utils     = require('../utils')
-const pipeline  = require('../pipeline')
-const ix        = require('../indicators')
+const dotenv     = require('dotenv').config()
+const pkg        = require('../package.json')
+const ta         = require('../index')
+const time       = require('../time')
+const utils      = require('../utils')
+const pipeline   = require('../pipeline')
+const ix         = require('../indicators')
 const strategies = require('../strategies')
-const simulator = require('../exchanges/simulator')
-const luxon     = require('luxon')
-const commander = require('commander')
-const talib     = require('talib')
-const beautify  = require('json-beautify')
+const simulator  = require('../exchanges/simulator')
+const luxon      = require('luxon')
+const commander  = require('commander')
+const talib      = require('talib')
+const beautify   = require('json-beautify')
 
 const {DateTime} = luxon
 
