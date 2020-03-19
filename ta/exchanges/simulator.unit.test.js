@@ -343,6 +343,22 @@ test("stop market orders should be able to close positions", () => {
 test("stop market orders should be able to open positions", () => {
   const balance = 100000
   const sx = simulator.create({ balance })
+  let candles = [
+    [0, 10000, 10000, 1000, 5000, 10000],
+  ]
+  const orders = [
+    {
+      type: 'stop-market',
+      action: 'sell',
+      quantity: 1,
+      stopPrice: 9000
+    },
+  ]
+  const [state, executedOrders] = sx(undefined, orders, candles[0])
+  //console.log(state, executedOrders)
+  expect(executedOrders).toHaveLength(1)
+  expect(state.position).toBe(-orders[0].quantity)
+  expect(state.balance).toBe(balance - orders[0].stopPrice * orders[0].quantity)
 })
 
 test("unexecuted orders should be editable", () => {
