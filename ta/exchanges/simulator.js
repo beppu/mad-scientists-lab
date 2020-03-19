@@ -105,7 +105,7 @@ function executeMarketOrders(state, candle) {
           executedOrders.push(rejection)
         }
       } else {
-        // closing short
+        // reducing or closing short
         let price = open
         let position = Math.abs(state.position)
         if (o.quantity <= position) {
@@ -120,24 +120,39 @@ function executeMarketOrders(state, candle) {
           // closing short and opening a long simultaneously
           // TODO check for sufficient funds
         }
+        if (newState.position === 0) newState.averageEntryPrice = 0
       }
     } else {
       // SELL
       // Is it possible that selling works the same whether we're closing a long or opening a short?
+      // I'm starting to think no.
       let price = open
-      if (o.quantity * price < state.balance) {
+      if (newState.position > 0) {
+        // closing a long position
         let previousPosition = newState.position
         let previousAverage = newState.averageEntryPrice
-        newState.balance -= o.quantity * price
+        newState.balance += o.quantity * price
         newState.position -= o.quantity
         newState.averageEntryPrice = calculateAverageEntryPrice(previousAverage, previousPosition, price, o.quantity)
         let marketSell = fillOrder(o)
         marketSell.fillPrice = price
         executedOrders.push(marketSell)
       } else {
-        let rejection = rejectOrder(o, 'insufficient funds')
-        executedOrders.push(rejection)
+        if (o.quantity * price < state.balance) {
+          let previousPosition = newState.position
+          let previousAverage = newState.averageEntryPrice
+          newState.balance -= o.quantity * price
+          newState.position -= o.quantity
+          newState.averageEntryPrice = calculateAverageEntryPrice(previousAverage, previousPosition, price, o.quantity)
+          let marketSell = fillOrder(o)
+          marketSell.fillPrice = price
+          executedOrders.push(marketSell)
+        } else {
+          let rejection = rejectOrder(o, 'insufficient funds')
+          executedOrders.push(rejection)
+        }
       }
+      if (newState.position === 0) newState.averageEntryPrice = 0
     }
   })
   newState.marketOrders = []
@@ -152,7 +167,7 @@ function executeMarketOrders(state, candle) {
  * @returns {Return Type} exchange state after orders between price a and b have been executed
  */
 function executeStopAndLimitOrders(state, a, b) {
-  const newState = clone(state)
+  let newState = clone(state)
   let executedOrders = []
   let mergedOrders
   if (a < b) {
@@ -190,9 +205,12 @@ function executeStopAndLimitOrders(state, a, b) {
         return o.price
       }
     })
+    mergedOrders.reverse() // XXX mutation
     //console.log('merged a >= b', mergedOrders)
   }
+  //console.log({a, b, mergedOrders})
   mergedOrders.forEach((o) => {
+    //console.log(o)
     switch (o.type) {
     case 'limit':
       //console.log('limit', o)
@@ -225,11 +243,11 @@ function executeStopAndLimitOrders(state, a, b) {
         // are we closing a short position or opening (or extending) a long position?
         if (state.position >= 0) {
           // opening or extending a long position
-          console.log('before', { p: newState.position, q: o.quantity, b: newState.balance })
+          let previousPosition = newState.position
+          let previousAverage = newState.averageEntryPrice
           newState.position += o.quantity
           newState.balance -= o.price * o.quantity
-          newState.averageEntryPrice = calculateAverageEntryPrice(state, o.price, o.quantity)
-          console.log('after ', { p: newState.position, q: o.quantity, b: newState.balance })
+          newState.averageEntryPrice = calculateAverageEntryPrice(previousAverage, previousPosition, o.price, o.quantity)
           const limitBuy = fillOrder(o)
           executedOrders.push(limitBuy)
         } else {
@@ -246,7 +264,10 @@ function executeStopAndLimitOrders(state, a, b) {
           } else {
             // closing short and opening a long simultaneously
             // TODO check for sufficient funds
+            // I can skip this for now.
+            // I don't intend to make a strategy do this just yet, and it can be approximated with 2 adjacent limit orders.
           }
+          if (newState.position === 0) newState.averageEntryPrice = 0
         }
         break;
       case 'sell':
@@ -259,7 +280,7 @@ function executeStopAndLimitOrders(state, a, b) {
           }
         }
         if (newState.position > 0) {
-          // reduce long position
+          // reduce or close long position
           if (newState.position < o.quantity) {
             let rejection = rejectOrder(o, 'insufficient position for sell order')
             executedOrders.push(rejection)
@@ -270,6 +291,7 @@ function executeStopAndLimitOrders(state, a, b) {
           newState.balance += o.price * o.quantity
           const limitSell = fillOrder(o)
           executedOrders.push(limitSell)
+          if (newState.position === 0) newState.averageEntryPrice = 0
           break;
         } else {
           // short
@@ -278,31 +300,30 @@ function executeStopAndLimitOrders(state, a, b) {
             executedOrders.push(rejection)
             break;
           }
-          if (state.position <= 0) {
-            // opening or extending a short
-            let price = o.price
-            let previousPosition = newState.position
-            newState.balance -= o.quantity * price
-            newState.position -= o.quantity
-            newState.averageEntryPrice = calculateAverageEntryPrice(newState.averageEntryPrice, previousPosition, price, o.quantity)
-            //console.log('opening a new short position', newState.balance, newState.position)
-            let limitSell = fillOrder(o)
-            executedOrders.push(limitSell)
-          } else {
-            // closing or reducing a long
-            let price = o.price
-            newState.balance -= o.quantity * price
-            newState.position -= o.quantity
-            //console.log('opening a new short position', newState.balance, newState.position)
-            let limitSell = fillOrder(o)
-            executedOrders.push(limitSell)
-          }
+          // opening or extending a short
+          let price = o.price
+          let previousPosition = newState.position
+          newState.balance -= o.quantity * price
+          newState.position -= o.quantity
+          newState.averageEntryPrice = calculateAverageEntryPrice(newState.averageEntryPrice, previousPosition, price, o.quantity)
+          //console.log('opening a new short position', newState.balance, newState.position)
+          let limitSell = fillOrder(o)
+          executedOrders.push(limitSell)
         }
       }
       break;
     case 'stop-limit':
+      // TODO later - I can write strategies without this, because I don't use stop-limit orders.
       break;
     case 'stop-market':
+      o.oldType = 'stop-market'
+      o.type = 'market'
+      o.price = o.stopPrice
+      const fakeCandle = [0, o.price, o.price, o.price, o.price, 0]
+      newState.marketOrders.push(o)
+      const [s, x] = executeMarketOrders(newState, fakeCandle)
+      newState = s
+      executedOrders = executedOrders.concat(x)
       break;
     }
   })
@@ -381,17 +402,19 @@ function executeOrders(state, candle) {
   if (openToLow > openToHigh) {
     // 1: o->h->l->c
     // o->h
-    //console.log(1);
+    //console.log(`1: o->h->l->c`, candle);
     [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], open, high)
     states.unshift(tmpState)
     executedOrders = executedOrders.concat(tmpExecutions);
     //console.log('o->h', executedOrders); // these semicolons seem necessary.  It's the destructured assignment without (var, let, or const) that's forcing the semicolon.
     // h->l
+    //console.log('h->l');
     [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], high, low)
     states.unshift(tmpState)
     executedOrders = executedOrders.concat(tmpExecutions);
     //console.log('h->l', executedOrders);
     // l->c
+    //console.log('l->c');
     [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], low, close)
     states.unshift(tmpState)
     executedOrders = executedOrders.concat(tmpExecutions);
@@ -399,7 +422,7 @@ function executeOrders(state, candle) {
   } else {
     // 2: o->l->h->c
     // o->l
-    //console.log(2, 'openToLow <= openToHigh');
+    //console.log(`2: o->l->h->c`, candle);
     [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], open, low)
     states.unshift(tmpState)
     executedOrders = executedOrders.concat(tmpExecutions);
