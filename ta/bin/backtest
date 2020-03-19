@@ -7,12 +7,18 @@ const time      = require('../time')
 const utils     = require('../utils')
 const pipeline  = require('../pipeline')
 const ix        = require('../indicators')
+const strategies = require('../strategies')
+const simulator = require('../exchanges/simulator')
 const luxon     = require('luxon')
 const commander = require('commander')
 const talib     = require('talib')
 const beautify  = require('json-beautify')
 
 const {DateTime} = luxon
+
+function parseIntBase10(n) {
+  return parseInt(n, 10)
+}
 
 async function main() {
   const program   = new commander.Command();
@@ -22,6 +28,7 @@ async function main() {
     .option('-x, --exchange <NAME>', 'Exchange to pull data from', process.env.TA_EXCHANGE)
     .option('-m, --market <SYMBOL>', 'Market in exchange to pull data from', process.env.TA_MARKET)
     .option('-t, --timeframe <INTERVAL>', 'Candlestick duration for market data', process.env.TA_TIMEFRAME)
+    .option('-b, --balance <DOLLARS>', 'Amount of money to start with', parseIntBase10, 100000)
     .option('-s, --strategy <STRATEGY>', 'Name of trading strategy to use')
     .option('-d, --data <PATH>', 'Directory to store candlestick data in', './data')
   program.parse(process.argv)
@@ -46,51 +53,19 @@ async function main() {
 
     // Let's feel this out.
     const nextCandle = await pipeline.loadCandlesFromFS(program.data, program.exchange, program.market, program.timeframe)
+    const indicatorSpecs = {} // this has to come from a strategy
+    const iterate = pipeline.mainLoopFn(program.timeframe, indicatorSpecs)
+    const sx = simulator.create({ balance: program.balance })
     let candle = await nextCandle()
-    // How do I want to aggregate candles?
-    // I need both finished AND unfinished candles.
-    // Once they're finished, they get stored in an array for later.
-    // While they're unfinished, they get replaced at the end of an array
-    let history = {
-      default: [],
-      '2h': [],
-      '4h': [],
-      '1d': [],
-    }
-    let ax2h = pipeline.aggregatorFn('2h')
-    let ax4h = pipeline.aggregatorFn('4h')
-    let ax1d = pipeline.aggregatorFn('1d')
-    let md = ta.marketDataFromCandles(history.default)
-    let imd1h = ta.invertedMarketData(md)
-    let sma20Calculator = ix.sma(20)
-    while (candle != null) {
-      history.default.push(candle)
-      // this is really fucking slow
-      md = ta.marketDataAppendCandle(md, candle)
-      imd1h = ta.invertedAppendCandle(imd1h, candle)
-      sma20Calculator(md, imd1h)
-      let [candle2h, isBoundary2h] = ax2h(candle)
-      if (isBoundary2h) {
-        history['2h'].push(candle2h)
-      } else {
-        history['2h'][history['2h'].length-1] = candle2h
-      }
-      let [candle4h, isBoundary4h] = ax4h(candle)
-      if (isBoundary4h) {
-        history['4h'].push(candle4h)
-      } else {
-        history['4h'][history['4h'].length-1] = candle4h
-      }
-      let [candle1d, isBoundary1d] = ax1d(candle)
-      if (isBoundary1d) {
-        history['1d'].push(candle1d)
-        console.log(candle)
-      } else {
-        history['1d'][history['1d'].length-1] = candle1d
-      }
+    let marketState
+    let exchangeState, executedOrders
+    while (candle) {
+      console.log(candle);
+      marketState = iterate(candle)
+      // TODO - Run a strategy on marketState
+      [exchangeState, executedOrders] = sx(exchangeState, [], candle)
       candle = await nextCandle()
     }
-    console.log(history.default.length, history['2h'].length, history['4h'].length, history['1d'].length, imd1h.sma20.length)
   }
   catch (err) {
     console.error(err.stack)
