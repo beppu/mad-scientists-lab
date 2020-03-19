@@ -347,6 +347,85 @@ function convertLateLimitOrdersToMarketOrders(state, candle) {
   return newState
 }
 
+/**
+ * If there are any modification instructions in orders, execute them.
+ * @param {Object} state - Parameter description.
+ * @param {Array<Object>} orders - a list of orders that may contain modify instructions
+ * @returns {Array} an array of state and executedModifyInstructions
+ */
+function executeModifyInstructions(state, orders) {
+  let newState = clone(state)
+  let executedModifyInstructions = []
+  const modifyInstructions = orders.filter((o) => o.type === 'modify')
+  modifyInstructions.forEach((m) => {
+    //console.log(m)
+    switch (m.action) {
+    case 'cancel':
+      if (m.id) {
+        let [keepLimits, cancelLimits] = partition(newState.limitOrders, (o) => o.id !== m.id)
+        let [keepStops, cancelStops] = partition(newState.stopOrders, (o) => o.id !== m.id)
+        newState.limitOrders = keepLimits
+        newState.stopOrders = keepStops
+        cancelLimits.forEach((o) => o.status = 'cancelled')
+        cancelStops.forEach((o) => o.status = 'cancelled')
+        executedModifyInstructions = executedModifyInstructions.concat(cancelLimits, cancelStops)
+      } else if (m.group) {
+        let [keepLimits, cancelLimits] = partition(newState.limitOrders, (o) => o.group !== m.group)
+        let [keepStops, cancelStops] = partition(newState.stopOrders, (o) => o.group !== m.group)
+        newState.limitOrders = keepLimits
+        newState.stopOrders = keepStops
+        cancelLimits.forEach((o) => o.status = 'cancelled')
+        cancelStops.forEach((o) => o.status = 'cancelled')
+        executedModifyInstructions = executedModifyInstructions.concat(cancelLimits, cancelStops)
+      }
+      break;
+    case 'update':
+      // NOTE: update is id only.  There are no group updates.
+      // TODO: Sanity check the update values to make sure there are enough funds.
+      newState.limitOrders.forEach((o) => {
+        if (o.id === m.id) {
+          const updatedOrder = clone(o)
+          updatedOrder.status = 'updated'
+          if (m.price) {
+            updatedOrder.oldPrice = o.price
+            o.price = m.price
+          }
+          if (m.quantity) {
+            updatedOrder.oldQuantity = o.quantity
+            o.quantity = m.quantity
+          }
+          if (m.limitPrice) {
+            updatedOrder.oldLimitPrice = o.limitPrice
+            o.limitPrice = m.limitPrice
+          }
+          executedModifyInstructions = executedModifyInstructions.concat(updatedOrder)
+        }
+      })
+      newState.stopOrders.forEach((o) => {
+        if (o.id === m.id) {
+          const updatedOrder = clone(o)
+          updatedOrder.status = 'updated'
+          if (m.price) {
+            updatedOrder.oldPrice = o.price
+            o.price = m.price
+          }
+          if (m.quantity) {
+            updatedOrder.oldQuantity = o.quantity
+            o.quantity = m.quantity
+          }
+          if (m.limitPrice) {
+            updatedOrder.oldLimitPrice = o.limitPrice
+            o.limitPrice = m.limitPrice
+          }
+          executedModifyInstructions = executedModifyInstructions.concat(updatedOrder)
+        }
+      })
+      break;
+    }
+  })
+  return [newState, executedModifyInstructions]
+}
+
 /*
 
   For simulated order execution, follow these rules:
@@ -374,7 +453,7 @@ function executeOrders(state, candle) {
   const openToHigh = high - open
   const openToLow  = open - low
 
-  // TODO - Convert limit orders that have been overtaken by price action to market orders like BitMEX
+  // Convert limit orders that have been overtaken by price action to market orders like BitMEX
   let states = []
   let tmpExecutions
   let tmpState = convertLateLimitOrdersToMarketOrders(state, candle)
@@ -474,6 +553,18 @@ function create(opts) {
     // let's get a state we can work with
     let newState = state ? clone(state) : initialState(opts.balance)
 
+    // Run any modifications first
+    let modifiedState, modifications
+    if (orders && orders.length) {
+      [modifiedState, modifications] = executeModifyInstructions(newState, orders)
+      //console.log(modifiedState, modifications.length)
+      if (modifications.length) {
+        newState = modifiedState
+      }
+    } else {
+      modifications = []
+    }
+
     // If orders were given, put them in state as appropriate
     if (orders && orders.length) {
       let limitOrders = orders.filter((o) => o.type === 'limit')
@@ -490,9 +581,9 @@ function create(opts) {
     if (candle) {
       let [newNewState, executedOrders] = executeOrders(newState, candle)
       lastCandle = candle
-      return [newNewState, executedOrders]
+      return [newNewState, modifications.concat(executedOrders)]
     } else {
-      return [newState, []]
+      return [newState, modifications]
     }
   }
 }

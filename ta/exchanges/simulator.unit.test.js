@@ -364,6 +364,66 @@ test("stop market orders should be able to open positions", () => {
 test("unexecuted orders should be editable", () => {
   const balance = 100000
   const sx = simulator.create({ balance })
+  const orders = [
+    {
+      group: 'test-orders',
+      type: 'stop-market',
+      action: 'sell',
+      quantity: 1,
+      price: 9000
+    },
+    {
+      id: 'foo',
+      type: 'stop-market',
+      action: 'sell',
+      quantity: 1,
+      price: 9000
+    },
+    {
+      group: 'test-orders',
+      type: 'limit',
+      action: 'buy',
+      quantity: 1,
+      price: 1000
+    },
+    {
+      id: 'bar',
+      type: 'limit',
+      action: 'buy',
+      quantity: 1,
+      price: 900
+    }
+  ]
+  const [s, x] = sx(undefined, orders)
+  //console.log(s)
+  expect(s.limitOrders).toHaveLength(2)
+  expect(s.stopOrders).toHaveLength(2)
+  const edits = [
+    {
+      type: 'modify',
+      action: 'cancel',
+      id: 'foo'
+    },
+    {
+      type: 'modify',
+      action: 'cancel',
+      group: 'test-orders'
+    },
+    {
+      type: 'modify',
+      action: 'update',
+      id: 'bar',
+      price: 1100,
+      quantity: 2
+    }
+  ]
+  // only one limit order should be left after all this, and it should be modified.
+  const [s2, x2] = sx(s, edits)
+  expect(s2.limitOrders).toHaveLength(1)
+  expect(s2.stopOrders).toHaveLength(0)
+  expect(x2).toHaveLength(4) // even though only 3 instructions were given, the group cancel cancelled 2 orders to bring the total number of orders changed to 4
+  expect(s2.limitOrders[0].price).toBe(1100)
+  expect(s2.limitOrders[0].quantity).toBe(2)
 })
 
 // After I get up to here, I have enough to move on to strategy implementation.
