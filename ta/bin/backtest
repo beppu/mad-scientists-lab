@@ -79,7 +79,16 @@ async function main() {
     let marketState
     let exchangeState, executedOrders
     let candle = await nextCandle()
-    let begin = true // TODO - Check vs candle[0]
+    let begin
+    if (program.begin) {
+      let current = time.dt(candle[0])
+      begin = time.dt(candle[0]) >= program.begin
+    } else {
+      begin = true
+    }
+    if (program.verbose) {
+      console.log(program.begin.toISO(), begin)
+    }
     let end = false
     while (candle && !end) {
       marketState = iterate(candle)
@@ -91,7 +100,20 @@ async function main() {
         }
       }
       candle = await nextCandle()
-      // TODO - Check candle[0] for begin and end conditions
+
+      // Check candle[0] for begin and end conditions
+      if (!begin) {
+        begin = time.dt(candle[0]) >= program.begin
+        if (begin && program.verbose) {
+          console.log('starting strategy at', time.dt(candle[0]).toISO())
+        }
+      }
+      if (program.end && candle) {
+        end = time.dt(candle[0]) > program.end
+        if (end && program.verbose) {
+          console.log('ending strategy at', time.dt(candle[0]).toISO())
+        }
+      }
     }
 
     // What's the damage?
