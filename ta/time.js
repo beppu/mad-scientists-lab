@@ -1,5 +1,14 @@
 const {DateTime, Interval} = require('luxon')
 
+/**
+ * A wrapper around DateTime.fromMillis
+ * @param {Number} ms - A unix time in milliseconds
+ * @returns {DateTime} ms converted to a DateTime
+ */
+function dt(ms) {
+  return DateTime.fromMillis(ms)
+}
+
 function timeframeToMinutes(timeframe) {
   const match  = timeframe.match(/(\d+)(\w+)/);
   if (!match) {
@@ -65,6 +74,7 @@ function isTimeframeBoundary(timeframe, time) {
 }
 
 module.exports = {
+  dt,
   timeframeToMinutes,
   timeframeToMilliseconds,
   timestampForTimeframe,
