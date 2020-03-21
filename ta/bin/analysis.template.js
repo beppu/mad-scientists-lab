@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// Does the potential for regular divergence exist?
 const dotenv    = require('dotenv').config()
 const pkg       = require('../package.json')
 const ta        = require('../index')
