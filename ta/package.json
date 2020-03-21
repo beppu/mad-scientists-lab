@@ -42,7 +42,8 @@
     "profit-loss": "./bin/profit-loss",
     "pnl": "./bin/profit-loss",
     "horizontal": "./bin/horizontal",
-    "guppy": "./bin/guppy"
+    "guppy": "./bin/guppy",
+    "backtest": "./bin/backtest"
   },
   "scripts": {
     "test": "jest"
