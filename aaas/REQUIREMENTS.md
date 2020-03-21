@@ -1,73 +1,66 @@
-# Alerts as a Service API
-
-What is required of an API that powers a market alert service?
-
-## Public API
+# Public API
 
 The following functionality should be read-only and not user-specific.
 
-### List of Exchanges
+## List of Exchanges
 
-#### Parameters
+Parameters
 
 None
 
-#### Output
+Output
 
 Return a list of all the exchanges supported by this service.
 
-### List of Markets
+## List of Markets
 
-#### Parameters
+Parameters
 
 - exchanges
 
-#### Output
+Output
 
 Return a list of markets available for the given exchange.
 
-### List of Timeframes
+## List of Timeframes
 
-#### Parameters
+Parameters
 
 - exchange
 
-#### Output
+Output
 
 Return a list of candlestick timeframes natively supported by the exchanges API.
 
-### List of Alerts
+## List of Alerts
 
-#### Parameters
+Parameters
 
 None
 
-#### Output
+Output
 
 Return a list of the alerts supported by this alerts service.
 
-### Alert Specs
+## Alert Specs
 
-#### Parameters
+Parameters
 
 - alert
 
-#### Output
+Output
 
 Return a structured description of the parameters the given alert takes.
 
+# Private API
 
-
-
-## Private API
-
-### Authentication
+## Authentication
 
 It must be possible to distinguish users from each other.
 
-### Create Alert
+## Create Alert
 
-#### Parameters
+Parameters
 
 - exchange
 - market
@@ -75,34 +68,31 @@ It must be possible to distinguish users from each other.
 - alert
 - alertParameters
 
-#### Output
+Output
 
 Return whether the alert was successfully created or not.
 
-### Edit Alert
+## Edit Alert
 
-#### Parameters
+Parameters
 
 - alertId
 - alertParameters
 
-#### Output
+Output
 
 Return whether the alert was successfully edited or not.
 
-### Delete Alert
+## Delete Alert
 
-#### Parameters
+Parameters
 
 - alertId
 
-#### Output
+Output
 
 Return whether the alert was successfully deleted or not.
 
+# Parting Thoughts
 
-
-## Parting Thoughts
-
-This could be implemented as a REST API or a GraphQL API.  Almost any database could be made to work as well.
-There are a lot of ways to correctly implement these requirements.
+This could be implemented as a REST API or a GraphQL API.  Almost any database could be made to work as well. There are a lot of ways to correctly implement these requirements.
