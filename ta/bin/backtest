@@ -81,7 +81,9 @@ async function main() {
       strategyConfig = config
     }
     const [indicatorSpecs, strategy] = strategies[program.strategy](program.timeframe, strategyConfig)
-    console.log(indicatorSpecs)
+    if (program.verbose) {
+      console.log('indicatorSpecs', indicatorSpecs)
+    }
 
     // Pipeline of Price Data
     const iterate = pipeline.mainLoopFn(program.timeframe, indicatorSpecs)
