@@ -74,7 +74,7 @@ async function main() {
     // Strategy
     let strategyConfig
     if (program.config) {
-      const configPath = program.config.match(/^\w/) ? `${process.cwd()}/${program.config}` : program.config
+      const configPath = `${process.cwd()}/${program.config}`
       const jsonConfig = require(configPath)
       strategyConfig = merge(config, jsonConfig)
     } else {
