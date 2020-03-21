@@ -13,6 +13,7 @@ const luxon      = require('luxon')
 const commander  = require('commander')
 const talib      = require('talib')
 const beautify   = require('json-beautify')
+const merge      = require('lodash.merge')
 
 const {DateTime} = luxon
 
@@ -63,11 +64,19 @@ async function main() {
     // Let's feel this out.
 
     // Exchange Simulator
-    const sx = simulator.create({ balance: program.balance })
+    let config = { balance: program.balance }
+    const sx = simulator.create(config)
 
     // Strategy
-    const config = { balance: program.balance }
-    const [indicatorSpecs, strategy] = strategies[program.strategy](program.timeframe, config)
+    let strategyConfig
+    if (program.config) {
+      const configPath = program.config.match(/^\w/) ? `${process.cwd()}/${program.config}` : program.config
+      const jsonConfig = require(configPath)
+      strategyConfig = merge(config, jsonConfig)
+    } else {
+      strategyConfig = config
+    }
+    const [indicatorSpecs, strategy] = strategies[program.strategy](program.timeframe, strategyConfig)
     console.log(indicatorSpecs)
 
     // Pipeline of Price Data
