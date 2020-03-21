@@ -64,7 +64,3 @@ happens.  This will be done using the following methods:
 
 Make some noise, so I can look at interesting developments in the market.
 
-#### Changes to be made
-
-* Add espeak support
-* Add desktop notification support
