@@ -14,8 +14,12 @@ const commander  = require('commander')
 const talib      = require('talib')
 const beautify   = require('json-beautify')
 const merge      = require('lodash.merge')
+const pino       = require('pino')
+
 
 const {DateTime} = luxon
+
+const logger = pino()
 
 function parseIntBase10(n) {
   return parseInt(n, 10)
@@ -64,7 +68,7 @@ async function main() {
     // Let's feel this out.
 
     // Exchange Simulator
-    let config = { balance: program.balance }
+    let config = { balance: program.balance, logger }
     const sx = simulator.create(config)
 
     // Strategy
@@ -129,6 +133,7 @@ async function main() {
     console.log(exchangeState)
     const key = `imd${program.timeframe}`
     const close = marketState[key].close[0]
+    console.log('Closing Price', close)
     console.log('Equity', (close * exchangeState.position) + exchangeState.balance)
   }
   catch (err) {
