@@ -68,7 +68,7 @@ async function main() {
 
     // Exchange Simulator
     let config = { balance: program.balance, logger }
-    const sx = simulator.create(config)
+    const exchange = simulator.create(config)
 
     // Strategy
     let strategyConfig
@@ -107,8 +107,8 @@ async function main() {
     while (candle && !end) {
       marketState = iterate(candle)
       if (begin) {
-        orders = strategy(marketState)
-        ;[exchangeState, executedOrders] = sx(exchangeState, orders, candle)
+        orders = strategy(marketState, executedOrders)
+        ;[exchangeState, executedOrders] = exchange(exchangeState, orders, candle)
         if (orders && orders.length) {
           console.log({ candle, orders })
         }

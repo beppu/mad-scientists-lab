@@ -11,7 +11,7 @@ module.exports = function init(baseTimeframe, opts) {
   indicatorSpecs[baseTimeframe] = []
   const imdKey = `imd${baseTimeframe}`
   let hasBought = false
-  function buyAndHold(state) {
+  function buyAndHold(state, executedOrders) {
     if (!hasBought) {
       const close = state[imdKey].close[0]
       const adjustedClose = close + (close * 0.05) // assume a higher price so that we don't buy more than we can afford on the market buy

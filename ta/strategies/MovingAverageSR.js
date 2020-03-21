@@ -21,7 +21,7 @@ module.exports = function init(baseTimeframe, config) {
   const period = config.period || 20
   const indicatorSpecs = {}
   indicatorSpecs[baseTimeframe] = [ [ma, period ] ]
-  function movingAverageSR(state) {
+  function movingAverageSR(state, executedOrders) {
     return []
   }
   return [indicatorSpecs, movingAverageSR]
