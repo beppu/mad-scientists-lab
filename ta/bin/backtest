@@ -100,7 +100,7 @@ async function main() {
     } else {
       begin = true
     }
-    if (program.verbose) {
+    if (program.verbose && program.begin) {
       console.log(program.begin.toISO(), begin)
     }
     let end = false
