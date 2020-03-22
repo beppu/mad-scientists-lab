@@ -25,11 +25,14 @@ global.alerts = require('./alerts')
 global.time = require('./time')
 global.utils = require('./utils')
 global.pipeline = global.pl = require('./pipeline')
+global.indicators = require('./indicators')
+global.strategies = require('./strategies')
 
 global.profitLoss = global.utils.profitLoss
 const ccxt = global.ccxt
 global.bitmex = new ccxt.bitmex()
 global.binance = new ccxt.binance()
+global.ftx = new ccxt.ftx()
 
 // Where I like to store my temporary results from async functions.
 global.x = {}
