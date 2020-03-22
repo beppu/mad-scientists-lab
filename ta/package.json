@@ -43,7 +43,8 @@
     "pnl": "./bin/profit-loss",
     "horizontal": "./bin/horizontal",
     "guppy": "./bin/guppy",
-    "backtest": "./bin/backtest"
+    "backtest": "./bin/backtest",
+    "mexico": "./bin/mexico"
   },
   "scripts": {
     "test": "jest"
