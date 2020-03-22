@@ -18,7 +18,7 @@ function keyName(period) {
  * @param {Number} period - length of the simple moving average
  * @returns {Function} a function that takes marketData and invertedMarketData and appends an EMA calculation to it
  */
-module.exports = function rsiFn(period) {
+module.exports = function rsiFn(period=14) {
   const key = keyName(period)
 
   // Calculate RSI for every iteration after the first one.

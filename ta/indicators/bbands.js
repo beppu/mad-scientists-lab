@@ -16,7 +16,7 @@ const EMPTY_STATE = {}
  * @param {Number} period - length of the simple moving average
  * @returns {Array<Function>} An array of two functions for inserting and updating data
  */
-module.exports = function bbandsFn(period) {
+module.exports = function bbandsFn(period=20) {
   const key1 = `upperBand${keySuffix(period)}`
   const key2 = `middleBand${keySuffix(period)}`
   const key3 = `lowerBand${keySuffix(period)}`
