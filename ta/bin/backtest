@@ -42,7 +42,6 @@ async function main() {
     .option('-b, --balance <DOLLARS>', 'Amount of money to start with', parseIntBase10, 100000)
     .option('--begin <DATETIME>', 'Date and time to let the strategy start', parseDateTime)
     .option('--end <DATETIME>', 'Date and time to stop the strategy', parseDateTime)
-    //.option('-l, --localtime', 'Interpret --begin and --end DATETIMES in the current timezone') // luxon does this by default so no need for another option.
     .option('-v, --verbose', 'Be verbose')
   program.parse(process.argv)
   let optionsAreMissing = false
