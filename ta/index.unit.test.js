@@ -61,5 +61,5 @@ test('ta.invertedUpdateCandle should not touch timestamp or open', () => {
   // REMEMBER: An update is NOT an aggregation.  It's more like a replacement.
   ta.invertedUpdateCandle(imd, [0, 0, 0, 0, 0, 0])
   expect(imd.timestamp[0]).toEqual(timestamp)
-  expect(imd.open[0]).toEqual(open)
+  expect(imd.open[0]).toEqual(false)
 })
