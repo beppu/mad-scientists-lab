@@ -49,11 +49,7 @@
   "scripts": {
     "test": "jest"
   },
-  "hooks": {
-    "pre-commit": "yarn test"
-  },
   "devDependencies": {
-    "husky": "^4.2.3",
     "jest": "^25.1.0"
   }
 }
