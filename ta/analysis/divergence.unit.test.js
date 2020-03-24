@@ -1,7 +1,7 @@
 const divergence = require('./divergence')
 const kindOf = require('kind-of')
 
-test("functions for detecting regular divergence should exist", () => {
+test("divergence should export functions for detecting regular divergence", () => {
   expect(kindOf(divergence.regularBullish)).toBe('function')
   expect(kindOf(divergence.regularBearish)).toBe('function')
 })
