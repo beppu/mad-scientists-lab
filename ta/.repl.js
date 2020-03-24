@@ -27,6 +27,7 @@ global.utils = require('./utils')
 global.pipeline = global.pl = require('./pipeline')
 global.indicators = require('./indicators')
 global.strategies = require('./strategies')
+global.analysis = require('./analysis')
 
 global.profitLoss = global.utils.profitLoss
 const ccxt = global.ccxt
