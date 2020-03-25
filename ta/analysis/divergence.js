@@ -1,5 +1,6 @@
 const utils = require('../utils')
 const ta = require('../index')
+const {missing} = utils
 
 /*
 
@@ -36,7 +37,7 @@ const ta = require('../index')
  */
 function regularBearish(imd, {indicator, ageThreshold, gapThreshold, peakThreshold}) {
   const osc = indicator ? indicator : 'rsi' // osc is short for oscillator
-  if (utils.missing(['upperBand', 'high', osc], imd)) return undefined
+  if (missing(['upperBand', 'high', osc], imd)) return undefined
   const [minGap, maxGap] = gapThreshold
   const clusters = utils.findClusters(imd, utils.highEnoughFn(peakThreshold)) // XXX I only need the first two clusters.
   if (clusters.length < 2) {
@@ -87,7 +88,7 @@ function regularBearish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
  */
 function regularBullish(imd, {indicator, ageThreshold, gapThreshold, peakThreshold}) {
   const osc = indicator ? indicator : 'rsi' // osc is short for oscillator
-  if (utils.missing(['lowerBand', 'low', osc], imd)) return undefined
+  if (missing(['lowerBand', 'low', osc], imd)) return undefined
   const [minGap, maxGap] = gapThreshold
   const clusters = utils.findClusters(imd, utils.lowEnoughFn(peakThreshold)) // XXX I only need the first two clusters.
   if (clusters.length < 2) {
