@@ -1,4 +1,5 @@
 const utils = require('../utils')
+const time = require('../time')
 const ta = require('../index')
 const {missing} = utils
 
@@ -46,12 +47,18 @@ function regularBearish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
   const [minGap, maxGap] = gapThreshold
   const clusters = utils.findClusters(imd, 3, utils.highEnoughFn(peakThreshold)) // I only need the first two clusters.
   if (__DEBUG__) {
-    debug.indicator = osc
-    debug.ageThreshold = ageThreshold
-    debug.gapThreshold = gapThreshold
+    debug.indicator     = osc
+    debug.ageThreshold  = ageThreshold
+    debug.gapThreshold  = gapThreshold
     debug.peakThreshold = peakThreshold
-    debug.clusters = clusters
-    // TODO - Let's get some timestamps too.
+    debug.clusters      = clusters
+    debug.clusterInfo = clusters.map((c) => {
+      return {
+        begin:  time.dt(imd.timestamps[c[c.length - 1]]),
+        end:    time.dt(imd.timestamps[c[0]]),
+        length: c.length
+      }
+    })
   }
   if (clusters.length < 2) {
     // not enough local highs detected
@@ -68,12 +75,25 @@ function regularBearish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
   const osc0 = imd[osc][high0]
   let osc1 = imd[osc][high1]
   //console.log({ gapThreshold, high0, high1, distance: high1 - high0 })
+  if (__DEBUG__) {
+    debug.high0 = high0
+    debug.osc0  = osc0
+    debug.ts0   = time.dt(imd.timestamps[high0])
+    debug.high1 = high1
+    debug.osc1  = osc1
+    debug.ts1   = time.dt(imd.timestamps[high1])
+  }
   if (high1 - high0 < minGap) {
     if (clusters.length > 2) {
       // if high1 is too recent, try the next cluster
       high1 = utils.findLocalHigh(imd, clusters[2])
       if (high1 - high0 < minGap) return false
       osc1 = imd[osc][high1]
+      if (__DEBUG__) {
+        debug.high1 = high1
+        debug.osc1  = osc1
+        debug.ts1   = time.dt(imd.timestamps[high1])
+      }
     } else {
       return false
     }
@@ -82,7 +102,6 @@ function regularBearish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
     return false
   }
   const regularBearishDivergence = osc0 < osc1
-  //console.log({ high0, osc0, high1, osc1, cluster0: clusters[0], cluster1: clusters[1], regularBearishDivergence })
   if (regularBearishDivergence) {
     return { offset: high0 } // XXX - I need to remember why I returned a truthy object instead of a plain boolean.  I think it had something to do with ta.scan.  There was a good reason for this.
   } else {
@@ -104,6 +123,20 @@ function regularBullish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
   if (missing(['lowerBand', 'low', osc], imd)) return undefined
   const [minGap, maxGap] = gapThreshold
   const clusters = utils.findClusters(imd, 3, utils.lowEnoughFn(peakThreshold)) // I only need the first two clusters.
+  if (__DEBUG__) {
+    debug.indicator     = osc
+    debug.ageThreshold  = ageThreshold
+    debug.gapThreshold  = gapThreshold
+    debug.peakThreshold = peakThreshold
+    debug.clusters      = clusters
+    debug.clusterInfo = clusters.map((c) => {
+      return {
+        begin:  time.dt(imd.timestamps[c[c.length - 1]]),
+        end:    time.dt(imd.timestamps[c[0]]),
+        length: c.length
+      }
+    })
+  }
   if (clusters.length < 2) {
     // not enough local highs detected
     return false
@@ -112,16 +145,28 @@ function regularBullish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
     return false
   }
   const low0 = utils.findLocalLow(imd, clusters[0])
-  const cluster0Candles = ta.invertedCandles(imd, [low0])
   let low1 = utils.findLocalLow(imd, clusters[1])
   const osc0 = imd[osc][low0]
   let osc1 = imd[osc][low1]
+  if (__DEBUG__) {
+    debug.low0 = low0
+    debug.osc0  = osc0
+    debug.ts0   = time.dt(imd.timestamps[low0])
+    debug.low1 = low1
+    debug.osc1  = osc1
+    debug.ts1   = time.dt(imd.timestamps[low1])
+  }
   if (low1 - low0 < minGap) {
     if (clusters.length > 2) {
       // if low1 is too recent, try the next cluster
       low1 = utils.findLocalLow(imd, clusters[2])
       if (low1 - low0 < minGap) return false
       osc1 = imd[osc][low1]
+      if (__DEBUG__) {
+        debug.low1 = low1
+        debug.osc1  = osc1
+        debug.ts1   = time.dt(imd.timestamps[low1])
+      }
     } else {
       return false
     }
@@ -129,11 +174,7 @@ function regularBullish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
   if (low1 - low0 > maxGap) {
     return false
   }
-  //console.log({ diff: low1 - low0, minGap, maxGap })
   const regularBullishDivergence = osc0 > osc1
-  //const cluster0Candles = ta.invertedCandles(imd, [low0])
-  //const cluster1Candles = ta.invertedCandles(imd, [low1])
-  //console.log({ low0, osc0, low1, osc1, cluster0: clusters[0], cluster0Candles, cluster1: clusters[1], cluster1Candles, regularBullishDivergence })
   if (regularBullishDivergence) {
     return { offset: low0 }
   } else {
