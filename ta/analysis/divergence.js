@@ -2,6 +2,9 @@ const utils = require('../utils')
 const ta = require('../index')
 const {missing} = utils
 
+// This variable may contain insight into the most recent divergence check.
+let debug = {}
+
 /*
 
   These functions were originally written for bin/divergence. Their function
@@ -39,7 +42,7 @@ function regularBearish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
   const osc = indicator ? indicator : 'rsi' // osc is short for oscillator
   if (missing(['upperBand', 'high', osc], imd)) return undefined
   const [minGap, maxGap] = gapThreshold
-  const clusters = utils.findClusters(imd, utils.highEnoughFn(peakThreshold)) // XXX I only need the first two clusters.
+  const clusters = utils.findClusters(imd, 2, utils.highEnoughFn(peakThreshold)) // I only need the first two clusters.
   if (clusters.length < 2) {
     // not enough local highs detected
     //console.warn('not enough clusters')
@@ -90,7 +93,7 @@ function regularBullish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
   const osc = indicator ? indicator : 'rsi' // osc is short for oscillator
   if (missing(['lowerBand', 'low', osc], imd)) return undefined
   const [minGap, maxGap] = gapThreshold
-  const clusters = utils.findClusters(imd, utils.lowEnoughFn(peakThreshold)) // XXX I only need the first two clusters.
+  const clusters = utils.findClusters(imd, 2, utils.lowEnoughFn(peakThreshold)) // I only need the first two clusters.
   if (clusters.length < 2) {
     // not enough local highs detected
     return false
@@ -129,6 +132,7 @@ function regularBullish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
 }
 
 module.exports = {
+  debug,
   regularBearish,
   regularBullish,
   // Someday, I may implement hidden bullish/bearish divergence as well.

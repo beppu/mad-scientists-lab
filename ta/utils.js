@@ -58,10 +58,11 @@ function highEnoughFn(threshold) {
 /**
  * Return an array or array of indices of consecutive candles that satisfy the given function
  * @param {InvertedMarketData} imd - inverted market data
+ * @param {Number} max - the maximum number of clusters to return
  * @param {Function} fn - a function that takes imd and an integer index and returns a boolean
  * @returns {Array<Array<Number>>} An array of array of indices that satisfy fn
  */
-function findClusters(imd, fn) {
+function findClusters(imd, max, fn) {
   let result = []
   let cluster = []
   for (let i = 0; i < imd.close.length; i++) {
@@ -71,6 +72,9 @@ function findClusters(imd, fn) {
       if (cluster.length) {
         result.push(cluster)
         cluster = []
+        if (result.length === max) {
+          return result
+        }
       }
     }
   }
