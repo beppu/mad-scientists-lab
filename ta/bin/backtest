@@ -40,13 +40,26 @@ async function main() {
     .option('-s, --strategy <STRATEGY>', 'Name of trading strategy to use', 'BuyAndHold')
     .option('-c, --config <CONFIG.JSON>', 'Path to a JSON config file for the strategy')
     .option('-b, --balance <DOLLARS>', 'Amount of money to start with', parseIntBase10, 100000)
+    .option('--start-processing-at <DATETIME>', 'Ignore candles until the given DateTime is reached', parseDateTime)
     .option('--begin <DATETIME>', 'Date and time to let the strategy start', parseDateTime)
     .option('--end <DATETIME>', 'Date and time to stop the strategy', parseDateTime)
     .option('-v, --verbose', 'Be verbose')
   program.parse(process.argv)
-  let optionsAreMissing = false
+  let optionsAreMissing = false;
+  ['exchange', 'market', 'timeframe'].forEach((opt) => {
+    if (!program[opt]) {
+      console.error(`The --${opt} option is required.`)
+      optionsAreMissing = true
+    }
+  })
   if (optionsAreMissing) {
     process.exit(-1)
+  }
+  if (program.begin && program.startProcessingAt) {
+    if (program.begin < program.startProcessingAt) {
+      console.error("--start-processing-at must have an earlier DateTime than --begin.")
+      process.exit(-1)
+    }
   }
   try {
     /*
@@ -93,19 +106,36 @@ async function main() {
     let marketState
     let exchangeState, executedOrders
     let candle = await nextCandle()
+    let firstTimestamp = time.dt(candle[0])
+    let startProcessing
     let begin
+    let end = false
+    if (program.startProcessingAt) {
+      startProcessing = firstTimestamp >= program.startProcessingAt
+    } else {
+      startProcessing = true
+    }
     if (program.begin) {
-      let current = time.dt(candle[0])
-      begin = time.dt(candle[0]) >= program.begin
+      begin = firstTimestamp >= program.begin
     } else {
       begin = true
     }
-    if (program.verbose && program.begin) {
-      console.log(program.begin.toISO(), begin)
+    if (program.verbose) {
+      if (program.startProcessingAt) {
+        console.log('start-processing-at', program.startProcessingAt.toISO(), startProcessing)
+      }
+      if (program.begin) {
+        console.log('begin', program.begin.toISO(), begin)
+      }
+      if (program.end) {
+        console.log('end', program.end.toISO(), end)
+      }
+      console.log('---- while loop')
     }
-    let end = false
     while (candle && !end) {
-      marketState = iterate(candle)
+      if (startProcessing) {
+        marketState = iterate(candle)
+      }
       if (program.verbose) {
         if (time.isTimeframeBoundary('1d', time.dt(candle[0]))) {
           console.log(time.dt(candle[0]).toISO(), candle)
@@ -121,16 +151,25 @@ async function main() {
       candle = await nextCandle()
 
       // Check candle[0] for begin and end conditions
-      if (!begin) {
-        begin = time.dt(candle[0]) >= program.begin
-        if (begin && program.verbose) {
-          console.log('starting strategy at', time.dt(candle[0]).toISO())
+      if (candle) {
+        let timestamp = time.dt(candle[0])
+        if (!begin) {
+          begin = timestamp >= program.begin
+          if (begin && program.verbose) {
+            console.log('starting strategy at', timestamp.toISO())
+          }
         }
-      }
-      if (program.end && candle) {
-        end = time.dt(candle[0]) > program.end
-        if (end && program.verbose) {
-          console.log('ending strategy at', time.dt(candle[0]).toISO())
+        if (program.end && candle) {
+          end = timestamp > program.end
+          if (end && program.verbose) {
+            console.log('ending strategy at', timestamp.toISO())
+          }
+        }
+        if (!startProcessing) {
+          startProcessing = timestamp >= program.startProcessingAt
+          if (startProcessing && program.verbose) {
+            console.log('start processing at', timestamp.toISO())
+          }
         }
       }
     }
