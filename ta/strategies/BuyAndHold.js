@@ -14,6 +14,7 @@ module.exports = function init(baseTimeframe, opts) {
   function buyAndHold(state, executedOrders) {
     if (!hasBought) {
       const close = state[imdKey].close[0]
+      if (!close) return []
       const adjustedClose = close + (close * 0.05) // assume a higher price so that we don't buy more than we can afford on the market buy
       hasBought = true
       return [
