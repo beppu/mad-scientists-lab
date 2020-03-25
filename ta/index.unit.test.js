@@ -65,6 +65,9 @@ test('ta.invertedUpdateCandle should not touch timestamp or open', () => {
 })
 
 test('an InvertedSeries should behave like an Array', () => {
+  // It only implements a small subset of Array functionality, but it's the subset the pipeline needs.
+  // The InvertedSeries makes unshift efficient by sacrificing push and slice which become very inefficient.
+  // However, the pipeline is agonizingly slow without a fast unshift, so it's worth it.
   const arr = []
   const ins = ta.createInvertedSeries()
   expect(arr.length).toEqual(ins.length)
