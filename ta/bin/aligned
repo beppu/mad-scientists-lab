@@ -75,7 +75,7 @@ async function main() {
       console.error(`The PERIOD "${_p}" must be a positive decimal integer.`)
       process.exit(-1)
     } else {
-      periods.push(parseInt(_p))
+      periods.push(utils.parseIntB10(_p))
     }
   }
 

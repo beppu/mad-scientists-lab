@@ -1,4 +1,5 @@
 const {DateTime, Interval} = require('luxon')
+const utils = require('./utils')
 
 /**
  * A wrapper around DateTime.fromMillis
@@ -16,7 +17,7 @@ function timeframeToMinutes(timeframe) {
   }
   const nu = match[1];
   const unit = match[2];
-  const n = Math.min(parseInt(nu, 10));
+  const n = Math.min(utils.parseIntB10(nu));
   switch (unit) {
   case 'm':
     return n;
@@ -55,7 +56,7 @@ function isTimeframeBoundary(timeframe, time) {
   }
   const nu = match[1];
   const unit = match[2];
-  const n = Math.min(parseInt(nu, 10));
+  const n = Math.min(utils.parseIntB10(nu));
   const dayOfYear = Math.floor(
     Interval.fromDateTimes(DateTime.utc(time.year, 1, 1), time).length() + 1);
 

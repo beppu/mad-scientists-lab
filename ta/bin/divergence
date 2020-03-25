@@ -12,8 +12,8 @@ const DateTime  = luxon.DateTime
 
 function parseGap(gapThreshold) {
   const parts = gapThreshold.split('-')
-  const minGap = parseInt(parts[0], 10)
-  const maxGap = parseInt(parts[1], 10)
+  const minGap = utils.parseIntB10(parts[0])
+  const maxGap = utils.parseIntB10(parts[1])
   return [minGap, maxGap]
 }
 

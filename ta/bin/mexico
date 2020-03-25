@@ -14,9 +14,7 @@ const fs        = require('fs')
 const mkdirp    = require('mkdirp')
 const {DateTime} = luxon
 
-function parseIntB10(n) {
-  return parseInt(n, 10)
-}
+const parseIntB10 = utils.parseIntB10
 
 async function main() {
   const program   = new commander.Command();

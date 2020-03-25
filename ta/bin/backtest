@@ -20,9 +20,7 @@ const {DateTime} = luxon
 
 const logger = pino()
 
-function parseIntBase10(n) {
-  return parseInt(n, 10)
-}
+const parseIntB10 = utils.parseIntB10
 
 function parseDateTime(d) {
   return DateTime.fromISO(d)
@@ -39,7 +37,7 @@ async function main() {
     .option('-d, --data <PATH>', 'Directory to store candlestick data in', './data')
     .option('-s, --strategy <STRATEGY>', 'Name of trading strategy to use', 'BuyAndHold')
     .option('-c, --config <CONFIG.JSON>', 'Path to a JSON config file for the strategy')
-    .option('-b, --balance <DOLLARS>', 'Amount of money to start with', parseIntBase10, 100000)
+    .option('-b, --balance <DOLLARS>', 'Amount of money to start with', parseIntB10, 100000)
     .option('--start-processing-at <DATETIME>', 'Ignore candles until the given DateTime is reached', parseDateTime)
     .option('--begin <DATETIME>', 'Date and time to let the strategy start', parseDateTime)
     .option('--end <DATETIME>', 'Date and time to stop the strategy', parseDateTime)

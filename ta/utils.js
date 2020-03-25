@@ -206,6 +206,15 @@ function missing(keys, object) {
   return miss
 }
 
+/**
+ * Parse a string as a base 10 number
+ * @param {String} n - string to parse as a number
+ * @returns {Number} the parsed number
+ */
+function parseIntB10(n) {
+  return parseInt(n, 10)
+}
+
 module.exports = {
   isAscending,
   isDescending,
@@ -220,5 +229,6 @@ module.exports = {
   lineFn,
   log10LineFn,
   dataPath,
-  missing
+  missing,
+  parseIntB10
 }
