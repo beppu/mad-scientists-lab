@@ -63,3 +63,28 @@ test('ta.invertedUpdateCandle should not touch timestamp or open', () => {
   expect(imd.timestamp[0]).toEqual(timestamp)
   expect(imd.open[0]).toEqual(open)
 })
+
+test('an InvertedSeries should behave like an Array', () => {
+  const arr = []
+  const ins = ta.createInvertedSeries()
+  expect(arr.length).toEqual(ins.length)
+  arr.unshift(66)
+  ins.unshift(66)
+  expect(arr.length).toEqual(ins.length)
+  arr.unshift(55)
+  ins.unshift(55)
+  expect(arr[0]).toEqual(ins[0])
+  expect(arr.slice(1)).toEqual(ins.slice(1))
+  arr.push(77)
+  ins.push(77)
+  expect(arr[2]).toEqual(ins[2])
+  expect(arr[2]).toBe(77)
+  expect(ins[2]).toBe(77)
+  // So far, so good.  What could be going wrong in the pipeline?
+  // ANSWER:  I forgot to implement InvertedSeries.set
+  arr[3] = 9
+  ins[3] = 9
+  expect(arr[3]).toEqual(ins[3])
+  expect(arr[3]).toBe(9)
+  expect(ins[3]).toBe(9)
+})
