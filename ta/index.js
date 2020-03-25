@@ -355,6 +355,9 @@ const invertedSeriesHandler = {
     }
   },
   set: function(target, key, value) {
+    const i = target.series.length - 1 - key
+    target.series[i] = value
+    return value
   }
 }
 
