@@ -83,7 +83,7 @@ test("pipeline.mainLoopFn should be able to take an empty indicatorSpecs", () =>
 test("pipeline.mainLoopFn should return a function that calculates correctly", () => {
   let state
   const baseTimeframe = '1h'
-  const indicatorSpecs = { '1h': [ ['rsi', 14], ['sma', 20] ], '2h': [ ['bbands', 20 ], ['ema', 9] ] }
+  const indicatorSpecs = { '1h': [ ['rsi', 14], ['sma', 20] ], '2h': [ ['bbands', 20 ], ['ema', 9] ], inverted: true }
   const iterate = pipeline.mainLoopFn(baseTimeframe, indicatorSpecs)
   candles.forEach((c) => state = iterate(c))
   expect(typeof iterate).toEqual("function")
@@ -103,6 +103,7 @@ test("pipeline.mainLoopFn should return a function that calculates correctly", (
   const r                  = talib.execute(indicatorSettings)
   const invertedMarketData = ta.invertedMarketData(state.md2h)
   ta.invertedAppend(invertedMarketData, 'ema9', r.result.outReal)
+  //console.warn({ agg: state.imd2h.open.slice(0), md: state.md2h.open })
   //console.warn({ 'wasWrongButNotAnymore': state.imd2h.ema9, right: invertedMarketData.ema9 })
   expect(invertedMarketData.ema9).toEqual(state.imd2h.ema9)
 })
