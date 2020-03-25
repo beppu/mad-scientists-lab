@@ -35,8 +35,9 @@ const ta = require('../index')
  * @returns {Boolean|Object} truthy if bearish divergence was detected near index 0
  */
 function regularBearish(imd, {indicator, ageThreshold, gapThreshold, peakThreshold}) {
-  const [minGap, maxGap] = gapThreshold
   const osc = indicator ? indicator : 'rsi' // osc is short for oscillator
+  if (utils.missing(['upperBand', 'high', osc], imd)) return undefined
+  const [minGap, maxGap] = gapThreshold
   const clusters = utils.findClusters(imd, utils.highEnoughFn(peakThreshold)) // XXX I only need the first two clusters.
   if (clusters.length < 2) {
     // not enough local highs detected
@@ -85,8 +86,9 @@ function regularBearish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
  * @returns {Boolean|Object} truthy if bullish divergence was detected near index 0
  */
 function regularBullish(imd, {indicator, ageThreshold, gapThreshold, peakThreshold}) {
-  const [minGap, maxGap] = gapThreshold
   const osc = indicator ? indicator : 'rsi' // osc is short for oscillator
+  if (utils.missing(['lowerBand', 'low', osc], imd)) return undefined
+  const [minGap, maxGap] = gapThreshold
   const clusters = utils.findClusters(imd, utils.lowEnoughFn(peakThreshold)) // XXX I only need the first two clusters.
   if (clusters.length < 2) {
     // not enough local highs detected
