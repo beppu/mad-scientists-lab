@@ -192,6 +192,20 @@ function dataPath(dataDir, exchange, market, timeframe) {
   return `${dataDir}/${exchange}/${mkt}/${timeframe}`
 }
 
+/**
+ * Is a key missing from an object?
+ * @param {Array<String>} keys - list of keys that are required
+ * @param {Object} object - object that must contain keys
+ * @returns {Boolean} true if any key is missing
+ */
+function missing(keys, object) {
+  let miss = false
+  keys.forEach((k) => {
+    if (!object.hasOwnProperty(k)) miss = true
+  })
+  return miss
+}
+
 module.exports = {
   isAscending,
   isDescending,
@@ -205,5 +219,6 @@ module.exports = {
   log10Slope,
   lineFn,
   log10LineFn,
-  dataPath
+  dataPath,
+  missing
 }
