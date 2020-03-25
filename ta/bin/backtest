@@ -105,6 +105,11 @@ async function main() {
     let end = false
     while (candle && !end) {
       marketState = iterate(candle)
+      if (program.verbose) {
+        if (time.isTimeframeBoundary('1d', time.dt(candle[0]))) {
+          console.log(time.dt(candle[0]).toISO(), candle)
+        }
+      }
       if (begin) {
         orders = strategy(marketState, executedOrders)
         ;[exchangeState, executedOrders] = exchange(exchangeState, orders, candle)
