@@ -19,7 +19,7 @@ function parseGap(gapThreshold) {
 
 function detectRegularBearishDivergence(imd, ageThreshold, gapThreshold, peakThreshold) {
   const [minGap, maxGap] = parseGap(gapThreshold)
-  const clusters = utils.findClusters(imd, 2, utils.highEnoughFn(peakThreshold)) // I only need the first two clusters.
+  const clusters = utils.findClusters(imd, 3, utils.highEnoughFn(peakThreshold)) // I only need the first two clusters.
   if (clusters.length < 2) {
     // not enough local highs detected
     //console.warn('not enough clusters')
@@ -59,7 +59,7 @@ function detectRegularBearishDivergence(imd, ageThreshold, gapThreshold, peakThr
 
 function detectRegularBullishDivergence(imd, ageThreshold, gapThreshold, peakThreshold) {
   const [minGap, maxGap] = parseGap(gapThreshold)
-  const clusters = utils.findClusters(imd, 2, utils.lowEnoughFn(peakThreshold)) // I only need the first two clusters.
+  const clusters = utils.findClusters(imd, 3, utils.lowEnoughFn(peakThreshold)) // I only need the first two clusters.
   if (clusters.length < 2) {
     // not enough local highs detected
     return false
@@ -234,7 +234,7 @@ rsiSettings = ta.id.rsi(md)
 rsi = talib.execute(rsiSettings)
 ta.invertedAppend(imd, 'rsi', rsi.result.outReal)
 
-clusters = utils.findClusters(imd, 2, utils.highEnoughFn(0)) // I only need the first two clusters.
+clusters = utils.findClusters(imd, 3, utils.highEnoughFn(0)) // I only need the first two clusters.
 high0 = utils.findLocalHigh(imd, clusters[0])
 high1 = utils.findLocalHigh(imd, clusters[1])
 rsi0 = imd.rsi[high0]

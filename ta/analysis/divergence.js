@@ -2,6 +2,8 @@ const utils = require('../utils')
 const ta = require('../index')
 const {missing} = utils
 
+const __DEBUG__ = true
+
 // This variable may contain insight into the most recent divergence check.
 let debug = {}
 
@@ -42,7 +44,15 @@ function regularBearish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
   const osc = indicator ? indicator : 'rsi' // osc is short for oscillator
   if (missing(['upperBand', 'high', osc], imd)) return undefined
   const [minGap, maxGap] = gapThreshold
-  const clusters = utils.findClusters(imd, 2, utils.highEnoughFn(peakThreshold)) // I only need the first two clusters.
+  const clusters = utils.findClusters(imd, 3, utils.highEnoughFn(peakThreshold)) // I only need the first two clusters.
+  if (__DEBUG__) {
+    debug.indicator = osc
+    debug.ageThreshold = ageThreshold
+    debug.gapThreshold = gapThreshold
+    debug.peakThreshold = peakThreshold
+    debug.clusters = clusters
+    // TODO - Let's get some timestamps too.
+  }
   if (clusters.length < 2) {
     // not enough local highs detected
     //console.warn('not enough clusters')
@@ -93,7 +103,7 @@ function regularBullish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
   const osc = indicator ? indicator : 'rsi' // osc is short for oscillator
   if (missing(['lowerBand', 'low', osc], imd)) return undefined
   const [minGap, maxGap] = gapThreshold
-  const clusters = utils.findClusters(imd, 2, utils.lowEnoughFn(peakThreshold)) // I only need the first two clusters.
+  const clusters = utils.findClusters(imd, 3, utils.lowEnoughFn(peakThreshold)) // I only need the first two clusters.
   if (clusters.length < 2) {
     // not enough local highs detected
     return false
