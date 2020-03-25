@@ -5,6 +5,8 @@ const DateTime = luxon.DateTime
 const cache = require('cache-all/file')
 const xdg = require('xdg-basedir')
 const pRetry = require('p-retry')
+const clone = require('clone')
+const reverse = require('lodash.reverse')
 Promise = require('bluebird')
 
 const time = require('./time')
@@ -336,6 +338,49 @@ const id = {
   }
 }
 
+const invertedSeriesHandler = {
+  get: function(target, key) {
+    switch (key) {
+    case 'unshift':
+      return target.unshift.bind(target)
+    case 'slice':
+      return target.slice.bind(target)
+    case 'push':
+      return target.push.bind(target)
+    case 'length':
+      return target.series.length
+    default:
+      const i = target.series.length - 1 - key
+      return target.series[i]
+    }
+  },
+  set: function(target, key, value) {
+  }
+}
+
+const invertedSeriesMethods = {
+  // making this fast
+  unshift: function(value) {
+    // this speeds up the pipeline considerably
+    return this.series.push(value)
+  },
+  // sacrificing a lot of speed here
+  slice: function() {
+    // this slows scan down but it's only batch ops that scan right now.
+    return reverse(this.series).slice(...arguments)
+  },
+  // sacrificing speed here
+  push: function(value) {
+    // only the batch ops use this, and it'll be max 1000 candles, so no biggy.
+    return this.series.unshift(value)
+  }
+}
+
+function createInvertedSeries() {
+  const target = Object.assign({ series: [] }, invertedSeriesMethods)
+  return new Proxy(target, invertedSeriesHandler)
+}
+
 module.exports = {
   loadCandles,
   marketDataFromCandles,
@@ -350,6 +395,7 @@ module.exports = {
   invertedCandles,
   scan,
   id,
+  createInvertedSeries,
   _previousMd,
   _previousImd,
   _goBack
