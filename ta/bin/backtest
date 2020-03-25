@@ -79,6 +79,7 @@ async function main() {
       strategyConfig = config
     }
     const [indicatorSpecs, strategy] = strategies[program.strategy](program.timeframe, strategyConfig)
+    indicatorSpecs.inverted = true // force it to use the InvertedSeries data structure.
     if (program.verbose) {
       console.log('indicatorSpecs', indicatorSpecs)
     }
