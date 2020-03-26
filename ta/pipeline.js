@@ -2,21 +2,72 @@ const Bluebird   = require('bluebird')
 const fs         = Bluebird.promisifyAll(require('fs'))
 const kindOf     = require('kind-of')
 const uniq       = require('lodash.uniq')
+const sortBy     = require('lodash.sortby')
 const ta         = require('./index')
 const time       = require('./time')
 const utils      = require('./utils')
 const indicators = require('./indicators')
 
+/**
+ * Load all candles from a JSON file.
+ * @param {String} filename - JSON file to load
+ * @returns {Array<Candle>} an array of OHLCV candles
+ */
 async function loadOHLCV(filename) {
   const buffer = await fs.readFileAsync(filename)
   const ohlcv = JSON.parse(buffer.toString())
   return ohlcv
 }
 
-async function loadCandlesFromFS(dataDir, exchange, market, timeframe) {
+/**
+ * Return only the filenames of the JSON files we want to process
+ * @param {Array<String>} filenames - list of filenames
+ * @param {DateTime} start - candlestick timestamp we want to start processing at
+ * @returns {Return Type} a list of filenames where the first file should contain the candle with the desired `start` time.
+ */
+function _cleanCandleFilenames(filenames, start) {
+  const s = start ? start.toMillis() : undefined
+  const onlyOurs = filenames.filter((fn) => {
+    let front = fn.replace(/\.json$/, '')
+    return front.match(/^\d+$/)
+  })
+  const f = sortBy(onlyOurs, (fn) => utils.parseIntB10(fn.replace(/\.json$/, '')))
+  const ints = f.map((fn) => utils.parseIntB10(fn.replace(/\.json$/, '')))
+  let i = 0, done = false, found = false
+  if (!s) return f
+
+  // If we have a start time, look for the file that contains it.
+  while (!done) {
+    if (ints[i] < s && s < ints[i+1]) {
+      done = true
+      found = true
+    } else {
+      i++
+      if (i === ints.length) {
+        done = true // but not found
+      }
+    }
+  }
+  if (found) {
+    return f.slice(i)
+  } else {
+    return []
+  }
+}
+
+/**
+ * Return an iterator function that returns the next candle
+ * @param {String} dataDir - directory where OHLCV candlestick data is organized
+ * @param {String} exchange - exchange name
+ * @param {String} market - market symbol
+ * @param {String} timeframe - timeframe of candles to load
+ * @param {DateTime} start - earliest allowed DateTime for first candle
+ * @returns {Function} a function that returns the next candle
+ */
+async function loadCandlesFromFS(dataDir, exchange, market, timeframe, start) {
   const path = utils.dataPath(dataDir, exchange, market, timeframe)
   const _jsons = await fs.readdirAsync(path)
-  const jsons = _jsons // TODO filter and sort for correctness later
+  const jsons = _cleanCandleFilenames(_jsons, start)
   let i = 0
   let j = 0
   let ohlcv = await loadOHLCV(`${path}/${jsons[i]}`)
@@ -248,6 +299,7 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
 
 module.exports = {
   loadOHLCV,
+  _cleanCandleFilenames,
   loadCandlesFromFS,
   mergeCandle,
   aggregatorFn,

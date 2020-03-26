@@ -97,7 +97,7 @@ async function main() {
 
     // Pipeline of Price Data
     const iterate = pipeline.mainLoopFn(program.timeframe, indicatorSpecs)
-    const nextCandle = await pipeline.loadCandlesFromFS(program.data, program.exchange, program.market, program.timeframe)
+    const nextCandle = await pipeline.loadCandlesFromFS(program.data, program.exchange, program.market, program.timeframe, program.startProcessingAt)
 
     // Mutable Variables
     let orders
