@@ -92,8 +92,15 @@ function s() { return ta.createInvertedSeries() }
  * @returns {Function} Return description.
  */
 function mainLoopFn(baseTimeframe, indicatorSpecs) {
+
+  // Check for the inverted flag.
   const inverted = indicatorSpecs.inverted
   delete indicatorSpecs.inverted
+  // Automatically insert an empty baseTimeframe if no indicators for baseTimeframe exist.
+  if (!indicatorSpecs[baseTimeframe]) {
+    indicatorSpecs[baseTimeframe] = []
+  }
+
   const state = {
     baseTimeframe
   }
