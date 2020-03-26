@@ -52,19 +52,13 @@ function regularBearish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
     debug.gapThreshold  = gapThreshold
     debug.peakThreshold = peakThreshold
     debug.clusters      = clusters
-    try {
-      debug.clusterInfo = clusters.map((c) => {
-        return {
-          begin:  time.dt(imd.timestamp[c[c.length - 1]]),
-          end:    time.dt(imd.timestamp[c[0]]),
-          length: c.length
-        }
-      })
-    }
-    catch (e) {
-      console.log(clusters, imd)
-      process.exit(-1)
-    }
+    debug.clusterInfo = clusters.map((c) => {
+      return {
+        begin:  time.iso(imd.timestamp[c[c.length - 1]]),
+        end:    time.iso(imd.timestamp[c[0]]),
+        length: c.length
+      }
+    })
   }
   if (clusters.length < 2) {
     // not enough local highs detected
@@ -84,10 +78,10 @@ function regularBearish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
   if (__DEBUG__) {
     debug.high0 = high0
     debug.osc0  = osc0
-    debug.ts0   = time.dt(imd.timestamp[high0])
+    debug.ts0   = time.iso(imd.timestamp[high0])
     debug.high1 = high1
     debug.osc1  = osc1
-    debug.ts1   = time.dt(imd.timestamp[high1])
+    debug.ts1   = time.iso(imd.timestamp[high1])
   }
   if (high1 - high0 < minGap) {
     if (clusters.length > 2) {
@@ -98,7 +92,7 @@ function regularBearish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
       if (__DEBUG__) {
         debug.high1 = high1
         debug.osc1  = osc1
-        debug.ts1   = time.dt(imd.timestamp[high1])
+        debug.ts1   = time.iso(imd.timestamp[high1])
       }
     } else {
       return false
@@ -137,8 +131,8 @@ function regularBullish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
     debug.clusters      = clusters
     debug.clusterInfo = clusters.map((c) => {
       return {
-        begin:  time.dt(imd.timestamp[c[c.length - 1]]),
-        end:    time.dt(imd.timestamp[c[0]]),
+        begin:  time.iso(imd.timestamp[c[c.length - 1]]),
+        end:    time.iso(imd.timestamp[c[0]]),
         length: c.length
       }
     })
@@ -157,10 +151,10 @@ function regularBullish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
   if (__DEBUG__) {
     debug.low0 = low0
     debug.osc0 = osc0
-    debug.ts0  = time.dt(imd.timestamp[low0])
+    debug.ts0  = time.iso(imd.timestamp[low0])
     debug.low1 = low1
     debug.osc1 = osc1
-    debug.ts1  = time.dt(imd.timestamp[low1])
+    debug.ts1  = time.iso(imd.timestamp[low1])
   }
   if (low1 - low0 < minGap) {
     if (clusters.length > 2) {
@@ -171,7 +165,7 @@ function regularBullish(imd, {indicator, ageThreshold, gapThreshold, peakThresho
       if (__DEBUG__) {
         debug.low1 = low1
         debug.osc1 = osc1
-        debug.ts1  = time.dt(imd.timestamp[low1])
+        debug.ts1  = time.iso(imd.timestamp[low1])
       }
     } else {
       return false
