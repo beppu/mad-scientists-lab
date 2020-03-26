@@ -63,6 +63,7 @@ function isTimeframeBoundary(timeframe, time) {
   if (!match) {
     return false;
   }
+  const utc = time.setZone('UTC')
   const nu = match[1];
   const unit = match[2];
   const n = Math.min(utils.parseIntB10(nu));
@@ -71,13 +72,13 @@ function isTimeframeBoundary(timeframe, time) {
 
   switch (unit) {
   case 'm':
-    if (time.minute % n === 0) return true;
+    if (utc.minute % n === 0) return true;
     break;
   case 'h':
-    if (time.hour % n === 0 && time.minute === 0) return true;
+    if (utc.hour % n === 0 && utc.minute === 0) return true;
     break;
   case 'd':
-    if (time.minute === 0 && time.hour === 0 && dayOfYear % n === 0) return true;
+    if (utc.minute === 0 && utc.hour === 0 && dayOfYear % n === 0) return true;
     break;
   }
   return false;
