@@ -10,6 +10,15 @@ function dt(ms) {
   return DateTime.fromMillis(ms)
 }
 
+/**
+ * Return date as an ISO 8601 formatted string
+ * @param {Number} ms - A unix time in milliseconds
+ * @returns {String} ISO 8601 formatted DateTime string
+ */
+function iso(ms) {
+  return dt(ms).toISO()
+}
+
 function timeframeToMinutes(timeframe) {
   const match  = timeframe.match(/(\d+)(\w+)/);
   if (!match) {
@@ -76,6 +85,7 @@ function isTimeframeBoundary(timeframe, time) {
 
 module.exports = {
   dt,
+  iso,
   timeframeToMinutes,
   timeframeToMilliseconds,
   timestampForTimeframe,
