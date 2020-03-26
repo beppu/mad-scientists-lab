@@ -116,7 +116,11 @@ async function main() {
     if (program.begin) {
       begin = firstTimestamp >= program.begin
     } else {
-      begin = true
+      if (program.startProcessingAt) {
+        begin = false
+      } else {
+        begin = true
+      }
     }
     if (program.verbose) {
       if (program.startProcessingAt) {
@@ -130,6 +134,7 @@ async function main() {
       }
       console.log('---- while loop')
     }
+    console.log({ begin, end, startProcessing })
     while (candle && !end) {
       if (startProcessing) {
         marketState = iterate(candle)
@@ -167,6 +172,12 @@ async function main() {
           startProcessing = timestamp >= program.startProcessingAt
           if (startProcessing && program.verbose) {
             console.log('start processing at', timestamp.toISO())
+          }
+          if (startProcessing && !program.begin) {
+            begin = true
+            if (program.verbose) {
+              console.log('starting strategy at', timestamp.toISO())
+            }
           }
         }
       }
