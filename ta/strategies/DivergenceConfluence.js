@@ -5,6 +5,7 @@
  * I want to encode the best me in this strategy.
  */
 
+const clone = require('clone')
 const analysis = require('../analysis')
 const time = require('../time')
 
@@ -25,12 +26,13 @@ module.exports = function init(baseTimeframe, config) {
     peakThreshold: 9,
   }
   indicatorSpecs[baseTimeframe] = []
-  function strategy(marketState, executedOrders) {
+  function strategy(strategyState, marketState, executedOrders) {
+    let state = strategyState ? clone(strategyState) : {}
     if (analysis.divergence.regularBullish(marketState.imd1d, divergenceOptions)) {
       const ts = time.dt(marketState.imd1d.timestamp[0])
       logger.info(`1d bullish divergence on ${ts.toISO()} at ${marketState.imd1d.low[0]}`)
     }
-    return []
+    return [state, []]
   }
   return [indicatorSpecs, strategy]
 }

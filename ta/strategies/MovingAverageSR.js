@@ -16,13 +16,16 @@
 
  */
 
+const clone = require('clone')
+
 module.exports = function init(baseTimeframe, config) {
   const ma = config.ma || 'sma'
   const period = config.period || 20
   const indicatorSpecs = {}
   indicatorSpecs[baseTimeframe] = [ [ma, period ] ]
-  function movingAverageSR(state, executedOrders) {
-    return []
+  function movingAverageSR(strategyState, marketState, executedOrders) {
+    let state = strategyState ? clone(strategyState) : {}
+    return [state, []]
   }
   return [indicatorSpecs, movingAverageSR]
 }

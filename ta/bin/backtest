@@ -130,9 +130,7 @@ async function main() {
     const nextCandle = await pipeline.loadCandlesFromFS(program.data, program.exchange, program.market, program.timeframe, program.startProcessingAt)
 
     // Mutable Variables
-    let orders
-    let marketState
-    let exchangeState, executedOrders
+    let marketState, strategyState, orders, exchangeState, executedOrders // state changes flow in this order
     let candle = await nextCandle()
     let firstTimestamp = time.dt(candle[0])
     let startProcessing
@@ -164,8 +162,16 @@ async function main() {
       }
       console.log('---- while loop')
     }
-    console.log({ begin, end, startProcessing })
+
     while (candle && !end) {
+
+      // This is the heart of the analysis pipeline.
+      // - Calculate marketState using the latest candle.
+      // - Inform the strategy of the latest marketState and executedOrders.
+      // - Receive a new strategyState and a new list of orders.
+      // - Give the orders to the simulated exchange.
+      // - Receive a new exchangeState and a new list of executedOrders.
+      // - Load the next candle and repeat until and end condition is met.
       if (startProcessing) {
         marketState = iterate(candle)
       }
@@ -175,10 +181,13 @@ async function main() {
         }
       }
       if (begin) {
-        orders = strategy(marketState, executedOrders)
-        ;[exchangeState, executedOrders] = exchange(exchangeState, orders, candle)
-        if (orders && orders.length) {
+        ;[strategyState, orders]         = strategy(strategyState, marketState, executedOrders)
+        if (program.verbose && orders && orders.length) {
           console.log({ candle, orders })
+        }
+        ;[exchangeState, executedOrders] = exchange(exchangeState, orders, candle)
+        if (program.verbose && executedOrders && executedOrders.length) {
+          console.log({ candle, executedOrders })
         }
       }
       candle = await nextCandle()

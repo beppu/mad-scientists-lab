@@ -42,6 +42,11 @@ function confluence(r, v, k) {
 module.exports = function init(baseTimeframe, config) {
   const { logger, balance } = config
 
+  // override divergenceOptions
+  if (config.ageThreshold)  divergenceOptions.ageThreshold  = config.ageThreshold
+  if (config.gapThreshold)  divergenceOptions.gapThreshold  = config.gapThreshold
+  if (config.peakThreshold) divergenceOptions.peakThreshold = config.peakThreshold
+
   // How about a strategy for confluence analysis?
   const timeframesConfluence = [
     '1h', '2h', '3h',  '4h',
@@ -55,7 +60,7 @@ module.exports = function init(baseTimeframe, config) {
     m[a] = [ ['rsi'], ['bbands'] ]
     return m
   }, {})
-  function strategyConfluence(marketState, executedOrders) {
+  function strategyConfluence(strategyState, marketState, executedOrders) {
     const bullStates = bulls.map((fn) => fn(marketState))
     const bearStates = bears.map((fn) => fn(marketState))
     const bullConfluences = bullStates.reduce(confluence, [])
@@ -70,11 +75,14 @@ module.exports = function init(baseTimeframe, config) {
       console.log(message)
     }
     /*
-      // Let's do bears later.
+    // Let's do bears later.
     if (bearConfluences.length > 1) {
     }
     */
-    return []
+
+    // This is a stateless strategy, so it doesn't matter what we return for strategyState.
+    // It only exists to do analysis and print its findings as a side effect.
+    return [strategyState, []]
   }
 
   return [iSpecsConfluence, strategyConfluence]

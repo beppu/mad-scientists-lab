@@ -6,27 +6,31 @@
 
 */
 
+const clone = require('clone')
+
 module.exports = function init(baseTimeframe, opts) {
   const indicatorSpecs = {}
-  indicatorSpecs[baseTimeframe] = []
   const imdKey = `imd${baseTimeframe}`
-  let hasBought = false
-  function buyAndHold(state, executedOrders) {
-    if (!hasBought) {
-      const close = state[imdKey].close[0]
-      if (!close) return []
+  function buyAndHold(strategyState, marketState, executedOrders) {
+    let state = strategyState ? clone(strategyState) : { hasBought: false }
+    if (!state.hasBought) {
+      const close = marketState[imdKey].close[0]
+      if (!close) return [state, []]
       const adjustedClose = close + (close * 0.05) // assume a higher price so that we don't buy more than we can afford on the market buy
-      hasBought = true
+      state.hasBought = true
       return [
-        {
-          id: 'almost-all-in',
-          type: 'market',
-          action: 'buy',
-          quantity: opts.balance / adjustedClose
-        }
+        state,
+        [
+          {
+            id: 'almost-all-in',
+            type: 'market',
+            action: 'buy',
+            quantity: opts.balance / adjustedClose
+          }
+        ]
       ]
     } else {
-      return []
+      return [state, []]
     }
   }
   return [indicatorSpecs, buyAndHold]

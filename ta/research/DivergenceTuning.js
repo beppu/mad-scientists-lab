@@ -3,6 +3,7 @@
  * I might not even check it in.
  */
 
+const clone = require('clone')
 const analysis = require('../analysis')
 const time = require('../time')
 
@@ -26,34 +27,35 @@ module.exports = function init(baseTimeframe, config) {
     '1h':  [ ['rsi'], ['bbands'] ],
     '1d':  [ ['rsi'], ['bbands'] ],
   }
-  let bullish, bearish
-  function strategy(marketState, executedOrders) {
+
+  function strategy(strategyState, marketState, executedOrders) {
+    let state = strategyState ? clone(strategyState) : { bullish: undefined, bearish: undefined }
     if (analysis.divergence.regularBullish(marketState.imd1d, divergenceOptions)) {
       const ts = time.dt(marketState.imd1d.timestamp[0])
-      if (!bullish) {
-        bullish = ts
+      if (!state.bullish) {
+        state.bullish = ts
       }
     } else {
-      if (bullish) {
-        // leaving the bullish state
-        const ts = marketState.imd1d.timestamp[1] < bullish ? bullish : time.dt(marketState.imd1d.timestamp[1])
-        console.info(`1d bullish divergence from ${bullish.toISO()} to ${ts.toISO()}`, analysis.divergence.debug)
-        bullish = undefined
+      if (state.bullish) {
+        // leaving the state.bullish state
+        const ts = marketState.imd1d.timestamp[1] < state.bullish ? state.bullish : time.dt(marketState.imd1d.timestamp[1])
+        console.info(`1d state.bullish divergence from ${state.bullish.toISO()} to ${ts.toISO()}`, analysis.divergence.debug)
+        state.bullish = undefined
       }
     }
     if (analysis.divergence.regularBearish(marketState.imd1d, divergenceOptions)) {
       const ts = time.dt(marketState.imd1d.timestamp[0])
-      if (!bearish) {
-        bearish = ts
+      if (!state.bearish) {
+        state.bearish = ts
       }
     } else {
-      if (bearish) {
-        const ts = marketState.imd1d.timestamp[1] < bearish ? bearish : time.dt(marketState.imd1d.timestamp[1])
-        console.info(`1d bearish divergence from ${bearish.toISO()} to ${ts.toISO()}`, analysis.divergence.debug)
-        bearish = undefined
+      if (state.bearish) {
+        const ts = marketState.imd1d.timestamp[1] < state.bearish ? state.bearish : time.dt(marketState.imd1d.timestamp[1])
+        console.info(`1d state.bearish divergence from ${state.bearish.toISO()} to ${ts.toISO()}`, analysis.divergence.debug)
+        state.bearish = undefined
       }
     }
-    return []
+    return [state, []]
   }
 
   return [indicatorSpecs, strategy]
