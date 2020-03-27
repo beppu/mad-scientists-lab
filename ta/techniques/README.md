@@ -34,3 +34,9 @@ Is the overall trend bullish or bearish?  There are various criteria I could use
 The purpose of having a bias is to inform the strategy to change modes.  For example, in a bullish market,
 bullish setups tend to work well.  However, once a market turns bearish, their effectiveness tends to be diminished.
 A strategy could use bias as a hint to fine tune its actions.
+
+
+## Position Sizing
+
+Something that I'm woefully ignorant about is the art of position sizing.  In the event that I learn
+how to size my positions efficiently, that kind of code may live here.
