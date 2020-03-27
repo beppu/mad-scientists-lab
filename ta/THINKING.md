@@ -79,6 +79,72 @@ the same options and environment variables though.
 
 # Blog
 
+## 2020-03-26 I Forgot About Strategy State and a Review
+
+In the previous entry, my pseudocode had the strategy function both consume its past state and 
+return a new state.  I forgot to do this in the implementation I have today, but I may go back
+and fix it now before it's too late.  It has state, but it's hidden behind closure variables,
+and that could make things harder for me in the future, so I'm definitely going to fix this.
+(Funnily enough, for the exchange state of my simulated exchange, I did the right thing.)
+
+### Review Time
+
+I've written a lot of code since 3/10.  Let's see what I've got.
+
+A simulted exchange took a little over a week to implement.  For some reason, I thought it was
+going to be easier to do than it really was.  Next, I thought I could implement strategies,
+but I discovered some deficiencies that needed to be addressed first.
+
+The analysis that I'm able to do via the scripts in bin/ were implemented in a way that wasn't
+reusable, so I spent some time creating an analysis/ directory and porting over the code that
+looks at InvertedMarketData and analyzes it.  This was straightforward, because the hard work
+had already been done months prior, and it was mostly an exercise in code reorganization.  I
+also got the chance to do some minor clean ups.
+
+The next deficiency I discovered was speed.  `Array.prototype.unshift` severely degrades in
+performance as the size of an array grows.  I didn't notice it until I tried to feed `bin/backtest`
+hundreds of thousands of 1m candles.  I have a few million of those downloaded, but I don't think
+I even made it to the first million before I did my optimization work.
+
+To solve this, I had to make something that behaved like an array but had a fast unshift.  To
+do this, I learned about and used [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy)
+for the first time.  It's about as close to operator overloading you can get in Javascript, and
+I made something I called `InvertedSeries` which implements the subset of `Array` that I needed
+and most importantly has a fast `.unshift` method which was implemented with a `.push` under the hood.
+It was quite clever, and I'm very proud of it.  It took about a day and half to do.
+
+#### Now can I write a strategy?  
+
+I think I can, but what I found myself doing today is writing research
+strategies that run in the backtesting system but don't execute trades.  I'm
+doing more market analysis to see things like what divergence confluences
+actually existed.  I think this knowledge will help me when I write a strategy that
+issues orders when these confluences are detected.
+
+I also have another research strategy for tuning my divergence detecting code.
+My initial pass at detecting divergences through the backtesting system revealed a lot of
+false positives that I'd like to minimize.  Thus, I wrote a strategy that emits debug
+info as it detects divergences so that I can find parameters for those functions that
+are more accurate.
+
+I may take a little break from divergences though.  I think it's time to write a real strategy
+that issues orders, and I think it'll be MovingAverageSR.  While watching the markets, I've
+become fascinated by the 960 SMA on all timeframes, and I'd like to see how it performs as support
+and resistance.  It'll be my first real strategy since it's easy enough to implement compared to
+DivergenceConfluence.  
+
+I need to develop a feeling for what it's like to issue orders and have them filled or not filled,
+and have a strategy react accordingly.  I will probably learn a lot from this exercise.
+
+#### In other news
+
+California went into lockdown since 3/19 due to the coronavirus hysteria.  Stores are low
+on food and out of paper products like toilet paper and paper towels.  People have been told to
+stay at home and not go to work.  The market's funking tanked too.  3/12 was the worst day.
+Donald Trump announced that entry from Europe would be temporarily banned, and everything went
+into a freefall after that.  Too bad I didn't have a short position.  (That's part of why I'm building
+this system.)
+
 ## 2020-03-10 Progress on Automated Trading
 
 Almost out of necessity, I've started taking auotmated trading more seriously in
