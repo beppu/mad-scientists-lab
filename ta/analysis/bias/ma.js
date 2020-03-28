@@ -11,7 +11,7 @@ const utils = require('../../utils')
 module.exports = function movingAverageBias(prices, maSeries) {
   const ma    = maSeries[0]
   const close = prices[0]
-  const slope = utils.slope([1, maSeries[1]], [2, maSeries[0]]) // make up x, and use closes for y
+  const slope = utils.slope([1, maSeries[1]], [2, maSeries[0]]) // make up x, and use maSeries for y
 
   if (close > ma && slope > 0) {
     return 'bullish'
