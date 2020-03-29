@@ -228,6 +228,7 @@ async function main() {
     const key = `imd${program.timeframe}`
     const close = marketState[key].close[0]
     console.log('Closing Price', close)
+    console.log('Closing DateTime', time.iso(marketState[key].timestamp[0]))
     console.log('Equity', (close * exchangeState.position) + exchangeState.balance)
   }
   catch (err) {
