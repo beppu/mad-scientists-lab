@@ -223,6 +223,7 @@ async function main() {
     }
 
     // What's the damage?
+    console.log(strategyState)
     console.log(exchangeState)
     const key = `imd${program.timeframe}`
     const close = marketState[key].close[0]
