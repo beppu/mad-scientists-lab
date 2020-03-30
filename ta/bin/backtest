@@ -55,6 +55,16 @@ function breakpointExists({ marketState, exchangeState, strategyState, order, ex
   return executedOrders && executedOrders.length > 0
 }
 
+function calculateEquity(exchangeState, price) {
+  if (exchangeState.position >= 0) {
+    return (price * exchangeState.position) + exchangeState.balance
+  } else {
+    const position = Math.abs(exchangeState.position)
+    const difference = (position * exchangeState.averageEntryPrice) - (position * price)
+    return exchangeState.balance + (position * exchangeState.averageEntryPrice + difference)
+  }
+}
+
 async function main() {
   const program   = new commander.Command();
   program
@@ -243,7 +253,7 @@ async function main() {
     const close = marketState[key].close[0]
     console.log('Closing Price', close)
     console.log('Closing DateTime', time.iso(marketState[key].timestamp[0]))
-    console.log('Equity', (close * exchangeState.position) + exchangeState.balance) // XXX If the position is negative, figure out the short profit correctly.
+    console.log('Equity', calculateEquity(exchangeState, close))  // XXX If the position is negative, figure out the short profit correctly.
     process.exit(0)
   }
   catch (err) {
