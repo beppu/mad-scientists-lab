@@ -51,6 +51,10 @@ function parseDateTime(d) {
   return DateTime.fromISO(d)
 }
 
+function prompt() {
+  process.stdout.write('> ')
+}
+
 function breakpointExists({ marketState, exchangeState, strategyState, orders, executedOrders }) {
   return executedOrders && executedOrders.filter((o) => o.status === 'filled').length > 0
 }
@@ -242,12 +246,29 @@ async function main() {
       }
       if (program.interactive) {
         if (breakpointExists({marketState, exchangeState, strategyState, orders, executedOrders})) {
-          const key = await interactive.keyPress()
-          if (key.name === 'q') {
-            process.exit(0)
-          }
-          if (key.name === 'e') {
-            console.log(calculateEquity(exchangeState, candle[4]))
+          prompt()
+          let key = await interactive.keyPress()
+          while (key.name !== 'n') { // n for next
+            if (key.name === 'q') {
+              process.exit(0)
+            }
+            if (key.name === 'e') {
+              console.log(calculateEquity(exchangeState, candle[4]))
+            }
+            if (key.name === 'x') {
+              console.log(exchangeState)
+            }
+            if (key.name === 's') {
+              console.log(strategyState)
+            }
+            if (key.name === 'm') {
+              console.log(candle[4]) // TODO partial marketState
+            }
+            if (key.name === 'o') {
+              console.log({ orders, executedOrders })
+            }
+            prompt()
+            key = await interactive.keyPress()
           }
         }
       }
