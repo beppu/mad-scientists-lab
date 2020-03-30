@@ -52,7 +52,7 @@ function parseDateTime(d) {
 }
 
 function breakpointExists({ marketState, exchangeState, strategyState, orders, executedOrders }) {
-  return executedOrders && executedOrders.filter((o) => o.filled).length > 0
+  return executedOrders && executedOrders.filter((o) => o.status === 'filled').length > 0
 }
 
 function calculateEquity(exchangeState, price) {
