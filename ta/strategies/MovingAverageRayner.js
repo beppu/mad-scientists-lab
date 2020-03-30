@@ -176,6 +176,7 @@ module.exports = function init(baseTimeframe, config) {
           return testingAreaOfValue(state.marketBias, imd.ema20, imd.close)
         }
         const size = 8
+        const stopBuffer = 50
         const onEntry = (strategyState) => {
           console.log('onEntry', `${strategyState.testCount} == ${merged.testsBeforeEntry}`)
           if (strategyState.testCount == merged.testsBeforeEntry) {
@@ -191,7 +192,7 @@ module.exports = function init(baseTimeframe, config) {
                 id: 'long-stop',
                 type: 'stop-market',
                 action: 'sell',
-                price: imd.close[0] - 25,
+                price: imd.close[0] - stopBuffer,
                 quantity: size
               })
               break;
@@ -206,7 +207,7 @@ module.exports = function init(baseTimeframe, config) {
                 id: 'short-stop',
                 type: 'stop-market',
                 action: 'buy',
-                price: imd.close[0] + 25,
+                price: imd.close[0] + stopBuffer,
                 quantity: size
               })
               break;
