@@ -181,7 +181,7 @@ module.exports = function init(baseTimeframe, config) {
       state.marketBias = newMarketBias // it could be undefined, so that's why we check again in the next line.
       if (state.marketBias) {
         const predicate = () => {
-          return testingAreaOfValue(state.marketBias, imd.ema20, imd.close)
+          return testingAreaOfValue(state.marketBias, imd[ma1Key], imd.close)
         }
         const size = 8
         const stopBuffer = 50
