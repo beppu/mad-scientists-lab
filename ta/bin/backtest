@@ -51,8 +51,8 @@ function parseDateTime(d) {
   return DateTime.fromISO(d)
 }
 
-function breakpointExists({ marketState, exchangeState, strategyState, order, executedOrders }) {
-  return executedOrders && executedOrders.length > 0
+function breakpointExists({ marketState, exchangeState, strategyState, orders, executedOrders }) {
+  return executedOrders && executedOrders.filter((o) => o.filled).length > 0
 }
 
 function calculateEquity(exchangeState, price) {
@@ -202,11 +202,12 @@ async function main() {
       if (begin) {
         ;[strategyState, orders]         = strategy(strategyState, marketState, executedOrders)
         if (program.verbose && orders && orders.length) {
-          console.log({ candle, orders })
+          console.log('-- ', time.iso(candle[0]), candle)
+          console.log('orders: ', orders)
         }
         ;[exchangeState, executedOrders] = exchange(exchangeState, orders, candle)
         if (program.verbose && executedOrders && executedOrders.length) {
-          console.log({ candle, executedOrders })
+          console.log('executedOrders: ', executedOrders)
         }
       }
       candle = await nextCandle()
@@ -242,6 +243,12 @@ async function main() {
       if (program.interactive) {
         if (breakpointExists({marketState, exchangeState, strategyState, orders, executedOrders})) {
           const key = await interactive.keyPress()
+          if (key.name === 'q') {
+            process.exit(0)
+          }
+          if (key.name === 'e') {
+            console.log(calculateEquity(exchangeState, candle[4]))
+          }
         }
       }
     }
