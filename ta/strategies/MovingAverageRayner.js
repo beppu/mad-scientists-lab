@@ -68,26 +68,33 @@ function testingAreaOfValue(marketBias, maSeries, priceSeries) {
 
 function trailStop(strategyState, priceSeries, maSeries) {
   //
-  let id, modifier
+  let id, modifier, update
   switch (strategyState.positionBias) {
   case 'long':
     id = 'long-stop'
     modifier = 5
+    if (priceSeries[0] + modifier > maSeries[0]) {
+      update = {
+        id,
+        type: 'modify',
+        action: 'update',
+        price: maSeries[0]
+      }
+    }
     break;
   case 'short':
     id = 'short-stop'
     modifier = -5
-  }
-  // If we're in position, emit orders that move the stop loss along the given moving average.
-  if (priceSeries[0] + modifier > maSeries[0]) {
-    return {
-      type: 'modify',
-      action: 'update',
-      price: maSeries[0]
+    if (priceSeries[0] + modifier < maSeries[0]) {
+      update = {
+        id,
+        type: 'modify',
+        action: 'update',
+        price: maSeries[0]
+      }
     }
-  } else {
-    return undefined
   }
+  return update
 }
 
 const defaults = {
