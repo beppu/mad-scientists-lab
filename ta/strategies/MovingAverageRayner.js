@@ -93,6 +93,7 @@ function trailStop(strategyState, priceSeries, maSeries) {
         price: maSeries[0]
       }
     }
+    update = undefined
   }
   return update
 }
@@ -102,7 +103,7 @@ const defaults = {
   ma1: ['ema', 20],
   ma2: ['ema', 50],
   ma3: ['ema', 200],
-  testsBeforeEntry: 2, // number of tests into area of value before attempting to make an entry
+  testsBeforeEntry: 1, // number of tests into area of value before attempting to make an entry
 }
 
 module.exports = function init(baseTimeframe, config) {
