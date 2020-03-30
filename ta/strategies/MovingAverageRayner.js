@@ -93,7 +93,7 @@ function trailStop(strategyState, priceSeries, maSeries) {
         price: maSeries[0]
       }
     }
-    update = undefined
+    update = undefined // XXX - shorts seem to work better without a trailing stop in this strategy.
   }
   return update
 }
@@ -106,19 +106,19 @@ const defaults = {
   testsBeforeEntry: 1, // number of tests into area of value before attempting to make an entry
 }
 
-module.exports = function init(baseTimeframe, config) {
-  const merged = Object.assign({}, defaults, config)
+module.exports = function init(baseTimeframe, custom) {
+  const config = Object.assign({}, defaults, custom)
   const indicatorSpecs = {}
-  indicatorSpecs[merged.tf] = [
-    merged.ma1,
-    merged.ma2,
-    merged.ma3
+  indicatorSpecs[config.tf] = [
+    config.ma1,
+    config.ma2,
+    config.ma3
   ]
-  const ma1Key = `${merged.ma1[0]}${merged.ma1[1]}`
-  const ma2Key = `${merged.ma2[0]}${merged.ma2[1]}`
-  const ma3Key = `${merged.ma3[0]}${merged.ma3[1]}`
+  const ma1Key = `${config.ma1[0]}${config.ma1[1]}`
+  const ma2Key = `${config.ma2[0]}${config.ma2[1]}`
+  const ma3Key = `${config.ma3[0]}${config.ma3[1]}`
   const initialState = {
-    tf:            merged.tf,
+    tf:            config.tf,
     positionBias:  undefined, // long, short, or undefined
     positionPrice: undefined, // fill price of position (more sophisticaion needed in future)
     stopPrice:     undefined, // price where stop loss is triggered
@@ -126,7 +126,7 @@ module.exports = function init(baseTimeframe, config) {
     testing:       undefined, // is an area of value currently being tested?
     testCount:     0          // How many times has price tested the area of value?
   }
-  const imdKey = `imd${merged.tf}`
+  const imdKey = `imd${config.tf}`
 
   function strategy(strategyState, marketState, executedOrders) {
     let state = strategyState ? clone(strategyState) : initialState
@@ -186,8 +186,8 @@ module.exports = function init(baseTimeframe, config) {
         const size = 8
         const stopBuffer = 50
         const onEntry = (strategyState) => {
-          console.log('onEntry', `${strategyState.testCount} == ${merged.testsBeforeEntry}`)
-          if (strategyState.testCount == merged.testsBeforeEntry) {
+          console.log('onEntry', `${strategyState.testCount} == ${config.testsBeforeEntry}`)
+          if (strategyState.testCount == config.testsBeforeEntry) {
             switch (strategyState.marketBias) {
             case 'bullish':
               orders.push({
