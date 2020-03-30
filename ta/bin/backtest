@@ -9,6 +9,7 @@ const ix         = require('../indicators')
 const strategies = require('../strategies')
 const research   = require('../research')
 const simulator  = require('../exchanges/simulator')
+const interactive = require('../interactive')
 const luxon      = require('luxon')
 const commander  = require('commander')
 const talib      = require('talib')
@@ -50,6 +51,10 @@ function parseDateTime(d) {
   return DateTime.fromISO(d)
 }
 
+function breakpointExists({ marketState, exchangeState, strategyState, order, executedOrders }) {
+  return executedOrders && executedOrders.length > 0
+}
+
 async function main() {
   const program   = new commander.Command();
   program
@@ -66,6 +71,7 @@ async function main() {
     .option('--start-processing-at <DATETIME>', 'Refrain from indicator calculation until the given DateTime is reached', parseDateTime)
     .option('--begin <DATETIME>', 'DateTime to begin the strategy', parseDateTime)
     .option('--end <DATETIME>', 'DateTime to end the strategy', parseDateTime)
+    .option('-i, --interactive', 'Interactive mode')
     .option('-v, --verbose', 'Be verbose')
   program.parse(process.argv)
   let optionsAreMissing = false;
@@ -87,6 +93,9 @@ async function main() {
       console.error("--start-processing-at must have an earlier DateTime than --begin.")
       process.exit(-1)
     }
+  }
+  if (program.interactive) {
+    interactive.init()
   }
   try {
     /*
@@ -220,6 +229,11 @@ async function main() {
           }
         }
       }
+      if (program.interactive) {
+        if (breakpointExists({marketState, exchangeState, strategyState, orders, executedOrders})) {
+          const key = await interactive.keyPress()
+        }
+      }
     }
 
     // What's the damage?
@@ -229,7 +243,8 @@ async function main() {
     const close = marketState[key].close[0]
     console.log('Closing Price', close)
     console.log('Closing DateTime', time.iso(marketState[key].timestamp[0]))
-    console.log('Equity', (close * exchangeState.position) + exchangeState.balance)
+    console.log('Equity', (close * exchangeState.position) + exchangeState.balance) // XXX If the position is negative, figure out the short profit correctly.
+    process.exit(0)
   }
   catch (err) {
     console.error(err.stack)
