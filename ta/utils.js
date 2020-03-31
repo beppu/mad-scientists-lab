@@ -219,6 +219,41 @@ function parseIntB10(n) {
   return parseInt(n, 10)
 }
 
+// collect candles
+/*
+
+  pipeline.loadCandlesFromFS('data', 'bitmex', 'BTC/USD', '1h', DateTime.fromISO('2017-01-01')).then((it) => x.it = it)
+
+  start = DateTime.fromISO('2017-01-01')
+  count = 2400
+  utils._cc(x.it, start, count).then((cs) => x.cs = cs)
+
+  const beautify = require('json-beautify')
+  fs.writeFileSync(`tests/fixtures/BTCUSD/1h/${x.cs[0][0]}.json`, beautify(x.cs), null, 2, 80)
+
+*/
+/*
+async function _cc(it, start, count) {
+  let ax = []
+  let candle = await it()
+  let n = 0
+  let end = false
+  while (candle && !end) {
+    console.log(candle[0], start.toMillis(), candle[0] > start.toMillis())
+    if (!candle[0]) return 'fuck'
+    if (candle[0] >= start.toMillis()) {
+      ax.push(candle)
+      n++
+    }
+    if (n == count) {
+      end = true
+    }
+    candle = await it()
+  }
+  return ax
+}
+*/
+
 module.exports = {
   isAscending,
   isDescending,
@@ -234,5 +269,5 @@ module.exports = {
   log10LineFn,
   dataPath,
   missing,
-  parseIntB10
+  parseIntB10,
 }
