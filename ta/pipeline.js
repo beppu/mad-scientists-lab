@@ -305,3 +305,20 @@ module.exports = {
   aggregatorFn,
   mainLoopFn,
 }
+
+
+/*
+
+  // Examples for bin/repl
+  // ---------------------
+
+  // Create an iterator
+  pipeline.loadCandlesFromFS('data', 'bitmex', 'BTC/USD', '1h', DateTime.fromISO('2017-01-01')).then((it) => x.it = it)
+
+  // Fetch next candle
+  candle = x.it()
+
+  // Are we on a timeframe boundary?
+  time.isTimeframeBoundary('1d', time.dt(1482789600000))
+
+*/
