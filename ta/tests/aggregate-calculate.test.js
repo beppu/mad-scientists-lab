@@ -97,7 +97,54 @@ test("simultaneous aggregation should calculate the right Bollinger Band values"
     i++
     candle = await nextCandle()
   }
-  // This time, we have to compare against talib.  I almost deprecated md*, but for the sake of these tests, I'm glad I didn't.
+  // This time, we have to compare against talib.
+  // I almost deprecated md*, but for the sake of these tests, I'm glad I didn't.
+  // Also, since multi-timeframe aggregation looks good, I feel confident that I
+  // can trust the contents of md* to be correct.
+
+  // 1d
+  let precision1d = 10 // bigger than 2 is enough
+  const imd1d = marketState.imd1d
+  const md1d = marketState.md1d
+  const imd1d_ = ta.invertedMarketData(md1d)
+  const bbandSettings1d = ta.id.bbands(md1d)
+  const bbands1d = talib.execute(bbandSettings1d)
+  ta.invertedAppend(imd1d_, 'upperBand', bbands1d.result.outRealUpperBand)
+  ta.invertedAppend(imd1d_, 'middleBand', bbands1d.result.outRealMiddleBand)
+  ta.invertedAppend(imd1d_, 'lowerBand', bbands1d.result.outRealLowerBand)
+  // It's not exact, but it's very close.
+  // expect(imd1d.middleBand).toMatchObject(imd1d_.middleBand)
+  imd1d.upperBand.forEach((m, i) => {
+    expect(m).toBeCloseTo(imd1d_.upperBand[i], precision1d)
+  })
+  imd1d.middleBand.forEach((m, i) => {
+    expect(m).toBeCloseTo(imd1d_.middleBand[i], precision1d) // I'd be happy with 2, but even 10 is no problem.  This is more than close enough.
+  })
+  imd1d.lowerBand.forEach((m, i) => {
+    expect(m).toBeCloseTo(imd1d_.lowerBand[i], precision1d)
+  })
+
+  // 4h
+  let precision4h = 9 // bigger than 2 is enough
+  const imd4h = marketState.imd4h
+  const md4h = marketState.md4h
+  const imd4h_ = ta.invertedMarketData(md4h)
+  const bbandSettings4h = ta.id.bbands(md4h)
+  const bbands4h = talib.execute(bbandSettings4h)
+  ta.invertedAppend(imd4h_, 'upperBand', bbands4h.result.outRealUpperBand)
+  ta.invertedAppend(imd4h_, 'middleBand', bbands4h.result.outRealMiddleBand)
+  ta.invertedAppend(imd4h_, 'lowerBand', bbands4h.result.outRealLowerBand)
+  // It's not exact, but it's very close.
+  // expect(imd4h.middleBand).toMatchObject(imd4h_.middleBand)
+  imd4h.upperBand.forEach((m, i) => {
+    expect(m).toBeCloseTo(imd4h_.upperBand[i], precision4h)
+  })
+  imd4h.middleBand.forEach((m, i) => {
+    expect(m).toBeCloseTo(imd4h_.middleBand[i], precision4h) // With 4h, I had to tone it down to 9, but 2 would have been enough for me.
+  })
+  imd4h.lowerBand.forEach((m, i) => {
+    expect(m).toBeCloseTo(imd4h_.lowerBand[i], precision4h)
+  })
 })
 
 test("simultaneous aggregation should calculate the right RSI values", async () => {
