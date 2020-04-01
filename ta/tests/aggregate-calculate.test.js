@@ -48,11 +48,13 @@ test("simultaneous aggregation in multiple timeframes should generate the right 
     i++
     candle = await nextCandle()
   }
-  console.log(i, marketState.imd1h.close[0], marketState.imd1h.close[1])
-  //console.log(Object.keys(marketState))
+  const len1 = marketState.imd1h.timestamp.length
+  console.log(i, marketState.imd1h.close[0], marketState.imd1h.close[len1 - 1], time.isTimeframeBoundary('1d', time.dt(marketState.imd1h.timestamp[len1 - 1])))
+  //console.log(Object.keys(marketState), marketState.imd1h.close)
   expect(marketState.imd1h.close).toHaveLength(2400)
   expect(marketState.imd4h.close).toHaveLength(600)
-  expect(marketState.imd1d.close).toHaveLength(24)
+  expect(marketState.imd1d.close).toHaveLength(100)
+  // The numbers are currently off, but even after that I have to verify that their values are correct.
 })
 
 /*

@@ -222,17 +222,24 @@ function parseIntB10(n) {
 // collect candles
 /*
 
-  pipeline.loadCandlesFromFS('data', 'bitmex', 'BTC/USD', '1h', DateTime.fromISO('2017-01-01')).then((it) => x.it = it)
+  const beautify = require('json-beautify')
+  start = DateTime.fromISO('2017-01-01', { zone: 'utc' })
+  pipeline.loadCandlesFromFS('data', 'bitmex', 'BTC/USD', '1h', start).then((it) => x.it = it)
 
-  start = DateTime.fromISO('2017-01-01')
   count = 2400
   utils._cc(x.it, start, count).then((cs) => x.cs = cs)
 
-  const beautify = require('json-beautify')
-  fs.writeFileSync(`tests/fixtures/BTCUSD/1h/${x.cs[0][0]}.json`, beautify(x.cs), null, 2, 80)
+  fs.writeFileSync(`tests/fixtures/BTCUSD/1h/${x.cs[0][0]}.json`, beautify(x.cs, null, 2, 80))
+
+
+  // snippet for the 1m fixtures that come in 2 sets of 10 candles
+  start = DateTime.fromMillis(0)
+  pipeline.loadCandlesFromFS('tests', 'fixtures', 'BTC/USD', '1m', start).then((nextCandle) => x.nextCandle = nextCandle)
+
+  utils._cc(x.nextCandle, start, 30).then((cs) => x.cs2 = cs)
 
 */
-/*
+
 async function _cc(it, start, count) {
   let ax = []
   let candle = await it()
@@ -246,13 +253,13 @@ async function _cc(it, start, count) {
       n++
     }
     if (n == count) {
+      console.log('end!!')
       end = true
     }
     candle = await it()
   }
   return ax
 }
-*/
 
 module.exports = {
   isAscending,
@@ -270,4 +277,5 @@ module.exports = {
   dataPath,
   missing,
   parseIntB10,
+  _cc
 }

@@ -68,18 +68,28 @@ async function loadCandlesFromFS(dataDir, exchange, market, timeframe, start) {
   const path = utils.dataPath(dataDir, exchange, market, timeframe)
   const _jsons = await fs.readdirAsync(path)
   const jsons = _cleanCandleFilenames(_jsons, start)
-  let i = 0
-  let j = 0
+  let i = 0 // filename index
+  let j = 0 // candle index
   let ohlcv = await loadOHLCV(`${path}/${jsons[i]}`)
   return async function () {
+    if (!ohlcv) return undefined
     const candle = ohlcv[j++]
+    //console.log({i,j})
     if (j == ohlcv.length) {
+      /*
       if (i+1 == jsons.length) {
         return null
       }
+      */
       i++
       j = 0
-      ohlcv = await loadOHLCV(`${path}/${jsons[i]}`)
+      //console.log(`${path}/${jsons[i]}`, i)
+      if (i == jsons.length) {
+        // special case to end iteration
+        ohlcv = undefined
+      } else {
+        ohlcv = await loadOHLCV(`${path}/${jsons[i]}`)
+      }
     }
     return candle
   }
@@ -313,7 +323,8 @@ module.exports = {
   // ---------------------
 
   // Create an iterator
-  pipeline.loadCandlesFromFS('data', 'bitmex', 'BTC/USD', '1h', DateTime.fromISO('2017-01-01')).then((it) => x.it = it)
+  const start = DateTime.fromISO('2017-01-01', { zone: 'utc' })
+  pipeline.loadCandlesFromFS('data', 'bitmex', 'BTC/USD', '1h', start).then((it) => x.it = it)
 
   // Fetch next candle
   candle = x.it()
