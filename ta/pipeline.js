@@ -76,11 +76,6 @@ async function loadCandlesFromFS(dataDir, exchange, market, timeframe, start) {
     const candle = ohlcv[j++]
     //console.log({i,j})
     if (j == ohlcv.length) {
-      /*
-      if (i+1 == jsons.length) {
-        return null
-      }
-      */
       i++
       j = 0
       //console.log(`${path}/${jsons[i]}`, i)
