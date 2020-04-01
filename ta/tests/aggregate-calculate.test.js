@@ -22,6 +22,7 @@ const talib = require('talib')
 const ta = require('../index')
 const pipeline = require('../pipeline')
 const indicators = require('../indicators')
+const time = require('../time')
 
 function newNextCandle() {
   return pipeline.loadCandlesFromFS('tests', 'fixtures', 'BTC/USD', '1h')
@@ -63,10 +64,28 @@ test("simultaneous aggregation should calculate the right SMA values", () => {
 })
 */
 
-test("simultaneous aggregation should calculate the right Bollinger Band values", () => {
-  // I want to pull in a bigger dataset for this test and the others I end up writing here.
+test("simultaneous aggregation should calculate the right Bollinger Band values", async () => {
+  const mainLoop   = newMainLoop([['bbands']])
+  const nextCandle = await newNextCandle()
+  let candle       = await nextCandle()
+  let marketState
+  let i = 0
+  while (candle) {
+    marketState = mainLoop(candle)
+    i++
+    candle = await nextCandle()
+  }
 })
 
-test("simultaneous aggregation should calculate the right RSI values", () => {
-  // I want to pull in a bigger dataset for this test and the others I end up writing here.
+test("simultaneous aggregation should calculate the right RSI values", async () => {
+  const mainLoop   = newMainLoop([['rsi']])
+  const nextCandle = await newNextCandle()
+  let candle       = await nextCandle()
+  let marketState
+  let i = 0
+  while (candle) {
+    marketState = mainLoop(candle)
+    i++
+    candle = await nextCandle()
+  }
 })
