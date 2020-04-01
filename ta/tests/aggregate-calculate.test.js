@@ -158,4 +158,33 @@ test("simultaneous aggregation should calculate the right RSI values", async () 
     i++
     candle = await nextCandle()
   }
+
+  // 1d
+  let precision1d = 18 // bigger than 2 is enough
+  const imd1d = marketState.imd1d
+  const md1d = marketState.md1d
+  const imd1d_ = ta.invertedMarketData(md1d)
+  const rsiSettings1d = ta.id.rsi(md1d)
+  const rsi1d = talib.execute(rsiSettings1d)
+  ta.invertedAppend(imd1d_, 'rsi', rsi1d.result.outReal)
+  // RSI gave me a perfect match on 1d which was a surprise.
+  expect(imd1d.rsi).toMatchObject(imd1d_.rsi)
+  // If the previous passed, this is superfluous.
+  imd1d.rsi.forEach((m, i) => {
+    expect(m).toBeCloseTo(imd1d_.rsi[i], precision1d)
+  })
+
+  // 4h
+  let precision4h = 10 // bigger than 2 is enough
+  const imd4h = marketState.imd4h
+  const md4h = marketState.md4h
+  const imd4h_ = ta.invertedMarketData(md4h)
+  const rsiSettings4h = ta.id.rsi(md4h)
+  const rsi4h = talib.execute(rsiSettings4h)
+  ta.invertedAppend(imd4h_, 'rsi', rsi4h.result.outReal)
+  // 4h could not give me a perfect match, but it doesn't have to be perfect.
+  // expect(imd4h.rsi).toMatchObject(imd4h_.rsi)
+  imd4h.rsi.forEach((m, i) => {
+    expect(m).toBeCloseTo(imd4h_.rsi[i], precision4h)
+  })
 })
