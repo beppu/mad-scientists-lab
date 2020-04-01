@@ -29,9 +29,9 @@ const DEFAULT_STRATEGY = 'BuyAndHold'
 function lookupStrategy(pr) {
   let init
   if (pr.research) {
-    init = research[pr.research]
+    init = research[pr.research].init
   } else {
-    init = strategies[pr.strategy]
+    init = strategies[pr.strategy].init
   }
   if (!init) {
     const strategyType = pr.research ? 'Research Strategy' : 'Trading Strategy'

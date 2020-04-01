@@ -18,7 +18,7 @@
 
 const clone = require('clone')
 
-module.exports = function init(baseTimeframe, config) {
+function init(baseTimeframe, config) {
   const ma = config.ma || 'sma'
   const period = config.period || 20
   const indicatorSpecs = {}
@@ -28,4 +28,8 @@ module.exports = function init(baseTimeframe, config) {
     return [state, []]
   }
   return [indicatorSpecs, movingAverageSR]
+}
+
+module.exports = {
+  init
 }

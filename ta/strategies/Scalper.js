@@ -5,7 +5,7 @@
 
 const clone = require('clone')
 
-module.exports = function init(baseTimeframe, config) {
+function init(baseTimeframe, config) {
   const indicatorSpecs = {
   }
   indicatorSpecs[baseTimeframe] = []
@@ -14,4 +14,8 @@ module.exports = function init(baseTimeframe, config) {
     return [state, []]
   }
   return [indicatorSpecs, strategy]
+}
+
+module.exports = {
+  init
 }

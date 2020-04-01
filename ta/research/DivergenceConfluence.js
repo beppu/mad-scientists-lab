@@ -39,7 +39,7 @@ function confluence(r, v, k) {
   return r
 }
 
-module.exports = function init(baseTimeframe, config) {
+function init(baseTimeframe, config) {
   const { logger, balance } = config
 
   // override divergenceOptions
@@ -86,4 +86,11 @@ module.exports = function init(baseTimeframe, config) {
   }
 
   return [iSpecsConfluence, strategyConfluence]
+}
+
+module.exports = {
+  init,
+  divergenceOptions,
+  bullFn,
+  bearFn
 }

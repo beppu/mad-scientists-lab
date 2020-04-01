@@ -8,7 +8,7 @@
 
 const clone = require('clone')
 
-module.exports = function init(baseTimeframe, opts) {
+function init(baseTimeframe, opts) {
   const indicatorSpecs = {}
   const imdKey = `imd${baseTimeframe}`
   function buyAndHold(strategyState, marketState, executedOrders) {
@@ -34,4 +34,8 @@ module.exports = function init(baseTimeframe, opts) {
     }
   }
   return [indicatorSpecs, buyAndHold]
+}
+
+module.exports = {
+  init
 }

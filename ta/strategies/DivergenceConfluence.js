@@ -9,7 +9,7 @@ const clone = require('clone')
 const analysis = require('../analysis')
 const time = require('../time')
 
-module.exports = function init(baseTimeframe, config) {
+function init(baseTimeframe, config) {
   const { logger, balance } = config
   const indicatorSpecs = {
     /*
@@ -35,4 +35,8 @@ module.exports = function init(baseTimeframe, config) {
     return [state, []]
   }
   return [indicatorSpecs, strategy]
+}
+
+module.exports = {
+  init
 }

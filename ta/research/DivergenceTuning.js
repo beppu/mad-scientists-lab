@@ -13,7 +13,7 @@ const divergenceOptions = {
   peakThreshold: 9,
 }
 
-module.exports = function init(baseTimeframe, config) {
+function init(baseTimeframe, config) {
   const { logger, balance } = config
 
   // override divergenceOptions
@@ -59,4 +59,9 @@ module.exports = function init(baseTimeframe, config) {
   }
 
   return [indicatorSpecs, strategy]
+}
+
+module.exports = {
+  divergenceOptions,
+  init
 }
