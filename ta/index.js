@@ -335,6 +335,18 @@ const id = {
       inReal:          marketData.close,
       optInTimePeriod: period
     }
+  },
+  atr: function(marketData, period=14) {
+    const {high, low, close} = marketData
+    return {
+      name:            'ATR',
+      startIdx:        0,
+      endIdx:          marketData.close.length - 1,
+      high,
+      low,
+      close,
+      optInTimePeriod: period
+    }
   }
 }
 
