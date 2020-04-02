@@ -43,10 +43,8 @@ test("simultaneous aggregation in multiple timeframes should generate the right 
   const nextCandle = await newNextCandle()
   let candle       = await nextCandle()
   let marketState
-  let i = 0
   while (candle) {
     marketState = mainLoop(candle)
-    i++
     candle = await nextCandle()
   }
   const len1 = marketState.imd1h.timestamp.length
@@ -91,10 +89,8 @@ test("simultaneous aggregation should calculate the right Bollinger Band values"
   const nextCandle = await newNextCandle()
   let candle       = await nextCandle()
   let marketState
-  let i = 0
   while (candle) {
     marketState = mainLoop(candle)
-    i++
     candle = await nextCandle()
   }
   // This time, we have to compare against talib.
@@ -152,10 +148,8 @@ test("simultaneous aggregation should calculate the right RSI values", async () 
   const nextCandle = await newNextCandle()
   let candle       = await nextCandle()
   let marketState
-  let i = 0
   while (candle) {
     marketState = mainLoop(candle)
-    i++
     candle = await nextCandle()
   }
 
@@ -188,3 +182,14 @@ test("simultaneous aggregation should calculate the right RSI values", async () 
     expect(m).toBeCloseTo(imd4h_.rsi[i], precision4h)
   })
 })
+
+/*
+
+  start = DateTime.fromMillis(1583589600000)
+  timeframes = ['1h', '4h', '1d']
+  specs = {}
+  timeframes.forEach((tf) => {specs[tf] = indicators.map((indi) => indi)})
+  mainLoop = pipeline.mainLoopFn('1h', specs)
+  nextCandle =  pipeline.loadCandlesFromFS('data', 'bitmex', 'BTC/USD', '1h', start)
+
+ */
