@@ -334,7 +334,8 @@ module.exports = {
   // ---------------------
 
   // Create an iterator
-  const start = DateTime.fromISO('2017-01-01', { zone: 'utc' })
+  const start = DateTime.fromISO(' 2017-01-01', { zone: 'utc' })
+  //const start = DateTime.fromISO('2017-08-24T17:00:00')
   pipeline.loadCandlesFromFS('data', 'bitmex', 'BTC/USD', '1h', start).then((it) => x.it = it)
 
   // Fetch next candle

@@ -13,21 +13,27 @@ const divergenceOptions = {
   peakThreshold: 9,
 }
 
-const _ignore = ['timestamp', 'open', 'high', 'low', 'close']
+//const _ignore = ['timestamp', 'open', 'high', 'low', 'close']
+const _ignore = []
+/**
+ * Print the newly completed previous day's indicators
+ * @param {MarketState} marketState - calculated data from the pipeline
+ */
 function _printIndicators(marketState) {
   const imd1d = marketState.imd1d
   const imd1h = marketState.imd1h
-  const ts = time.dt(imd1h.timestamp[0])
-  if (time.isTimeframeBoundary('1d', ts)) {
+  const currentTs = time.dt(imd1h.timestamp[0])
+  if (time.isTimeframeBoundary('1d', currentTs)) {
+    const ts = time.iso(imd1d.timestamp[1]) // // get the previous day's timestamp
     const availableIndicators = Object.keys(imd1d).reduce((m, a) => {
       if (_ignore.includes(a)) {
         return m
       } else {
-        m[a] = imd1d[a][0]
+        m[a] = imd1d[a][1] // print the previous day since it's a brand new completed candle
         return m
       }
-    }, {})
-    console.log(ts.toISO(), availableIndicators)
+    }, { })
+    //console.log(ts, availableIndicators)
   }
 }
 

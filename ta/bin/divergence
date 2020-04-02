@@ -221,7 +221,7 @@ main()
 // REPL Debugging
 
 x = {}
-ta.loadCandles('binance', 'BTC/USDT', '3m').then((candles) => x.candles = candles)
+ta.loadCandles('binance', 'BTC/USDT', '1d').then((candles) => x.candles = candles)
 
 md = ta.marketDataFromCandles(x.candles)
 imd = ta.invertedMarketData(md)
