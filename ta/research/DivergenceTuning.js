@@ -13,6 +13,24 @@ const divergenceOptions = {
   peakThreshold: 9,
 }
 
+const _ignore = ['timestamp', 'open', 'high', 'low', 'close']
+function _printIndicators(marketState) {
+  const imd1d = marketState.imd1d
+  const imd1h = marketState.imd1h
+  const ts = time.dt(imd1h.timestamp[0])
+  if (time.isTimeframeBoundary('1d', ts)) {
+    const availableIndicators = Object.keys(imd1d).reduce((m, a) => {
+      if (_ignore.includes(a)) {
+        return m
+      } else {
+        m[a] = imd1d[a][0]
+        return m
+      }
+    }, {})
+    console.log(ts.toISO(), availableIndicators)
+  }
+}
+
 function init(baseTimeframe, config) {
   const { logger, balance } = config
 
@@ -30,8 +48,9 @@ function init(baseTimeframe, config) {
 
   function strategy(strategyState, marketState, executedOrders) {
     let state = strategyState ? clone(strategyState) : { bullish: undefined, bearish: undefined }
+    const ts = time.dt(marketState.imd1h.timestamp[0])
+    _printIndicators(marketState)
     if (analysis.divergence.regularBullish(marketState.imd1d, divergenceOptions)) {
-      const ts = time.dt(marketState.imd1d.timestamp[0])
       if (!state.bullish) {
         state.bullish = ts
       }
@@ -44,7 +63,6 @@ function init(baseTimeframe, config) {
       }
     }
     if (analysis.divergence.regularBearish(marketState.imd1d, divergenceOptions)) {
-      const ts = time.dt(marketState.imd1d.timestamp[0])
       if (!state.bearish) {
         state.bearish = ts
       }
