@@ -350,6 +350,63 @@ const id = {
   }
 }
 
+/**
+ * Compute the index into series and pad series with undefined if necessary.
+ * @param {Array} series - underlying (non-inverted) array backing an InvertedSeries
+ * @param {Number} index - desired index into the InvertedSeries
+ * @returns {Number} corresponding index into the underlying Array
+ */
+function invertedIndexForSet(series, index) {
+  let i
+  if (series.length) {
+    if (index >= series.length) {
+      // pad the series first
+      for (let j = series.length; j <= index; j++) {
+        series.unshift(undefined)
+      }
+      i = 0
+    } else {
+      i = series.length - 1 - index
+    }
+  } else {
+    if (index === 0) {
+      i = 0
+    } else if (index >= series.length) {
+      // pad the series first
+      for (let j = series.length; j <= index; j++) {
+        series.unshift(undefined)
+      }
+      i = 0
+    } else {
+      i = series.length - 1 - index
+    }
+  }
+  return i
+}
+
+function invertedIndexForGet(series, index) {
+  let i
+  if (series.length) {
+    if (index >= series.length) {
+      // DO NOT pad the series first
+      i = -1 // anything undefined will do
+    } else {
+      i = series.length - 1 - index
+    }
+  } else {
+    if (index === 0) {
+      i = 0
+    } else if (index >= series.length) {
+      // DO NOT pad the series first
+      i = -1
+    } else {
+      i = series.length - 1 - index
+    }
+
+  }
+  return i
+}
+
 const invertedSeriesHandler = {
   get: function(target, key) {
     switch (key) {
@@ -362,12 +419,12 @@ const invertedSeriesHandler = {
     case 'length':
       return target.series.length
     default:
-      const i = target.series.length - 1 - key
+      const i = invertedIndexForGet(target.series, key)
       return target.series[i]
     }
   },
   set: function(target, key, value) {
-    const i = target.series.length - 1 - key
+    const i = invertedIndexForSet(target.series, key)
     target.series[i] = value
     return value
   }

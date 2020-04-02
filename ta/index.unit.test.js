@@ -90,4 +90,20 @@ test('an InvertedSeries should behave like an Array', () => {
   expect(arr[3]).toEqual(ins[3])
   expect(arr[3]).toBe(9)
   expect(ins[3]).toBe(9)
+  // I need more tests for some newly discovered edge cases (on April Fool's 2020 no less).
+  // setting index 0 on an empty series should yield a series where index 0 is vivified with the given value.
+  const b = []
+  const ins2 = ta.createInvertedSeries()
+  b[0] = 5
+  ins2[0] = 5
+  expect(b[0]).toBe(ins2[0])
+  // setting an out-of-bounds index should pad the internal series with undefined
+  const c = []
+  const ins3 = ta.createInvertedSeries()
+  c[5] = 5
+  ins3[5] = 5
+  expect(c[5]).toBe(ins3[5])
+  expect(c[3]).toBe(ins3[3])
+  expect(c[3]).toBeUndefined()
+  expect(c.length).toBe(ins3.length)
 })
