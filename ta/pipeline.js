@@ -267,6 +267,22 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
   }
 }
 
+/**
+ * Run a loop function to completion and return marketState
+ * @param {Function} loop - a main loop function created by pipeline.mainLoopFn
+ * @param {Function} nextCandle - an async function that returns the next candle
+ * @returns {MarketData} marketData as computed by `loop` over all the candles returned by `nextCandle`
+ */
+async function runLoop(loop, nextCandle) {
+  let candle = await nextCandle()
+  let marketState
+  while (candle) {
+    marketState = loop(candle)
+    candle = await nextCandle()
+  }
+  return marketState
+}
+
 // What's a nice API for declaring that I want stuff calculdated on various timeframes
 /*
 
@@ -309,8 +325,8 @@ module.exports = {
   mergeCandle,
   aggregatorFn,
   mainLoopFn,
+  runLoop
 }
-
 
 /*
 
