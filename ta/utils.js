@@ -1,3 +1,6 @@
+const fs = require('fs')
+const beautify = require('json-beautify')
+
 function isAscending(comparables) {
   let rest = comparables.slice(1)
   let initial = { current: comparables[0], isAscending: true }
@@ -219,6 +222,10 @@ function parseIntB10(n) {
   return parseInt(n, 10)
 }
 
+function dump(data, filename) {
+  fs.writeFileSync(filename, beautify(data, null, 2, 80))
+}
+
 // collect candles
 /*
 
@@ -277,5 +284,6 @@ module.exports = {
   dataPath,
   missing,
   parseIntB10,
+  dump,
   _cc
 }

@@ -1,22 +1,24 @@
 #!/usr/bin/env node
-const dotenv     = require('dotenv').config()
-const pkg        = require('../package.json')
-const ta         = require('../index')
-const time       = require('../time')
-const utils      = require('../utils')
-const pipeline   = require('../pipeline')
-const ix         = require('../indicators')
-const strategies = require('../strategies')
-const research   = require('../research')
-const simulator  = require('../exchanges/simulator')
+const dotenv      = require('dotenv').config()
+const luxon       = require('luxon')
+const commander   = require('commander')
+const talib       = require('talib')
+const beautify    = require('json-beautify')
+const merge       = require('lodash.merge')
+const reverse     = require('lodash.reverse')
+const zip         = require('lodash.zip')
+const pino        = require('pino')
+const fs          = require('fs')
+const pkg         = require('../package.json')
+const ta          = require('../index')
+const time        = require('../time')
+const utils       = require('../utils')
+const pipeline    = require('../pipeline')
+const ix          = require('../indicators')
+const strategies  = require('../strategies')
+const research    = require('../research')
+const simulator   = require('../exchanges/simulator')
 const interactive = require('../interactive')
-const luxon      = require('luxon')
-const commander  = require('commander')
-const talib      = require('talib')
-const beautify   = require('json-beautify')
-const merge      = require('lodash.merge')
-const pino       = require('pino')
-const fs         = require('fs')
 
 const {DateTime} = luxon
 
@@ -67,10 +69,6 @@ function calculateEquity(exchangeState, price) {
     const difference = (position * exchangeState.averageEntryPrice) - (position * price)
     return exchangeState.balance + (position * exchangeState.averageEntryPrice + difference)
   }
-}
-
-function dump(data, filename) {
-  fs.writeFileSync(filename, beautify(data, null, 2, 80))
 }
 
 async function main() {
@@ -187,6 +185,7 @@ async function main() {
       if (program.end) {
         console.log('end', program.end.toISO(), end)
       }
+      console.log({ startProcessing, begin, end })
       console.log('---- while loop')
     }
 
@@ -208,7 +207,7 @@ async function main() {
         }
       }
       if (begin) {
-        ;[strategyState, orders]         = strategy(strategyState, marketState, executedOrders)
+        ;[strategyState, orders] = strategy(strategyState, marketState, executedOrders)
         if (program.verbose && orders && orders.length) {
           console.log('-- ', time.iso(candle[0]), candle)
           console.log('orders: ', orders)
@@ -286,6 +285,11 @@ async function main() {
     console.log('Closing Price', close)
     console.log('Closing DateTime', time.iso(marketState[key].timestamp[0]))
     console.log('Equity', calculateEquity(exchangeState, close))  // XXX If the position is negative, figure out the short profit correctly.
+    const first = marketState.imd1d.timestamp[marketState.imd1d.rsi.length - 1]
+    const timestamps = marketState.imd1d.timestamp.slice(0, marketState.imd1d.rsi.length)
+    const closes = marketState.imd1d.close.slice(0, marketState.imd1d.rsi.length)
+    const info = reverse(zip(timestamps.map(time.iso), closes, marketState.imd1d.rsi.map((r) => 100 - r)))
+    utils.dump(info, `${first}.json`)
     process.exit(0)
   }
   catch (err) {
