@@ -16,7 +16,7 @@ const talib      = require('talib')
 const beautify   = require('json-beautify')
 const merge      = require('lodash.merge')
 const pino       = require('pino')
-
+const fs         = require('fs')
 
 const {DateTime} = luxon
 
@@ -67,6 +67,10 @@ function calculateEquity(exchangeState, price) {
     const difference = (position * exchangeState.averageEntryPrice) - (position * price)
     return exchangeState.balance + (position * exchangeState.averageEntryPrice + difference)
   }
+}
+
+function dump(data, filename) {
+  fs.writeFileSync(filename, beautify(data, null, 2, 80))
 }
 
 async function main() {
