@@ -38,7 +38,7 @@ function _cleanCandleFilenames(filenames, start) {
 
   // If we have a start time, look for the file that contains it.
   while (!done) {
-    if (ints[i] < s && s < ints[i+1]) {
+    if (ints[i] <= s && s < (ints[i+1] || Infinity)) {
       done = true
       found = true
     } else {
