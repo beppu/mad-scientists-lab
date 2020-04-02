@@ -20,6 +20,7 @@
     "lodash.reverse": "^4.0.1",
     "lodash.sortby": "^4.7.0",
     "lodash.uniq": "^4.5.0",
+    "lodash.zip": "^4.2.0",
     "luxon": "^1.18.0",
     "minimist": "^1.2.5",
     "mkdirp": "^0.5.1",
