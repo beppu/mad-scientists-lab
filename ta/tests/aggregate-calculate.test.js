@@ -184,12 +184,17 @@ test("simultaneous aggregation should calculate the right RSI values", async () 
 })
 
 /*
+  // repl snippet
 
   start = DateTime.fromMillis(1583589600000)
+  indicators = [['rsi']]
   timeframes = ['1h', '4h', '1d']
   specs = {}
   timeframes.forEach((tf) => {specs[tf] = indicators.map((indi) => indi)})
   mainLoop = pipeline.mainLoopFn('1h', specs)
-  nextCandle =  pipeline.loadCandlesFromFS('data', 'bitmex', 'BTC/USD', '1h', start)
+  pipeline.loadCandlesFromFS('data', 'bitmex', 'BTC/USD', '1h', start).then((nc) => x.nc = nc)
+
+  nextCandle = x.nc
+  marketState = pipeline.runLoop(mainLoop, nextCandle)
 
  */
