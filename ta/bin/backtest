@@ -285,11 +285,13 @@ async function main() {
     console.log('Closing Price', close)
     console.log('Closing DateTime', time.iso(marketState[key].timestamp[0]))
     console.log('Equity', calculateEquity(exchangeState, close))  // XXX If the position is negative, figure out the short profit correctly.
+    /*
     const first = marketState.imd1d.timestamp[marketState.imd1d.rsi.length - 1]
     const timestamps = marketState.imd1d.timestamp.slice(0, marketState.imd1d.rsi.length)
     const closes = marketState.imd1d.close.slice(0, marketState.imd1d.rsi.length)
     const info = reverse(zip(timestamps.map(time.iso), closes, marketState.imd1d.rsi.map((r) => 100 - r)))
     utils.dump(info, `${first}.json`)
+    */
     process.exit(0)
   }
   catch (err) {
