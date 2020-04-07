@@ -92,7 +92,12 @@ function marketDataAppendCandle(marketData, candle) {
 }
 
 function marketDataUpdateCandle(marketData, candle) {
-  const last = marketData.timestamp.length ? marketData.timestamp.length - 1 : 0
+  let last
+  if (marketData.timestamp.length === 0) {
+    // If update happens on an empty marketData, do an append first.
+    return marketDataAppendCandle(marketData, candle)
+  }
+  last = marketData.timestamp.length - 1
   //marketData.timestamp[last] = candle.timestamp // should be same value so skip
   //marketData.open[last] = candle[1] // also skip, because open shouldn't change either.
   marketData.high[last] = candle[2]
@@ -196,6 +201,9 @@ function invertedAppendCandle(invertedMarketData, candle) {
  * @returns {InvertedMarketData} an updated invertedMarketData struct
  */
 function invertedUpdateCandle(invertedMarketData, candle) {
+  if (invertedMarketData.timestamp.length === 0) {
+    return invertedAppendCandle(invertedMarketData, candle)
+  }
   // leave timestamp and open alone
   invertedMarketData.high[0] = candle[2]
   invertedMarketData.low[0] = candle[3]

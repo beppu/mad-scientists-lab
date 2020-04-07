@@ -36,13 +36,23 @@ test('ta.marketDataTakeLast should be allowed to ask for more than what is avail
 test('ta.marketDataUpdateCandle should insert a value when called against an empty marketData struct', () => {
   const md = ta.marketDataFromCandles([])
   ta.marketDataUpdateCandle(md, candles[0])
+  expect(md.timestamp).toHaveLength(1)
+  expect(md.open).toHaveLength(1)
+  expect(md.high).toHaveLength(1)
+  expect(md.low).toHaveLength(1)
   expect(md.close).toHaveLength(1)
+  expect(md.volume).toHaveLength(1)
 })
 
 test('ta.invertedUpdateCandle should insert a value when called against an empty invertedMarketData struct', () => {
   const imd = ta.marketDataFromCandles([]) // in their empty state, md and imd are the same
   ta.invertedUpdateCandle(imd, candles[0])
+  expect(imd.timestamp).toHaveLength(1)
+  expect(imd.open).toHaveLength(1)
+  expect(imd.high).toHaveLength(1)
+  expect(imd.low).toHaveLength(1)
   expect(imd.close).toHaveLength(1)
+  expect(imd.volume).toHaveLength(1)
 })
 
 test('ta.invertedUpdateCandle should not increase the length of a non-empty invertedMarketData', () => {
