@@ -8,7 +8,6 @@ const ta         = require('./index')
 const time       = require('./time')
 const utils      = require('./utils')
 const indicators = require('./indicators')
-const interactive = require('./interactive')
 
 const {DateTime} = luxon
 
