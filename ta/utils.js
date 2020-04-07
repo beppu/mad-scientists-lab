@@ -222,6 +222,11 @@ function parseIntB10(n) {
   return parseInt(n, 10)
 }
 
+/**
+ * Dump a JSON serializable data struct to a file
+ * @param {Any} data - data to dump to a file
+ * @param {String} filename - path to file
+ */
 function dump(data, filename) {
   fs.writeFileSync(filename, beautify(data, null, 2, 80))
 }
