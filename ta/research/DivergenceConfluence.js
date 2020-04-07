@@ -71,7 +71,7 @@ function init(baseTimeframe, config) {
       const imd = marketState[imdKey]
       const ts = time.iso(imd.timestamp[0])
       const tfs = bullConfluences.map((i) => timeframesConfluence[i]).join(' + ')
-      const message = `${ts} - ${tfs} bullish divergence confluence`
+      const message = `${ts} - ${imd.close[0]} - ${tfs} potential bullish divergence confluence`
       console.log(message)
     }
     /*
