@@ -1,11 +1,11 @@
 const keypress = require('keypress')
-keypress(process.stdin)
 const q = []
 
 /**
  * Turn stdin to raw mode and listen for keyboard events.
  */
 function init() {
+  keypress(process.stdin)
   process.stdin.on('keypress', (ch, key) => {
     q.push(key)
   })
