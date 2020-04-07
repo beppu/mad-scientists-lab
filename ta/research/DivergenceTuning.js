@@ -68,6 +68,7 @@ function init(baseTimeframe, config) {
         state.bullish = undefined
       }
     }
+    /*
     if (analysis.divergence.regularBearish(marketState.imd1d, divergenceOptions)) {
       if (!state.bearish) {
         state.bearish = ts
@@ -79,6 +80,7 @@ function init(baseTimeframe, config) {
         state.bearish = undefined
       }
     }
+    */
     return [state, []]
   }
 
