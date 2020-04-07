@@ -8,6 +8,7 @@ const ta         = require('./index')
 const time       = require('./time')
 const utils      = require('./utils')
 const indicators = require('./indicators')
+const interactive = require('./interactive')
 
 const {DateTime} = luxon
 
@@ -204,7 +205,6 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
       if (isBoundaryForTf) {
         ta.marketDataAppendCandle(md, candleForTf)
         ta.invertedAppendCandle(imd, candleForTf)
-        //if (tf == '2h') console.log(imd.open[0], md.open[md.open.length - 1], imd.open[0] == md.open[md.open.length - 1])
       } else {
         ta.marketDataUpdateCandle(md, candleForTf)
         ta.invertedUpdateCandle(imd, candleForTf)

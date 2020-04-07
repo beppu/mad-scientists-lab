@@ -20,7 +20,7 @@ test('RSI stream calculations should be consistent with RSI batch calculations',
   let imd = ta.invertedMarketData(md)
   //const rsiCalculator = rsi(period)
   const [rsiCalculate, rsiRecalculate] = rsi(period)
-  let state = undefined
+  let state
   candles.forEach((c) => {
     md = ta.marketDataAppendCandle(md, c)
     imd = ta.invertedAppendCandle(imd, c)
