@@ -3,10 +3,13 @@ const fs         = Bluebird.promisifyAll(require('fs'))
 const kindOf     = require('kind-of')
 const uniq       = require('lodash.uniq')
 const sortBy     = require('lodash.sortby')
+const luxon      = require('luxon')
 const ta         = require('./index')
 const time       = require('./time')
 const utils      = require('./utils')
 const indicators = require('./indicators')
+
+const {DateTime} = luxon
 
 /**
  * Load all candles from a JSON file.
@@ -124,7 +127,7 @@ function aggregatorFn(desiredTimeframe) {
     // if so, reset ax and start a new candle
     // else update ax's ohlcv values and return it
     const ts = time.timestampForTimeframe(desiredTimeframe, candle[0])
-    if (candle[0] === ts) {
+    if (time.isTimeframeBoundary(desiredTimeframe, DateTime.fromMillis(candle[0]))) {
       ax = [ ...candle ]
       return [candle, true]
     } else {
@@ -281,6 +284,17 @@ async function runLoop(loop, nextCandle) {
     candle = await nextCandle()
   }
   return marketState
+}
+
+/**
+ * Make sure candles in the stream have the expected progression of timestamps for the given timeframe
+ * @param {String} timeframe - duration of the candles
+ * @param {Function} nextCandle - an async function that returns the next candle
+ * @returns {Object} report on findings
+ */
+async function validateCandles(timeframe, nextCandle) {
+  const findings = {}
+  return findings
 }
 
 // What's a nice API for declaring that I want stuff calculdated on various timeframes

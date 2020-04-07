@@ -48,7 +48,7 @@ test("Aggregation should combine candles correctly", () => {
   // I know this is true with the current test fixture.
   const ax2h = pipeline.aggregatorFn('2h')
   ax2h(candles[0])
-  const [candle2h] = ax2h(candles[1])
+  let [candle2h] = ax2h(candles[1])
 
   /*
     0 timestamp
