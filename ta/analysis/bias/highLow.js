@@ -107,8 +107,7 @@ function lowerHighs(imd, {ageThreshold, gapThreshold, peakThreshold}) {
  */
 function detect(imd, options) {
   if (missing(['lowerBand', 'low', 'upperBand', 'high'], imd)) {
-    console.log('wait', Object.keys(imd))
-    return undefined 
+    return undefined
   }
   // find 2 most recent highs
   // - Is the newer high lower?
@@ -117,7 +116,6 @@ function detect(imd, options) {
   // - Is the newer low higher?
   const hiRes = higherLows(imd, options)
   // - If only one condition is true, that determines bias.
-  console.log({loRes, hiRes})
   if (loRes && !hiRes) {
     return 'bullish'
   }
