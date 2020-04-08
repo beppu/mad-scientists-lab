@@ -9,13 +9,21 @@ const clone = require('clone')
 const analysis = require('../analysis')
 const time = require('../time')
 
-function init(baseTimeframe, config) {
-  const { logger, balance } = config
+const defaultConfig = {
+  biasTf: '12h'
+}
+
+function init(baseTimeframe, customConfig) {
+  const { logger, balance } = customConfig
+  const config = Object.assign({}, defaultConfig, customConfig)
+  delete config.logger
   const indicatorSpecs = {
+    /*
     '3m':  [ ['rsi'], ['bbands'] ],
     '5m':  [ ['rsi'], ['bbands'] ],
     '10m': [ ['rsi'], ['bbands'] ],
     '15m': [ ['rsi'], ['bbands'] ],
+    */
     '1h':  [ ['rsi'], ['bbands'] ],
     '2h':  [ ['rsi'], ['bbands'] ],
     '4h':  [ ['rsi'], ['bbands'] ],
@@ -31,14 +39,21 @@ function init(baseTimeframe, config) {
   const initialState = {
     marketBias: undefined
   }
+  if (config.verbose) {
+    console.log(config)
+  }
   function strategy(strategyState, marketState, executedOrders) {
     let state = strategyState ? clone(strategyState) : initialState
     let orders = []
 
-    const imd12h = marketState.imd12h
-    const bias = analysis.bias.highLow.detect(imd12h, divergenceOptions)
+    const imdBias = marketState[`imd${config.biasTf}`]
+    const bias = analysis.bias.highLow.detect(imdBias, divergenceOptions)
     if (state.marketBias != bias) {
       state.marketBias = bias
+      if (config.verbose) {
+        const ts = time.iso(imdBias.timestamp[0])
+        console.log(`${ts} - ${bias}`)
+      }
     }
 
     return [state, orders]
@@ -47,5 +62,6 @@ function init(baseTimeframe, config) {
 }
 
 module.exports = {
+  defaultConfig,
   init
 }
