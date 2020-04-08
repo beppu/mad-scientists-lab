@@ -105,7 +105,7 @@ function lowerHighs(imd, {ageThreshold, gapThreshold, peakThreshold}) {
  * @param {Object} options - configuration for various thresholds (similar to what divergence takes)
  * @returns {String|undefined} 'bullish' or 'bearish'
  */
-function bias(imd, options) {
+function detect(imd, options) {
   if (missing(['lowerBand', 'low', 'uppperBand', 'high'], imd)) return undefined
   // find 2 most recent highs
   // - Is the newer high lower?
@@ -137,5 +137,5 @@ function bias(imd, options) {
 module.exports = {
   higherLows,
   lowerHighs,
-  bias // this is the main function people should be using
+  detect // this is the main function people should be using
 }
