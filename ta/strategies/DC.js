@@ -12,12 +12,15 @@ const time = require('../time')
 function init(baseTimeframe, config) {
   const { logger, balance } = config
   const indicatorSpecs = {
-    /*
     '3m':  [ ['rsi'], ['bbands'] ],
     '5m':  [ ['rsi'], ['bbands'] ],
     '10m': [ ['rsi'], ['bbands'] ],
     '15m': [ ['rsi'], ['bbands'] ],
-    */
+    '1h':  [ ['rsi'], ['bbands'] ],
+    '2h':  [ ['rsi'], ['bbands'] ],
+    '4h':  [ ['rsi'], ['bbands'] ],
+    '6h':  [ ['rsi'], ['bbands'] ],
+    '12h': [ ['rsi'], ['bbands'] ],
     '1d':  [ ['rsi'], ['bbands'] ],
   }
   const divergenceOptions = {
@@ -25,14 +28,20 @@ function init(baseTimeframe, config) {
     gapThreshold: [7, 30],
     peakThreshold: 9,
   }
-  indicatorSpecs[baseTimeframe] = []
+  const initialState = {
+    marketBias: undefined
+  }
   function strategy(strategyState, marketState, executedOrders) {
-    let state = strategyState ? clone(strategyState) : {}
-    if (analysis.divergence.regularBullish(marketState.imd1d, divergenceOptions)) {
-      const ts = time.dt(marketState.imd1d.timestamp[0])
-      logger.info(`1d bullish divergence on ${ts.toISO()} at ${marketState.imd1d.low[0]}`)
+    let state = strategyState ? clone(strategyState) : initialState
+    let orders = []
+
+    const imd12h = marketState.imd12h
+    const bias = analysis.bias.highLow.detect(imd12h, divergenceOptions)
+    if (state.marketBias != bias) {
+      state.marketBias = bias
     }
-    return [state, []]
+
+    return [state, orders]
   }
   return [indicatorSpecs, strategy]
 }
