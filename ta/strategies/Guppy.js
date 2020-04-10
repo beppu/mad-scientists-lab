@@ -9,7 +9,7 @@ const defaultConfig = {
   guppyTf:      '15m',   // timeframe to use for guppy color changes.
   rsiTf:        '4h',    // timeframe to use for RSI crosses
   rsiThreshold: 0,       // distance from RSI 50 required for confluence.  Higher numbers are more aggressive and cause buying/selling to happen sooner.
-  fixedPositionSize: 3,  // If we're using fixed position sizing, how many units should a position be?
+  fixedPositionSize: 2,  // If we're using fixed position sizing, how many units should a position be?
 }
 
 function shouldBuy(marketState, config) {
@@ -77,7 +77,7 @@ function init(baseTimeframe, customConfig) {
           action: 'sell',
           quantity: size
         }, {
-          if: 'open-short',
+          id: 'open-short',
           type: 'market',
           action: 'sell',
           quantity: size
@@ -94,7 +94,7 @@ function init(baseTimeframe, customConfig) {
           action: 'buy',
           quantity: size
         }, {
-          if: 'open-long',
+          id: 'open-long',
           type: 'market',
           action: 'buy',
           quantity: size
@@ -105,7 +105,7 @@ function init(baseTimeframe, customConfig) {
       // If we're not in a position, figure out which way to go.
       if (shouldBuy(marketState, config)) {
         orders.push({
-          if: 'open-long',
+          id: 'open-long',
           type: 'market',
           action: 'buy',
           quantity: size
@@ -113,7 +113,7 @@ function init(baseTimeframe, customConfig) {
       }
       if (shouldSell(marketState, config)) {
         orders.push({
-          if: 'open-short',
+          id: 'open-short',
           type: 'market',
           action: 'sell',
           quantity: size
