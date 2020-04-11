@@ -110,7 +110,6 @@ function executeMarketOrders(state, candle) {
         let position = Math.abs(newState.position)
         if (o.quantity <= position) {
           let difference = (position * newState.averageEntryPrice) - (position * price)
-          console.log({price, entry: newState.averageEntryPrice, position, difference })
           newState.balance += position * newState.averageEntryPrice + difference
           newState.position += o.quantity
           let marketBuy = fillOrder(o)
