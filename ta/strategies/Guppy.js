@@ -131,5 +131,8 @@ function init(baseTimeframe, customConfig) {
 }
 
 module.exports = {
+  defaultConfig,
+  shouldBuy,
+  shouldSell,
   init
 }
