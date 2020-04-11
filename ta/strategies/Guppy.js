@@ -16,6 +16,7 @@ function shouldBuy(marketState, config) {
   const logger   = config.logger
   const guppyImd = marketState[`imd${config.guppyTf}`]
   const rsiImd   = marketState[`imd${config.rsiTf}`]
+  if (!rsiImd.rsi || !guppyImd.ema3) return false
   const rsiValue = rsiImd.rsi[0]
   const isGreen  = analysis.guppy.isSlowEMAColoredNow(guppyImd, 'green')
   if (isGreen && (rsiValue + config.rsiThreshold > 50)) {
@@ -30,6 +31,7 @@ function shouldSell(marketState, config) {
   const logger   = config.logger
   const guppyImd = marketState[`imd${config.guppyTf}`]
   const rsiImd   = marketState[`imd${config.rsiTf}`]
+  if (!rsiImd.rsi || !guppyImd.ema3) return false
   const rsiValue = rsiImd.rsi[0]
   const isRed    = analysis.guppy.isSlowEMAColoredNow(guppyImd, 'red')
   if (isRed && (rsiValue - config.rsiThreshold < 50)) {
@@ -52,7 +54,10 @@ function init(baseTimeframe, customConfig) {
   function strategy(strategyState, marketState, executedOrders) {
     let state  = strategyState ? clone(strategyState) : initialState
     let orders = []
-    let size   = config.fixedPositionSize // FIXME - there should be functions for smarter position sizing
+    let price  = marketState.imd1m.close[0]
+    let size   = config.fixedPositionSize // (config.fixedPositionSize * 10000) / price
+    //let size   = (config.fixedPositionSize * 10000) / price
+    //console.log('>> ', config.fixedPositionSize, (config.fixedPositionSize * 10000) / price)
 
     // handle executedOrders
     if (executedOrders && executedOrders.length) {
