@@ -214,7 +214,10 @@ async function main() {
         }
         ;[exchangeState, executedOrders] = exchange(exchangeState, orders, candle)
         if (program.verbose && executedOrders && executedOrders.length) {
+          const key = `imd${program.timeframe}`
+          const close = marketState[key].close[0]
           console.log('executedOrders: ', executedOrders)
+          console.log('equity: ', calculateEquity(exchangeState, close))
         }
       }
       candle = await nextCandle()
