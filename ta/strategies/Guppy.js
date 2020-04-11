@@ -8,7 +8,7 @@ const analysis = require('../analysis')
 const defaultConfig = {
   guppyTf:      '15m',   // timeframe to use for guppy color changes.
   rsiTf:        '4h',    // timeframe to use for RSI crosses
-  rsiThreshold: 0,       // distance from RSI 50 required for confluence.  Higher numbers are more aggressive and cause buying/selling to happen sooner.
+  rsiThreshold: 2,       // distance from RSI 50 required for confluence.  Higher numbers are more aggressive and cause buying/selling to happen sooner.
   fixedPositionSize: 2,  // If we're using fixed position sizing, how many units should a position be?
 }
 
@@ -75,54 +75,62 @@ function init(baseTimeframe, customConfig) {
     case 'long':
       // If we're long, figure out if we need to reverse position and go short.
       if (shouldSell(marketState, config)) {
-        // FIXME - let's start with fixed sized market orders, but this ought to use limit orders and be a little smarter.
+        let lastSize = state.lastSize
+        let size = (config.fixedPositionSize * 10000) / price
         orders.push({
           id: 'close-long',
           type: 'market',
           action: 'sell',
-          quantity: size
+          quantity: lastSize
         }, {
           id: 'open-short',
           type: 'market',
           action: 'sell',
           quantity: size
         })
+        state.lastSize = size
       }
       break;
     case 'short':
       // If we're short, figure out if we need to reverse position and go long.
       if (shouldBuy(marketState, config)) {
-        // FIXME - let's start with fixed sized market orders, but this ought to use limit orders and be a little smarter.
+        let lastSize = state.lastSize
+        let size = (config.fixedPositionSize * 10000) / price
         orders.push({
           id: 'close-short',
           type: 'market',
           action: 'buy',
-          quantity: size
+          quantity: lastSize
         }, {
           id: 'open-long',
           type: 'market',
           action: 'buy',
           quantity: size
         })
+        state.lastSize = size
       }
       break;
     default:
       // If we're not in a position, figure out which way to go.
       if (shouldBuy(marketState, config)) {
+        let size = (config.fixedPositionSize * 10000) / price
         orders.push({
           id: 'open-long',
           type: 'market',
           action: 'buy',
           quantity: size
         })
+        state.lastSize = size
       }
       if (shouldSell(marketState, config)) {
+        let size = (config.fixedPositionSize * 10000) / price
         orders.push({
           id: 'open-short',
           type: 'market',
           action: 'sell',
           quantity: size
         })
+        state.lastSize = size
       }
     }
     return [state, orders]
