@@ -87,7 +87,7 @@ function executeMarketOrders(state, candle) {
     if (o.action === 'buy') {
       // BUY
       // but are we opening a long or closing a short?
-      if (state.position >= 0) {
+      if (newState.position >= 0) {
         // long
         let price = open // should do something fancier here
         if (o.quantity * price < state.balance) {
@@ -107,11 +107,11 @@ function executeMarketOrders(state, candle) {
       } else {
         // reducing or closing short
         let price = open
-        let position = Math.abs(state.position)
+        let position = Math.abs(newState.position)
         if (o.quantity <= position) {
-          let difference = (position * state.averageEntryPrice) - (position * price)
-          //console.log({price, entry: state.averageEntryPrice, position, difference })
-          newState.balance += Math.abs(state.position) * state.averageEntryPrice + difference
+          let difference = (position * newState.averageEntryPrice) - (position * price)
+          console.log({price, entry: newState.averageEntryPrice, position, difference })
+          newState.balance += position * newState.averageEntryPrice + difference
           newState.position += o.quantity
           let marketBuy = fillOrder(o)
           marketBuy.fillPrice = price
