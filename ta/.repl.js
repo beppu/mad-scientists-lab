@@ -29,6 +29,7 @@ global.indicators = require('./indicators')
 global.strategies = require('./strategies')
 global.research = require('./research')
 global.analysis = require('./analysis')
+global.exchanges = require('./exchanges')
 
 global.profitLoss = global.utils.profitLoss
 const ccxt = global.ccxt
