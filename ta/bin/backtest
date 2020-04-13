@@ -133,6 +133,7 @@ async function main() {
     // Exchange Simulator
     let config = { balance: program.balance, logger }
     const exchange = simulator.create(config)
+    const allExecutedOrders = []
 
     // Strategy
     let strategyConfig
@@ -214,6 +215,7 @@ async function main() {
         }
         ;[exchangeState, executedOrders] = exchange(exchangeState, orders, candle)
         if (program.verbose && executedOrders && executedOrders.length) {
+          allExecutedOrders.push(...executedOrders)
           const key = `imd${program.timeframe}`
           const close = marketState[key].close[0]
           console.log('executedOrders: ', executedOrders)
@@ -288,6 +290,7 @@ async function main() {
     console.log('Closing Price', close)
     console.log('Closing DateTime', time.iso(marketState[key].timestamp[0]))
     console.log('Equity', calculateEquity(exchangeState, close))  // XXX If the position is negative, figure out the short profit correctly.
+    //console.log(allExecutedOrders)
     /*
     const first = marketState.imd1d.timestamp[marketState.imd1d.rsi.length - 1]
     const timestamps = marketState.imd1d.timestamp.slice(0, marketState.imd1d.rsi.length)
