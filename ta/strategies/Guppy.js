@@ -27,6 +27,10 @@ function shouldBuy(marketState, config) {
   }
 }
 
+function calculateSize(n, price) {
+  return (n * 10000) / price
+}
+
 function shouldSell(marketState, config) {
   const logger   = config.logger
   const guppyImd = marketState[`imd${config.guppyTf}`]
@@ -40,6 +44,10 @@ function shouldSell(marketState, config) {
   } else {
     return false
   }
+}
+
+function calculateSize(n, price) {
+  return ((n * 10000) / price)
 }
 
 function init(baseTimeframe, customConfig) {
@@ -76,7 +84,7 @@ function init(baseTimeframe, customConfig) {
       // If we're long, figure out if we need to reverse position and go short.
       if (shouldSell(marketState, config)) {
         let lastSize = state.lastSize
-        let size = (config.fixedPositionSize * 10000) / price
+        let size = calculateSize(config.fixedPositionSize, price)
         orders.push({
           id: 'close-long',
           type: 'market',
@@ -95,7 +103,7 @@ function init(baseTimeframe, customConfig) {
       // If we're short, figure out if we need to reverse position and go long.
       if (shouldBuy(marketState, config)) {
         let lastSize = state.lastSize
-        let size = (config.fixedPositionSize * 10000) / price
+        let size = calculateSize(config.fixedPositionSize, price)
         orders.push({
           id: 'close-short',
           type: 'market',
@@ -113,7 +121,7 @@ function init(baseTimeframe, customConfig) {
     default:
       // If we're not in a position, figure out which way to go.
       if (shouldBuy(marketState, config)) {
-        let size = (config.fixedPositionSize * 10000) / price
+        let size = calculateSize(config.fixedPositionSize, price)
         orders.push({
           id: 'open-long',
           type: 'market',
@@ -123,7 +131,7 @@ function init(baseTimeframe, customConfig) {
         state.lastSize = size
       }
       if (shouldSell(marketState, config)) {
-        let size = (config.fixedPositionSize * 10000) / price
+        let size = calculateSize(config.fixedPositionSize, price)
         orders.push({
           id: 'open-short',
           type: 'market',
@@ -142,5 +150,6 @@ module.exports = {
   defaultConfig,
   shouldBuy,
   shouldSell,
+  calculateSize,
   init
 }
