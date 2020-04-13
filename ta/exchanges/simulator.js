@@ -39,22 +39,26 @@ const partition = require('lodash.partition')
 /**
  * Create a rejected order
  * @param {String} reason - why the order was rejected
+ * @param {Number} timestamp - DateTime of order execution in milliseconds
  */
-function rejectOrder(o, reason) {
+function rejectOrder(o, timestamp, reason) {
   const rejection = clone(o)
   o.status = 'rejected'
   o.reason = reason || 'unknown'
+  o.timestamp = timestamp
   return o
 }
 
 /**
  * Create a filled order
  * @param {Object} o - an order
+ * @param {Number} timestamp - DateTime of order execution in milliseconds
  * @returns {Object} a clone of the order with a filled status
  */
-function fillOrder(o) {
+function fillOrder(o, timestamp) {
   const filledOrder = clone(o)
   filledOrder.status = 'filled'
+  filledOrder.timestamp = timestamp
   return filledOrder
 }
 
@@ -96,12 +100,12 @@ function executeMarketOrders(state, candle) {
           newState.balance -= o.quantity * price
           newState.position += o.quantity
           newState.averageEntryPrice = calculateAverageEntryPrice(previousAverage, previousPosition, price, o.quantity)
-          let marketBuy = fillOrder(o)
+          let marketBuy = fillOrder(o, candle[0])
           marketBuy.fillPrice = price
           executedOrders.push(marketBuy)
         } else {
           // rejected due to insufficient balance
-          let rejection = rejectOrder(o, 'insufficient funds')
+          let rejection = rejectOrder(o, candle[0], 'insufficient funds')
           executedOrders.push(rejection)
         }
       } else {
@@ -112,7 +116,7 @@ function executeMarketOrders(state, candle) {
           let difference = (position * newState.averageEntryPrice) - (position * price)
           newState.balance += position * newState.averageEntryPrice + difference
           newState.position += o.quantity
-          let marketBuy = fillOrder(o)
+          let marketBuy = fillOrder(o, candle[0])
           marketBuy.fillPrice = price
           executedOrders.push(marketBuy)
         } else {
@@ -133,7 +137,7 @@ function executeMarketOrders(state, candle) {
         newState.balance += o.quantity * price
         newState.position -= o.quantity
         newState.averageEntryPrice = calculateAverageEntryPrice(previousAverage, previousPosition, price, o.quantity)
-        let marketSell = fillOrder(o)
+        let marketSell = fillOrder(o, candle[0])
         marketSell.fillPrice = price
         executedOrders.push(marketSell)
       } else {
@@ -143,11 +147,11 @@ function executeMarketOrders(state, candle) {
           newState.balance -= o.quantity * price
           newState.position -= o.quantity
           newState.averageEntryPrice = calculateAverageEntryPrice(previousAverage, previousPosition, price, o.quantity)
-          let marketSell = fillOrder(o)
+          let marketSell = fillOrder(o, candle[0])
           marketSell.fillPrice = price
           executedOrders.push(marketSell)
         } else {
-          let rejection = rejectOrder(o, 'insufficient funds')
+          let rejection = rejectOrder(o, candle[0], 'insufficient funds')
           executedOrders.push(rejection)
         }
       }
@@ -165,7 +169,7 @@ function executeMarketOrders(state, candle) {
  * @param {Number} b - price to end at
  * @returns {Return Type} exchange state after orders between price a and b have been executed
  */
-function executeStopAndLimitOrders(state, a, b) {
+function executeStopAndLimitOrders(state, a, b, candle) {
   let newState = clone(state)
   let executedOrders = []
   let mergedOrders
@@ -206,7 +210,7 @@ function executeStopAndLimitOrders(state, a, b) {
         // check if the order has the reduceOnly option
         if (o.options && o.options.reduceOnly) {
           if (newState.position < o.quantity) {
-            let rejection = rejectOrder(o, 'reduceOnly orders may only close a position')
+            let rejection = rejectOrder(o, candle[0], 'reduceOnly orders may only close a position')
             executedOrders.push(rejection)
             break;
           }
@@ -215,14 +219,14 @@ function executeStopAndLimitOrders(state, a, b) {
         if (newState.position < 0) {
           // reduce short position
           if ((newState.position < 0) && Math.abs(newState.position) < o.quantity) {
-            let rejection = rejectOrder(o, 'insufficient position for buy order')
+            let rejection = rejectOrder(o, candle[0], 'insufficient position for buy order')
             executedOrders.push(rejection)
             break;
           }
         } else {
           // long
           if (newState.balance <= (o.price * o.quantity)) {
-            let rejection = rejectOrder(o, 'insufficient funds')
+            let rejection = rejectOrder(o, candle[0], 'insufficient funds')
             executedOrders.push(rejection)
             break;
           }
@@ -235,7 +239,7 @@ function executeStopAndLimitOrders(state, a, b) {
           newState.position += o.quantity
           newState.balance -= o.price * o.quantity
           newState.averageEntryPrice = calculateAverageEntryPrice(previousAverage, previousPosition, o.price, o.quantity)
-          const limitBuy = fillOrder(o)
+          const limitBuy = fillOrder(o, candle[0])
           executedOrders.push(limitBuy)
         } else {
           // closing or reducing a short position
@@ -246,7 +250,7 @@ function executeStopAndLimitOrders(state, a, b) {
             //console.log({price, entry: state.averageEntryPrice, position, difference })
             newState.balance += Math.abs(state.position) * state.averageEntryPrice + difference
             newState.position += o.quantity
-            let marketBuy = fillOrder(o)
+            let marketBuy = fillOrder(o, candle[0])
             executedOrders.push(marketBuy)
           } else {
             // closing short and opening a long simultaneously
@@ -261,7 +265,7 @@ function executeStopAndLimitOrders(state, a, b) {
         // check if the order has the reduceOnly option
         if (o.options && o.options.reduceOnly) {
           if (newState.position < o.quantity) {
-            let rejection = rejectOrder(o, 'reduceOnly orders may only close a position')
+            let rejection = rejectOrder(o, candle[0], 'reduceOnly orders may only close a position')
             executedOrders.push(rejection)
             break;
           }
@@ -269,21 +273,21 @@ function executeStopAndLimitOrders(state, a, b) {
         if (newState.position > 0) {
           // reduce or close long position
           if (newState.position < o.quantity) {
-            let rejection = rejectOrder(o, 'insufficient position for sell order')
+            let rejection = rejectOrder(o, candle[0], 'insufficient position for sell order')
             executedOrders.push(rejection)
             break;
           }
           // go ahead and reduce long position
           newState.position -= o.quantity
           newState.balance += o.price * o.quantity
-          const limitSell = fillOrder(o)
+          const limitSell = fillOrder(o, candle[0])
           executedOrders.push(limitSell)
           if (newState.position === 0) newState.averageEntryPrice = 0
           break;
         } else {
           // short
           if (newState.balance <= (o.price * o.quantity)) {
-            let rejection = rejectOrder(o, 'insufficient funds')
+            let rejection = rejectOrder(o, candle[0], 'insufficient funds')
             executedOrders.push(rejection)
             break;
           }
@@ -294,7 +298,7 @@ function executeStopAndLimitOrders(state, a, b) {
           newState.position -= o.quantity
           newState.averageEntryPrice = calculateAverageEntryPrice(newState.averageEntryPrice, previousPosition, price, o.quantity)
           //console.log('opening a new short position', newState.balance, newState.position)
-          let limitSell = fillOrder(o)
+          let limitSell = fillOrder(o, candle[0])
           executedOrders.push(limitSell)
         }
       }
@@ -468,19 +472,19 @@ function executeOrders(state, candle) {
     // 1: o->h->l->c
     // o->h
     //console.log(`1: o->h->l->c`, candle);
-    [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], open, high)
+    [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], open, high, candle)
     states.unshift(tmpState)
     executedOrders = executedOrders.concat(tmpExecutions);
     //console.log('o->h', executedOrders); // these semicolons seem necessary.  It's the destructured assignment without (var, let, or const) that's forcing the semicolon.
     // h->l
     //console.log('h->l');
-    [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], high, low)
+    [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], high, low, candle)
     states.unshift(tmpState)
     executedOrders = executedOrders.concat(tmpExecutions);
     //console.log('h->l', executedOrders);
     // l->c
     //console.log('l->c');
-    [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], low, close)
+    [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], low, close, candle)
     states.unshift(tmpState)
     executedOrders = executedOrders.concat(tmpExecutions);
     //console.log('l->c', executedOrders);
@@ -488,17 +492,17 @@ function executeOrders(state, candle) {
     // 2: o->l->h->c
     // o->l
     //console.log(`2: o->l->h->c`, candle);
-    [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], open, low)
+    [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], open, low, candle)
     states.unshift(tmpState)
     executedOrders = executedOrders.concat(tmpExecutions);
     //console.log('o->l', executedOrders); // these semicolons seem necessary
     // l->h
-    [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], low, high)
+    [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], low, high, candle)
     states.unshift(tmpState)
     executedOrders = executedOrders.concat(tmpExecutions);
     //console.log('l->h', executedOrders);
     // h->c
-    [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], high, close)
+    [tmpState, tmpExecutions] = executeStopAndLimitOrders(states[0], high, close, candle)
     states.unshift(tmpState)
     executedOrders = executedOrders.concat(tmpExecutions);
     //console.log('h->c', executedOrders);
