@@ -27,10 +27,6 @@ function shouldBuy(marketState, config) {
   }
 }
 
-function calculateSize(n, price) {
-  return (n * 10000) / price
-}
-
 function shouldSell(marketState, config) {
   const logger   = config.logger
   const guppyImd = marketState[`imd${config.guppyTf}`]
