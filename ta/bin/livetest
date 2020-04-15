@@ -1,0 +1,56 @@
+#!/usr/bin/env node
+const dotenv     = require('dotenv').config()
+const luxon      = require('luxon')
+const commander  = require('commander')
+const talib      = require('talib')
+const beautify   = require('json-beautify')
+const pkg        = require('../package.json')
+const ta         = require('../index')
+const utils      = require('../utils')
+const pipeline   = require('../pipeline')
+const research   = require('../research')
+const strategies = require('../strategies')
+const exchanges  = require('../exchanges')
+
+async function main() {
+  const program   = new commander.Command();
+  program
+    .version(pkg.version)
+    .description('Test a trading strategy against realtime data.')
+    .option('-x, --exchange <NAME>', 'Exchange to pull data from', process.env.TA_EXCHANGE)
+    .option('-m, --market <SYMBOL>', 'Market in exchange to pull data from', process.env.TA_MARKET)
+    .option('-t, --timeframe <INTERVAL>', 'Candlestick duration for market data', process.env.TA_TIMEFRAME || '1m')
+    .option('-s, --strategy <STRATEGY>', 'Strategy to test')
+    .option('-v, --verbose', 'Be verbose')
+  program.parse(process.argv)
+  let optionsAreMissing = false;
+  ['exchange', 'market', 'timeframe'].forEach((opt) => {
+    if (!program[opt]) {
+      console.error(`The --${opt} option is required.`)
+      optionsAreMissing = true
+    }
+  })
+  if (optionsAreMissing) {
+    process.exit(-1)
+  }
+  try {
+    // Initialize Strategy
+    // Initialize Pipeline
+    // Initialize Exchange Driver
+    // Precalculate invertedMarketState Using Historical Data
+    // Connect Exchange Driver to Pipeline
+  }
+  catch (err) {
+    console.error(err.stack)
+    process.exit(-1)
+  }
+}
+
+if (require.main === module) {
+  main()
+}
+
+// for repl debugging, export functions and variables here
+module.exports = {
+  main
+}
