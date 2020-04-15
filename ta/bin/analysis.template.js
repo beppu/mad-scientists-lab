@@ -59,4 +59,11 @@ async function main() {
   }
 }
 
-main()
+if (require.main === module) {
+  main()
+}
+
+// for repl debugging, export functions and variables here
+module.exports = {
+  main
+}
