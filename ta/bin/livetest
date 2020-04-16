@@ -4,6 +4,7 @@ const luxon      = require('luxon')
 const commander  = require('commander')
 const talib      = require('talib')
 const beautify   = require('json-beautify')
+const pino       = require('pino')
 const pkg        = require('../package.json')
 const ta         = require('../index')
 const utils      = require('../utils')
@@ -11,6 +12,36 @@ const pipeline   = require('../pipeline')
 const research   = require('../research')
 const strategies = require('../strategies')
 const exchanges  = require('../exchanges')
+const simulator  = exchanges.simulator
+
+const {DateTime} = luxon
+
+const logger = pino()
+
+const parseIntB10 = utils.parseIntB10
+
+const DEFAULT_STRATEGY = 'BuyAndHold'
+
+function lookupStrategy(pr) {
+  let init
+  if (pr.research) {
+    init = research[pr.research].init
+  } else {
+    init = strategies[pr.strategy].init
+  }
+  if (!init) {
+    const strategyType = pr.research ? 'Research Strategy' : 'Trading Strategy'
+    const strategyName = pr.research ? pr.research : pr.strategy
+    console.error(`${strategyType} "${strategyName}" not found.`)
+    if (pr.research) {
+      console.log(Object.keys(research))
+    } else {
+      console.log(Object.keys(strategies))
+    }
+    process.exit(-1)
+  }
+  return init
+}
 
 async function main() {
   const program   = new commander.Command();
@@ -20,7 +51,10 @@ async function main() {
     .option('-x, --exchange <NAME>', 'Exchange to pull data from', process.env.TA_EXCHANGE)
     .option('-m, --market <SYMBOL>', 'Market in exchange to pull data from', process.env.TA_MARKET)
     .option('-t, --timeframe <INTERVAL>', 'Candlestick duration for market data', process.env.TA_TIMEFRAME || '1m')
-    .option('-s, --strategy <STRATEGY>', 'Strategy to test')
+    .option('-s, --strategy <STRATEGY>', 'Name of trading strategy to use', DEFAULT_STRATEGY)
+    .option('-r, --research <STRATEGY>', 'Use a strategy from the research collection instead')
+    .option('-c, --config <CONFIG.JSON>', 'Path to a JSON config file for the strategy')
+    .option('-b, --balance <DOLLARS>', 'Amount of money to start with', parseIntB10, 100000)
     .option('-v, --verbose', 'Be verbose')
   program.parse(process.argv)
   let optionsAreMissing = false;
@@ -33,10 +67,33 @@ async function main() {
   if (optionsAreMissing) {
     process.exit(-1)
   }
+  if (program.strategy !== DEFAULT_STRATEGY && program.research) {
+    console.error(`You can't use --strategy and --research at the same time.  Pick one and only one.`)
+    process.exit(-1)
+  }
   try {
+    // Initialize Exchange Simulator (for simulated trading)
+    let config = { balance: program.balance, logger }
+    const exchange = simulator.create(config)
+    const allExecutedOrders = []
     // Initialize Strategy
+    let strategyConfig
+    if (program.config) {
+      const configPath = `${process.cwd()}/${program.config}`
+      const jsonConfig = require(configPath)
+      strategyConfig = merge(config, jsonConfig)
+    } else {
+      strategyConfig = config
+    }
+    const strategyInit = lookupStrategy(program)
+    const [indicatorSpecs, strategy] = strategyInit(program.timeframe, strategyConfig)
+    indicatorSpecs.inverted = true // force the pipeline to use the InvertedSeries data structure.
+    if (program.verbose) {
+      console.log('indicatorSpecs', indicatorSpecs)
+    }
     // Initialize Pipeline
-    // Initialize Exchange Driver
+    /* XXX This should be a function */
+    // Initialize Exchange Driver (for realtime price data)
     // Precalculate invertedMarketState Using Historical Data
     // Connect Exchange Driver to Pipeline
   }
