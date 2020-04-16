@@ -30,6 +30,7 @@ global.strategies = require('./strategies')
 global.research = require('./research')
 global.analysis = require('./analysis')
 global.exchanges = require('./exchanges')
+global.live = require('./live')
 
 global.profitLoss = global.utils.profitLoss
 const ccxt = global.ccxt
