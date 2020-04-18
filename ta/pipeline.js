@@ -74,7 +74,7 @@ async function loadCandlesFromFS(dataDir, exchange, market, timeframe, start) {
   let i = 0 // filename index
   let j = 0 // candle index
   let ohlcv = await loadOHLCV(`${path}/${jsons[i]}`)
-  return async function () {
+  return async function nextCandle() {
     if (!ohlcv) return undefined
     const candle = ohlcv[j++]
     //console.log({i,j})
@@ -190,7 +190,7 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
     }
   })
 
-  return function(candle) {
+  return function mainLoop(candle) {
     timeframes.forEach((tf) => {
       const imdKey  = `imd${tf}`
       const mdKey   = `md${tf}`
