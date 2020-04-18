@@ -14,7 +14,7 @@ function create(options) {
   }
 }
 
-function ping() {
+function ping(ws) {
 }
 
 function connect(apiKey, endpoint=WEBSOCKET_ENDPOINT) {
@@ -50,11 +50,12 @@ function connect(apiKey, endpoint=WEBSOCKET_ENDPOINT) {
   return [ws, ee]
 }
 
-function subscribeCandles(ws, market) {
+async function subscribeCandles(ws, market) {
   const mkt = market.replace(/\//, '')
+  const channel = `klineV2.1.${mkt}`
   const klineSubscribe = JSON.stringify({
     op: 'subscribe',
-    args: [ `klineV2.1.${mkt}` ]
+    args: [channel]
   })
   if (ws.readyState) {
     ws.send(klineSubscribe)
@@ -63,9 +64,10 @@ function subscribeCandles(ws, market) {
       ws.send(klineSubscribe)
     })
   }
+  return channel
 }
 
-function subscribePrivate(ws) {
+async function subscribePrivate(ws) {
 }
 
 //ws.send(JSON.stringify({ op: 'unsubscribe', args: [ 'klineV2.1.BTCUSD' ] }))
