@@ -91,8 +91,11 @@ class Trader {
   async switchToRealtime() {
     // This is the same for both.
     if (this.isWarmedUp) {
-      this.events.on(this.candleChannel, (candle) => {
-        this.marketState = this.mainLoop(candle)
+      this.events.on(this.candleChannel, (message) => {
+        const candles = (message.data)
+          ? message.data.map((d) => [ d.start * 1000, d.open, d.high, d.low, d.close, d.volume ])
+          : []
+        candles.forEach((c) => this.marketState = this.mainLoop(c))
       })
     } else {
       throw("We're not warmed up yet.")
