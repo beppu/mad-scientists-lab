@@ -1,6 +1,6 @@
 const live = require('./live')
 
-test("a Trader should instantiate and have certain properties", () => {
+test("a trader should instantiate and have certain properties", () => {
   const exchange = 'bybit'
   const market = 'BTC/USD'
   const strategy = 'Guppy'
@@ -10,14 +10,14 @@ test("a Trader should instantiate and have certain properties", () => {
   expect(btcusd.logger).toBeDefined()
 })
 
-test("warming up a Trader instance should work", () => {
+test("warming up a trader instance should work", () => {
   // TODO
 })
 
-test("switching a warmed up Trader to realtime price data should work", () => {
+test("switching a warmed up trader to realtime price data should work", () => {
   // TODO
 })
 
-test("Trying to use an unsupported exchange should throw an exception", () => {
+test("trying to use an unsupported exchange should throw an exception", () => {
   // TODO
 })
