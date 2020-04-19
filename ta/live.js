@@ -26,8 +26,8 @@ function findStrategy(name) {
 }
 
 class Trader {
-  constructor({exchange, market, strategy, options, logger}) {
-    this.opts = { exchange, market, strategy, options }
+  constructor({dataDir, exchange, market, strategy, options, logger}) {
+    this.opts = { dataDir, exchange, market, strategy, options }
     this.logger = logger || pino()
     this.isWarmedUp = false
     this.isRealtime = false
@@ -56,7 +56,7 @@ class Trader {
     await this.sanityCheck()
     // This is the same for both.
     // Load candles from the filesystem until we can't.
-    const nextCandle = pipeline.loadCandlesFromFS(this.opts.exchange, this.opts.market, this.baseTimeframe, since)
+    const nextCandle = await pipeline.loadCandlesFromFS(this.opts.dataDir, this.opts.exchange, this.opts.market, this.baseTimeframe, since)
     let candle = await nextCandle()
     while (candle) {
       this.marketState = this.mainLoop(candle)
@@ -85,7 +85,8 @@ class Trader {
       DONE - give ta.loadCandles a limit parameter
       DONE - store exchange limits in exchanges/$exchange.js
      */
-    candles.forEach((c) => this.marketState = this.mainLoop(candle))
+    console.log('candles', candles)
+    candles.forEach((c) => this.marketState = this.mainLoop(c))
     this.isWarmedUp = true
   }
 
@@ -151,7 +152,7 @@ const trade = {
 const test = {
   bybit: {
     BTCUSD(strategy, options={}) {
-      return new Trader({ exchange: 'bybit', market: 'BTC/USD', strategy, options })
+      return new Trader({ dataDir: 'data', exchange: 'bybit', market: 'BTC/USD', strategy, options })
     }
   }
 }
