@@ -24,21 +24,25 @@ cache.init({
  * @param {String} exchange  - Name of exchange
  * @param {String} market    - Symbol for market
  * @param {String} timeframe - Duration of candle (5m, 30m, 1h, 1d, etc)
+ * @param {Number} _since    - Timestamp in milliseconds on where to start from
+ * @param {Number} _limit    - Maximum number of candles to download
  * @returns {Array<Object>}  - An array of candles
  */
-async function loadCandles(exchange, market, timeframe) {
+async function loadCandles(exchange, market, timeframe, _since, _limit) {
   const ex = new ccxt[exchange]()
-  const key = `${exchange}-${market}-${timeframe}`
+  const key = _since
+    ? `${exchange}-${market}-${timeframe}-${_since}`
+    : `${exchange}-${market}-${timeframe}`
   try {
     let candles = await cache.get(key)
     if (!candles) {
       let fetch = async () => {
         let _candles
         try {
-          const limit = 1000
+          const limit = _limit ? _limit : 1000
           const now = DateTime.local()
           const tf = time.timeframeToMinutes(timeframe)
-          const since = now.minus({ minutes: tf * limit })
+          const since = _since ? DateTime.fromMillis(_since) : now.minus({ minutes: tf * limit })
           _candles = await ex.fetchOHLCV(market, timeframe, since.toMillis(), limit)
         }
         catch (err) {
