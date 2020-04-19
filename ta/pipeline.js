@@ -222,8 +222,14 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
       const [candleForTf, isBoundaryForTf] = aggregator ? aggregator(candle) : [candle, true]
 
       if (isBoundaryForTf) {
-        ta.marketDataAppendCandle(md, candleForTf)
-        ta.invertedAppendCandle(imd, candleForTf)
+        // Check the timestamp of the last candle and only append if the timestamp is different.
+        if (candleForTf[0] !== imd.timestamp[0]) {
+          ta.marketDataAppendCandle(md, candleForTf)
+          ta.invertedAppendCandle(imd, candleForTf)
+        } else {
+          ta.marketDataUpdateCandle(md, candleForTf)
+          ta.invertedUpdateCandle(imd, candleForTf)
+        }
       } else {
         ta.marketDataUpdateCandle(md, candleForTf)
         ta.invertedUpdateCandle(imd, candleForTf)
