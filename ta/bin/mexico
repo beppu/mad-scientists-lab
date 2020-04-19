@@ -4,6 +4,7 @@ const pkg       = require('../package.json')
 const ta        = require('../index')
 const utils     = require('../utils')
 const time      = require('../time')
+const pipeline  = require('../pipeline')
 const luxon     = require('luxon')
 const commander = require('commander')
 const talib     = require('talib')
@@ -16,6 +17,14 @@ const {DateTime} = luxon
 
 const parseIntB10 = utils.parseIntB10
 
+function parseSince(x) {
+  if (x.match(/last/i)) {
+    return "last"
+  } else {
+    return utils.parseIntB10(x)
+  }
+}
+
 async function main() {
   const program   = new commander.Command();
   program
@@ -24,7 +33,7 @@ async function main() {
     .option('-x, --exchange <NAME>', 'Exchange to pull data from', process.env.TA_EXCHANGE || 'bitmex')
     .option('-m, --market <SYMBOL>', 'Market in exchange to pull data from', process.env.TA_MARKET || 'BTC/USDT')
     .option('-t, --timeframe <INTERVAL>', 'Candlestick duration for market data', process.env.TA_TIMEFRAME || '5m')
-    .option('-s, --since <TIMESTAMP>', 'Specify a timestamp for the first candle', parseIntB10, 1)
+    .option('-s, --since <TIMESTAMP>', 'Specify a timestamp for the first candle or special timestamp "last"', parseSince, 1000)
     .option('-l, --limit <CANDLES>', 'Specify how many candles to ask for per API call', parseIntB10, 1000)
     .option('-d, --data <PATH>', 'Directory to store candlestick data in', './data')
     .option('-D, --delay <MILLISECONDS>', 'Milliseconds to wait before sending next request', parseIntB10, 3000)
@@ -81,6 +90,9 @@ async function main() {
     const limit = program.limit
     const millisecondsToNextCandle = time.timeframeToMilliseconds(program.timeframe)
     let since = program.since
+    if (since === "last") {
+      since = await pipeline.lastTimestampFromFS(program.data, program.exchange, program.market, program.timeframe)
+    }
     let candles = []
     do {
       const now = DateTime.local()
