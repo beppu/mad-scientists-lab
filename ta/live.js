@@ -52,11 +52,11 @@ class Trader {
     return true
   }
 
-  async warmUp(start = 0) {
+  async warmUp(since = 0) {
     await this.sanityCheck()
     // This is the same for both.
     // Load candles from the filesystem until we can't.
-    const nextCandle = pipeline.loadCandlesFromFS(this.opts.exchange, this.opts.market, this.baseTimeframe, start)
+    const nextCandle = pipeline.loadCandlesFromFS(this.opts.exchange, this.opts.market, this.baseTimeframe, since)
     let candle = await nextCandle()
     while (candle) {
       this.marketState = this.mainLoop(candle)
@@ -69,7 +69,7 @@ class Trader {
     this.candleChannel = await this.exchange.subscribeCandles(this.ws, this.opts.market)
     // Load from memory one last time if necessary.
     /*
-      TODO - This is the part I hate.
+      DONE - This is the part I hate.
       Loading up 1m candles from the beginning of an exchange's trading history can
       take considerably longer than 1m.  Furthermore, I don't have any guarantee that
       the FS has enough data downloaded.
@@ -78,13 +78,14 @@ class Trader {
       the end of the FS to the current minute, and for ByBit, it can't be more than
       200 minutes.  For BitMEX, it can't be more than 1000 minutes.
      */
-    // let lastTimestamp = this.marketState.imd1m.timestamp[0]
-    // let candles = await ta.loadCandles(this.opts.exchange, this.opts.market, this.baseTimeframe, lastTimestamp)
+    let lastTimestamp = this.marketState.imd1m.timestamp[0]
+    let limit = this.exchange.limits.maxCandles || 200
+    let candles = await ta.loadCandles(this.opts.exchange, this.opts.market, this.baseTimeframe, lastTimestamp, limit)
     /*
-      TODO - give ta.loadCandles a limit parameter
-      TODO - store exchange limits in exchanges/$exchange.js
+      DONE - give ta.loadCandles a limit parameter
+      DONE - store exchange limits in exchanges/$exchange.js
      */
-    // candles.forEach((c) => this.marketState = this.mainLoop(candle))
+    candles.forEach((c) => this.marketState = this.mainLoop(candle))
     this.isWarmedUp = true
   }
 
