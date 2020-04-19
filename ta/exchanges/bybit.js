@@ -14,7 +14,13 @@ function create(options) {
   }
 }
 
-function ping(ws) {
+const _ping = JSON.stringify({ op: 'ping' })
+function pingAtInterval(ws, interval=30000) {
+  return setInterval(() => {
+    if (ws.readyState) {
+      ws.send(_ping)
+    }
+  }, interval)
 }
 
 function connect(apiKey, endpoint=WEBSOCKET_ENDPOINT) {
@@ -83,7 +89,7 @@ const limits = {
 module.exports = {
   WEBSOCKET_ENDPOINT,
   create,
-  ping,
+  pingAtInterval,
   connect,
   subscribeCandles,
   subscribePrivate,

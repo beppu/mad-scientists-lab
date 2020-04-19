@@ -66,6 +66,7 @@ class Trader {
     const [ws, events] = this.exchange.connect(undefined) // XXX undefined should be an API key
     this.ws = ws
     this.events = events
+    this.pingInterval = this.exchange.pingAtInterval(ws, 30000)
     this.candleChannel = await this.exchange.subscribeCandles(this.ws, this.opts.market)
     // Load from memory one last time if necessary.
     /*
