@@ -94,6 +94,26 @@ async function loadCandlesFromFS(dataDir, exchange, market, timeframe, start) {
 }
 
 /**
+ * Return the leading timestamp of the last batch of candles downloaded to the filesystem.
+ * @param {String} dataDir - directory where OHLCV candlestick data is organized
+ * @param {String} exchange - exchange name
+ * @param {String} market - market symbol
+ * @param {String} timeframe - timeframe of candles to load
+ */
+async function lastTimestampFromFS(dataDir, exchange, market, timeframe) {
+  const path = utils.dataPath(dataDir, exchange, market, timeframe)
+  const _jsons = await fs.readdirAsync(path)
+  const jsons = _cleanCandleFilenames(_jsons, undefined)
+  if (jsons.length) {
+    const lastFilename = jsons[jsons.length - 1]
+    const lastTimestamp = utils.parseIntB10(lastFilename.replace(/\.json$/, ''))
+    return lastTimestamp
+  } else {
+    return 1000
+  }
+}
+
+/**
  * This function leaves timestamp and open alone, but updates high, low, close and volume as necessary.
  * @param {Array<Number>} lastCandle - the previous candle
  * @param {Array<Number>} candle - the current candle
@@ -335,6 +355,7 @@ module.exports = {
   loadOHLCV,
   _cleanCandleFilenames,
   loadCandlesFromFS,
+  lastTimestampFromFS,
   mergeCandle,
   aggregatorFn,
   mainLoopFn,
