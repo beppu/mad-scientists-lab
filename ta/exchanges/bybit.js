@@ -70,6 +70,10 @@ async function subscribeCandles(ws, market) {
 async function subscribePrivate(ws) {
 }
 
+const limits = {
+  maxCandles: 200
+}
+
 //ws.send(JSON.stringify({ op: 'unsubscribe', args: [ 'klineV2.1.BTCUSD' ] }))
 
 // I'm not sure what the websocket side should look like yet.
@@ -82,6 +86,7 @@ module.exports = {
   ping,
   connect,
   subscribeCandles,
-  subscribePrivate
+  subscribePrivate,
+  limits
 }
 
