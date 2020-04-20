@@ -7,7 +7,7 @@ const ema = require('./indicators/ema')
 // This contains 25 1h candles
 let candles = require('./tests/fixtures/candles.json')
 
-test("Aggregation functions should generate the right number of candles", () => {
+test("aggregation functions should generate the right number of candles", () => {
   const ax2h = pipeline.aggregatorFn('2h')
   const ax4h = pipeline.aggregatorFn('4h')
   const md2h = ta.marketDataFromCandles([])
@@ -43,7 +43,7 @@ test("Aggregation functions should generate the right number of candles", () => 
   expect(md4h.close.length).toBeLessThan(candles.length/4 + 1)
 })
 
-test("Aggregation should combine candles correctly", () => {
+test("aggregation should combine candles correctly", () => {
   // Here, I assume the first candle is on a timeframe boundary and the second one is not.
   // I know this is true with the current test fixture.
   const ax2h = pipeline.aggregatorFn('2h')
@@ -78,6 +78,19 @@ test("Aggregation should combine candles correctly", () => {
 test("pipeline.mainLoopFn should be able to take an empty indicatorSpecs", () => {
   const s = pipeline.mainLoopFn('1h', {  })
   // If it doesn't crash, we're good.
+})
+
+test("pipeline.mainLoopFn should update instead of append if the baseTimeframe's candle's timestamp hasn't changed from the last candle", () => {
+  let state
+  const baseTimeframe = '1h'
+  const indicatorSpecs = { '1h': [ ['rsi', 14] ] }
+  const iterate = pipeline.mainLoopFn(baseTimeframe, indicatorSpecs)
+  for (let i = 0; i < 8; i++) {
+    // feed it the same candle repeatedly
+    state = iterate(candles[0])
+  }
+  expect(state.md1h.timestamp).toHaveLength(1)
+  expect(state.imd1h.timestamp).toHaveLength(1)
 })
 
 test("pipeline.mainLoopFn should return a function that calculates correctly", () => {
