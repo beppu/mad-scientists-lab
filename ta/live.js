@@ -42,17 +42,22 @@ class Trader {
     // Instantiate a pipeline with the strategy's indicatorSpecs
     this.baseTimeframe = '1m' // XXX It would be nice to not hardcode this, but I almost always want 1m.
     this.mainLoop = pipeline.mainLoopFn(this.baseTimeframe, indicatorSpecs)
+    this.initializeTradeExecutor()
   }
   // XXX - I can't implment a full trader yet.
   // I need exchanges/bybit to implement more of the exchange bits.
   // Position Before Submission
+
+  initializeTradeExecutor() {
+    // TODO
+  }
 
   async sanityCheck() {
     // TODO - Make sure we have some data in the FS first
     return true
   }
 
-  async warmUp(since = 0) {
+  async warmUp(since) {
     await this.sanityCheck()
     // This is the same for both.
     // Load candles from the filesystem until we can't.
@@ -98,7 +103,7 @@ class Trader {
         const candles = (message.data)
           ? message.data.map((d) => [ d.start * 1000, d.open, d.high, d.low, d.close, d.volume ])
           : []
-        candles.forEach((c) => this.marketState = this.mainLoop(c))
+        this.iterate(candles)
       })
     } else {
       throw("We're not warmed up yet.")
@@ -122,15 +127,21 @@ class Trader {
     // Reset the strategy to its initial state.
   }
 
-  async go() {
-    await this.warmUp()
+  async go(since) {
+    // TODO Use a default since that goes back far enough to get 1000 candles for the largest requested timeframe.
+    await this.warmUp(since)
     await this.switchToRealtime()
     await this.start()
   }
 
-  iterate() {
+  iterate(candles) {
     // This is not async and I think this is where I'm going to differentiate
     // between live testing and live trading.
+    candles.forEach((c) => {
+      this.marketState = this.mainLoop(c)
+      // give marketState to strategy
+      // give orders to tradeExecutor
+    })
   }
 }
 
@@ -141,16 +152,27 @@ class Trader {
    exchange is different from a real exchange in that it needs to be fed candles.
  */
 class Simulator extends Trader {
+  constructor(opts) {
+    super(opts)
+  }
 
-  iterate() {
+  initializeTradeExecutor() {
+    const options = Object.assign({ balance: 100000 }, this.simulatorOptions || {})
+    this.tradeExecutor = exchanges.simulator.create(options)
+  }
+
+  // Is iteration the same?
+  // Almost, but not quite.  The tradeExecutor is synchronous during simulation but async in live trading.
+  iterate(candles) {
+    candles.forEach((c) => {
+      this.marketState = this.mainLoop(c)
+      // give marketState to strategy
+      // give orders to tradeExecutor
+    })
   }
 }
 
 const trade = {
-  bybit: {}
-}
-
-const test = {
   bybit: {
     BTCUSD(strategy, options={}) {
       return new Trader({ dataDir: 'data', exchange: 'bybit', market: 'BTC/USD', strategy, options })
@@ -158,12 +180,22 @@ const test = {
   }
 }
 
-const btc = test.bybit.BTCUSD
+const simulate = {
+  bybit: {
+    BTCUSD(strategy, options={}) {
+      return new Simulator({ dataDir: 'data', exchange: 'bybit', market: 'BTC/USD', strategy, options })
+    }
+  }
+}
+
+const btc = trade.bybit.BTCUSD
+const btcs = simulate.bybit.BTCUSD
 
 module.exports = {
   Trader,
   Simulator,
-  test,
   trade,
-  btc
+  simulate,
+  btc,
+  btcs
 }
