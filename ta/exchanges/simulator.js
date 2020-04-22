@@ -552,7 +552,7 @@ function create(opts) {
    * @param {Object} candle - a candle
    * @returns {Array<Object>} an array containing updated state and a list of actions that happened in this iteration.
    */
-  return function simulator(state, orders, candle) {
+  return async function simulator(orders, state, candle) {
     // let's get a state we can work with
     let newState = state ? clone(state) : initialState(opts.balance)
 
