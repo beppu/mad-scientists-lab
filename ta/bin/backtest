@@ -213,7 +213,7 @@ async function main() {
           console.log('-- ', time.iso(candle[0]), candle)
           console.log('orders: ', orders)
         }
-        ;[exchangeState, executedOrders] = exchange(exchangeState, orders, candle)
+        ;[exchangeState, executedOrders] = await exchange(orders, exchangeState, candle)
         if (program.verbose && executedOrders && executedOrders.length) {
           allExecutedOrders.push(...executedOrders)
           const key = `imd${program.timeframe}`
