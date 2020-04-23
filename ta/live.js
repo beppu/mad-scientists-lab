@@ -8,8 +8,10 @@
  * - exchange execution
  */
 
+const Promise    = require('bluebird')
 const pino       = require('pino')
 const luxon      = require('luxon')
+const clone      = require('clone')
 const ta         = require('./index')
 const utils      = require('./utils')
 const pipeline   = require('./pipeline')
@@ -42,6 +44,11 @@ class Trader {
     // Instantiate a pipeline with the strategy's indicatorSpecs
     this.baseTimeframe = '1m' // XXX It would be nice to not hardcode this, but I almost always want 1m.
     this.mainLoop = pipeline.mainLoopFn(this.baseTimeframe, indicatorSpecs)
+    // Setup variables used by the loop
+    this.marketState = undefined
+    this.strategyState = undefined
+    this.orders = undefined
+    this.executedOrders = undefined
     this.initializeTradeExecutor()
   }
   // XXX - I can't implment a full trader yet.
@@ -50,6 +57,11 @@ class Trader {
 
   initializeTradeExecutor() {
     // TODO
+    this.executor = async (orders) => {
+      const exchangeState = {}
+      const executedOrders = []
+      return [exchangeState, executedOrders]
+    }
   }
 
   async sanityCheck() {
@@ -137,10 +149,19 @@ class Trader {
   iterate(candles) {
     // This is not async and I think this is where I'm going to differentiate
     // between live testing and live trading.
-    candles.forEach((c) => {
+    Promise.each(candles, async (c) => {
       this.marketState = this.mainLoop(c)
       // give marketState to strategy
+      let xo = clone(this.executedOrders)
+      let [strategyState, orders] = this.strategy(this.strategyState, this.marketState, xo)
+      this.strategyState = strategyState
+      this.orders = orders
+      this.executedOrders = undefined;
       // give orders to tradeExecutor
+      let [exchangeState, executedOrders] = await this.executor(orders);
+      this.exchangeState = exchangeState
+      // this.executedOrders = executedOrders
+      // XXX - I just realized that a real exchange can return executedOrders at any time.
     })
   }
 }
@@ -164,10 +185,21 @@ class Simulator extends Trader {
   // Is iteration the same?
   // Almost, but not quite.  The tradeExecutor is synchronous during simulation but async in live trading.
   iterate(candles) {
-    candles.forEach((c) => {
+    // This is not async and I think this is where I'm going to differentiate
+    // between live testing and live trading.
+    Promise.each(candles, async (c) => {
       this.marketState = this.mainLoop(c)
       // give marketState to strategy
+      let xo = clone(this.executedOrders)
+      let [strategyState, orders] = this.strategy(this.strategyState, this.marketState, xo)
+      this.strategyState = strategyState
+      this.orders = orders
+      this.executedOrders = undefined;
       // give orders to tradeExecutor
+      let [exchangeState, executedOrders] = await this.executor(orders);
+      this.exchangeState = exchangeState
+      this.executedOrders = executedOrders
+      // XXX - I just realized that a real exchange can return executedOrders at any time.
     })
   }
 }

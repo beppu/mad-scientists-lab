@@ -70,7 +70,7 @@ test("market orders should fill immediately when a candle is given", async () =>
     }
   ]
   let [state, actions] = await sx(orders, undefined, undefined)
-  console.log({state, actions})
+  //console.log({state, actions})
   expect(state.marketOrders).toHaveLength(1)
   let [state2, actions2] = await sx(undefined, state, [0, 7000, 7100, 6990, 7010, 10000])
   expect(state2.marketOrders).toHaveLength(0)
