@@ -20,22 +20,24 @@ global.luxon       = require('luxon')
 global.DateTime    = global.luxon.DateTime
 global.Interval    = global.luxon.Interval
 
-global.ta = require('./index')
-global.alerts = require('./alerts')
-global.time = require('./time')
-global.utils = require('./utils')
-global.pipeline = global.pl = require('./pipeline')
+global.ta         = require('./index')
+global.alerts     = require('./alerts')
+global.time       = require('./time')
+global.utils      = require('./utils')
+global.pipeline   = global.pl = require('./pipeline')
 global.indicators = require('./indicators')
 global.strategies = require('./strategies')
-global.research = require('./research')
-global.analysis = require('./analysis')
-global.exchanges = require('./exchanges')
-global.live = require('./live')
+global.research   = require('./research')
+global.analysis   = require('./analysis')
+global.exchanges  = require('./exchanges')
+global.live       = require('./live')
+global.misc       = require('./misc')
 
-global.profitLoss = global.utils.profitLoss
+global.pnl = global.profitLoss = global.utils.profitLoss
 const ccxt = global.ccxt
 global.bitmex = new ccxt.bitmex()
 global.binance = new ccxt.binance()
+global.bybit = new ccxt.bybit()
 global.ftx = new ccxt.ftx()
 
 // Where I like to store my temporary results from async functions.
