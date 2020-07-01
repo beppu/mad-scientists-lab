@@ -1,0 +1,3 @@
+TA_ROOT=/mad/ta
+#  m  h  dom  mon  dow  command
+ */5  *    *    *    *  cd $TA_ROOT && mexico --exchange bybit --market BTC/USD --timeframe 1m --since last --limit 200
