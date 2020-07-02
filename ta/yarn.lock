@@ -765,6 +765,15 @@ buffer-from@^1.0.0:
   resolved "https://registry.yarnpkg.com/buffer-from/-/buffer-from-1.1.1.tgz#32713bc028f75c02fdb710d7c7bcec1f2c6070ef"
   integrity sha512-MQcXEUbCKtEo7bhqEs6560Hyd4XaovZlO/k9V3hjVUF/zwW7KBVdSK4gIt/bzwS9MbR5qob+F5jusZsb0YQK2A==
 
+bybit@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/bybit/-/bybit-1.0.5.tgz#781cb567e027b635c5e740d72f2c379fea1276ea"
+  integrity sha512-cBQm4hKV7ASaqZQtdUF6swfci+1AbPISU72ks1DONK1q7IghHSQFDu0n87Px2DCFq0azeitSqw94kcowPA9rdQ==
+  dependencies:
+    dotenv "^8.1.0"
+    lodash "^4.17.15"
+    node-fetch "^2.6.0"
+
 cache-all@^2.0.4:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/cache-all/-/cache-all-2.0.4.tgz#aa98d31fb9d29651d6e59d3a7f4f0b871525235c"
@@ -2677,6 +2686,11 @@ nice-try@^1.0.4:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/nice-try/-/nice-try-1.0.5.tgz#a3378a7696ce7d223e88fc9b764bd7ef1089e366"
   integrity sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==
+
+node-fetch@^2.6.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.0.tgz#e633456386d4aa55863f676a7ab0daa8fdecb0fd"
+  integrity sha512-8dG4H5ujfvFiqDmVu9fQ5bOHUC15JMjMY/Zumv26oOvvVJjM67KF8koCWIabKQ1GJIa9r2mMZscBq/TbdOcmNA==
 
 node-int64@^0.4.0:
   version "0.4.0"
