@@ -3,6 +3,7 @@ const WebSocket = require('ws')
 const {DateTime} = require('luxon')
 const kindOf = require('kind-of')
 const bybit = require('bybit')
+const Bluebird = require('bluebird')
 
 const WEBSOCKET_ENDPOINT = 'wss://stream.bybit.com/realtime'
 
@@ -10,7 +11,7 @@ function create(options) {
   let exchangeState = {}
   let executedOrders = []
 
-  return function bybit(orders) {
+  return async function bybit(orders) {
     return [exchangeState, executedOrders]
   }
 }
