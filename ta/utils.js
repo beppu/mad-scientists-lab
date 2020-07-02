@@ -187,6 +187,10 @@ function log10LineFn(a, b) {
 // TODO Write bin/trendline
 // My code tries to load 1000 candles by default, and this means big trendlines need big timeframes.
 
+function hanneValue(imd, period) {
+  // find the highest high
+  // find the lowest low
+}
 
 /**
  * Return a predictable path for storing/retrieving OHLCV data

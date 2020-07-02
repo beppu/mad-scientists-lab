@@ -2,6 +2,7 @@ const events = require('events')
 const WebSocket = require('ws')
 const {DateTime} = require('luxon')
 const kindOf = require('kind-of')
+const bybit = require('bybit')
 
 const WEBSOCKET_ENDPOINT = 'wss://stream.bybit.com/realtime'
 

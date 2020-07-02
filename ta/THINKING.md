@@ -79,6 +79,29 @@ the same options and environment variables though.
 
 # Blog
 
+## 2020-06-29 Revisiting My Work
+
+It's close to being able to do live execution of strategies, but a little more plumbing needs
+to happen.  If I remember correctly, I still need to implement the following.
+
+* The ability to warm up a strategy immediately prior to realtime execution.  (It seems I have this in live.js also.)
+* The ability to execute strategies in realtime.  (It seems I have this in live.js)
+* The ability to execute orders on a real exchange.  (I don't have this yet.)
+
+I need to recall how orders are structured, and I need to translate them into exchange API calls.
+
+Small things left to do:
+
+* Write a cron job to keep downloaded candles up to date.
+* Install my code on my non-US servers.
+
+An important things I must not forget is robustness in the face of network
+errors. If the live trader loses connectivity, it must first download candle
+data to get back up to speed. It should also send me an alert, so that I can
+monitor the situation. Perhaps wide stop losses should also be used in case the
+bot is not able to reconnect in time to resume order management.
+
+
 ## 2020-03-26 I Forgot About Strategy State and a Review
 
 In the previous entry, my pseudocode had the strategy function both consume its past state and 
@@ -113,7 +136,7 @@ I made something I called `InvertedSeries` which implements the subset of `Array
 and most importantly has a fast `.unshift` method which was implemented with a `.push` under the hood.
 It was quite clever, and I'm very proud of it.  It took about a day and half to do.
 
-#### Now can I write a strategy?  
+#### Now can I write a strategy?
 
 I think I can, but what I found myself doing today is writing research
 strategies that run in the backtesting system but don't execute trades.  I'm
@@ -131,7 +154,7 @@ I may take a little break from divergences though.  I think it's time to write a
 that issues orders, and I think it'll be MovingAverageSR.  While watching the markets, I've
 become fascinated by the 960 SMA on all timeframes, and I'd like to see how it performs as support
 and resistance.  It'll be my first real strategy since it's easy enough to implement compared to
-DivergenceConfluence.  
+DivergenceConfluence.
 
 I need to develop a feeling for what it's like to issue orders and have them filled or not filled,
 and have a strategy react accordingly.  I will probably learn a lot from this exercise.

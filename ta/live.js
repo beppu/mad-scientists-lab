@@ -132,6 +132,7 @@ class Trader {
 
   async stop() {
     // Note that stopping a strategy doesn't mean that candle consumption is stopped.
+    // It only means that strategy execution is stopped.
     // That should keep going until the trader instance is no longer being used.
   }
 

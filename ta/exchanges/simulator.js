@@ -532,6 +532,7 @@ function initialState(balance) {
  * @returns {Function} a function that updates the state of the exchange.
  */
 function create(opts) {
+  const logger = opts.logger
 
   // What is the internal state of the exchange?
   /*

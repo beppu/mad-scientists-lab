@@ -427,4 +427,4 @@ test("unexecuted orders should be editable", async () => {
 })
 
 // After I get up to here, I have enough to move on to strategy implementation.
-// I don't need stop-limit or trailing-stop.
+// I don't need stop-limit or trailing-stop immediately.
