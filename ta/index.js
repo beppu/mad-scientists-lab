@@ -460,6 +460,12 @@ const invertedSeriesMethods = {
   }
 }
 
+// For memory efficiency, is there a way to periodically drop old data that isn't being used anymore?
+// I think I could use the mutatey splice.
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice
+// Do it only on unshift.
+// When a certain length threshold is reached, splice away old unused data and maybe call global.gc after all the splicing is done.
+// After I implement this, I should measure actual memory usage and compare.
 function createInvertedSeries() {
   const target = Object.assign({ series: [] }, invertedSeriesMethods)
   return new Proxy(target, invertedSeriesHandler)
