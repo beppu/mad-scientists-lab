@@ -209,6 +209,9 @@ const trade = {
   bybit: {
     BTCUSD(strategy, options={}) {
       return new Trader({ dataDir: 'data', exchange: 'bybit', market: 'BTC/USD', strategy, options })
+    },
+    ETHUSD(strategy, options={}) {
+      return new Trader({ dataDir: 'data', exchange: 'bybit', market: 'ETH/USD', strategy, options })
     }
   }
 }
