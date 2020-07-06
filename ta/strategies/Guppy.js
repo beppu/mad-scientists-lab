@@ -42,18 +42,41 @@ function shouldSell(marketState, config) {
   }
 }
 
-function calculateSize(n, price) {
-  return ((n * 10000) / price)
+function calculateSize(config, price) {
+  switch (config.sizeMode) {
+  case 'spot':
+    return calculateSizeSpot(config.fixedPositionSize)
+    break
+  case 'contracts':
+    return 0
+    break
+  case 'emulateContracts':
+    return calculateSizeEmulateContracts(config.fixedPositionSize, price)
+    break
+  default:
+    throw('Fix your config')
+  }
+}
+
+function calculateSizeEmulateContracts(n, price) {
+  return Math.round(((n * 10000) / price))
+}
+
+function calculateSizeSpot(n) {
+  return n
 }
 
 function init(baseTimeframe, customConfig) {
   const config = Object.assign({}, defaultConfig, customConfig)
   const logger = config.logger
+  console.log({ logger })
   const indicatorSpecs = {}
   indicatorSpecs[config.guppyTf] = analysis.guppy.allEMAs.map((period) => ['ema', period])
   indicatorSpecs[config.rsiTf]   = [ ['rsi'] ]
   const initialState = {
     positionBias:      undefined,  // 'long' or 'short'
+    longFilled:        undefined,
+    shortFilled:       undefined
   }
   function strategy(strategyState, marketState, executedOrders) {
     let state  = strategyState ? clone(strategyState) : initialState
@@ -68,9 +91,11 @@ function init(baseTimeframe, customConfig) {
       executedOrders.forEach((o) => {
         if (o.id === 'open-long' && o.status === 'filled') {
           state.positionBias = 'long'
+          state.longFilled = true
         }
         if (o.id === 'open-short' && o.status === 'filled') {
           state.positionBias = 'short'
+          state.shortFilled = true
         }
       })
     }
@@ -80,7 +105,7 @@ function init(baseTimeframe, customConfig) {
       // If we're long, figure out if we need to reverse position and go short.
       if (shouldSell(marketState, config)) {
         let lastSize = state.lastSize
-        let size = calculateSize(config.fixedPositionSize, price)
+        let size = calculateSize(config, price)
         orders.push({
           id: 'close-long',
           type: 'market',
@@ -93,13 +118,14 @@ function init(baseTimeframe, customConfig) {
           quantity: size
         })
         state.lastSize = size
+        state.shortFilled = false
       }
       break;
     case 'short':
       // If we're short, figure out if we need to reverse position and go long.
       if (shouldBuy(marketState, config)) {
         let lastSize = state.lastSize
-        let size = calculateSize(config.fixedPositionSize, price)
+        let size = calculateSize(config, price)
         orders.push({
           id: 'close-short',
           type: 'market',
@@ -112,12 +138,13 @@ function init(baseTimeframe, customConfig) {
           quantity: size
         })
         state.lastSize = size
+        state.longFilled = false
       }
       break;
     default:
       // If we're not in a position, figure out which way to go.
       if (shouldBuy(marketState, config)) {
-        let size = calculateSize(config.fixedPositionSize, price)
+        let size = calculateSize(config, price)
         orders.push({
           id: 'open-long',
           type: 'market',
@@ -125,9 +152,10 @@ function init(baseTimeframe, customConfig) {
           quantity: size
         })
         state.lastSize = size
+        state.longFilled = false
       }
       if (shouldSell(marketState, config)) {
-        let size = calculateSize(config.fixedPositionSize, price)
+        let size = calculateSize(config, price)
         orders.push({
           id: 'open-short',
           type: 'market',
@@ -135,6 +163,7 @@ function init(baseTimeframe, customConfig) {
           quantity: size
         })
         state.lastSize = size
+        state.shortFilled = false
       }
     }
     return [state, orders]
