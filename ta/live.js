@@ -21,6 +21,8 @@ const exchanges  = require('./exchanges')
 
 const {DateTime} = luxon
 
+const DEFAULT_LOGGER = pino()
+
 function findStrategy(name) {
   if (strategies[name]) return strategies[name]
   if (research[name]) return research[name]
@@ -30,7 +32,7 @@ function findStrategy(name) {
 class Trader {
   constructor({dataDir, exchange, market, strategy, options, logger}) {
     this.opts = { dataDir, exchange, market, strategy, options }
-    this.logger = logger || pino()
+    this.logger = logger || DEFAULT_LOGGER
     this.isWarmedUp = false
     this.isRealtime = false
     this.exchange = exchanges[exchange]
@@ -38,7 +40,7 @@ class Trader {
     // Instantiate strategy and get its indicatorSpecs
     const _s = findStrategy(strategy)
     if (!_s) throw(`Can't find strategy '${strategy}'`)
-    let [indicatorSpecs, s] = _s.init(options)
+    let [indicatorSpecs, s] = _s.init(this.baseTimeframe, Object.assign({ logger }, options))
     this.strategy = s
     this.indicatorSpecs = indicatorSpecs
     // Instantiate a pipeline with the strategy's indicatorSpecs
@@ -56,12 +58,8 @@ class Trader {
   // Position Before Submission
 
   initializeTradeExecutor() {
-    // TODO
-    this.executor = async (orders) => {
-      const exchangeState = {}
-      const executedOrders = []
-      return [exchangeState, executedOrders]
-    }
+    const options = Object.assign({ }, this.exchangeOptions || {})
+    this.executor = this.exchange.create(options)
   }
 
   async sanityCheck() {
@@ -147,6 +145,19 @@ class Trader {
     await this.start()
   }
 
+  lastCandle() {
+    const i = this.marketState.imd1m
+    const candle = [
+      i.timestamp[0],
+      i.open[0],
+      i.high[0],
+      i.low[0],
+      i.close[0],
+      i.volume[0],
+    ]
+    return candle
+  }
+
   iterate(candles) {
     // This is not async and I think this is where I'm going to differentiate
     // between live testing and live trading.
@@ -179,8 +190,8 @@ class Simulator extends Trader {
   }
 
   initializeTradeExecutor() {
-    const options = Object.assign({ balance: 100000 }, this.simulatorOptions || {})
-    this.tradeExecutor = exchanges.simulator.create(options)
+    const options = Object.assign({ balance: 100000 }, this.exchangeOptions || {})
+    this.executor = exchanges.simulator.create(options)
   }
 
   // Is iteration the same?
@@ -197,7 +208,8 @@ class Simulator extends Trader {
       this.orders = orders
       this.executedOrders = undefined;
       // give orders to tradeExecutor
-      let [exchangeState, executedOrders] = await this.executor(orders);
+      let candle = this.lastCandle()
+      let [exchangeState, executedOrders] = await this.executor(orders, this.exchangeState, candle);
       this.exchangeState = exchangeState
       this.executedOrders = executedOrders
       // XXX - I just realized that a real exchange can return executedOrders at any time.
@@ -225,7 +237,7 @@ const trade = {
 const simulate = {
   bybit: {
     BTCUSD(strategy, options={}) {
-      return new Simulator({ dataDir: 'data', exchange: 'bybit', market: 'BTC/USD', strategy, options })
+      return new Simulator({ dataDir: 'data', exchange: 'bybit', market: 'BTC/USD', strategy, options, logger: DEFAULT_LOGGER })
     }
   }
 }
@@ -241,3 +253,14 @@ module.exports = {
   btc,
   btcs
 }
+
+/**
+
+   How do I use this thing?
+
+   // Instantiate a live simulator with a Guppy strategy
+   s = live.simulate.bybit.BTCUSD(...preset.guppy1m30m)
+   since = DateTime.fromISO('2020-07-04')
+   s.go(since).then(cl)
+
+ */
