@@ -10,8 +10,19 @@ const WEBSOCKET_ENDPOINT = 'wss://stream.bybit.com/realtime'
 function create(options) {
   let exchangeState = {}
   let executedOrders = []
+  const client = bybit({
+    baseURL: options.baseURL,
+    key: options.key,
+    secret: options.secret
+  })
 
   return async function bybit(orders) {
+    let results = await Bluebird.map(orders, (order) => {
+      switch (order.type) {
+      case 'market':
+        break;
+      }
+    })
     return [exchangeState, executedOrders]
   }
 }
