@@ -466,6 +466,7 @@ const invertedSeriesMethods = {
 // Do it only on unshift.
 // When a certain length threshold is reached, splice away old unused data and maybe call global.gc after all the splicing is done.
 // After I implement this, I should measure actual memory usage and compare.
+// Maybe the pipeline should be rsponsible for triggering old data deletion, because marketData (without inversion) needs periodic cleanup too.
 function createInvertedSeries() {
   const target = Object.assign({ series: [] }, invertedSeriesMethods)
   return new Proxy(target, invertedSeriesHandler)
