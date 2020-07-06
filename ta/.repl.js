@@ -31,6 +31,7 @@ global.research   = require('./research')
 global.analysis   = require('./analysis')
 global.exchanges  = require('./exchanges')
 global.live       = require('./live')
+global.preset     = global.strategies.preset
 global.misc       = require('./misc')
 
 global.pnl = global.profitLoss = global.utils.profitLoss
@@ -45,3 +46,5 @@ global.x = {}
 
 // I use this test fixture a lot
 global.candles = require('./tests/fixtures/candles.json')
+
+console.log(Object.keys(global))
