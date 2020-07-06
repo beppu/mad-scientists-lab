@@ -208,9 +208,15 @@ class Simulator extends Trader {
 const trade = {
   bybit: {
     BTCUSD(strategy, options={}) {
+      options.baseURL = process.env.TA_BYBIT_BASE_URL
+      options.key = process.env.TA_BYBIT_KEY
+      options.secret = process.env.TA_BYBIT_SECRET
       return new Trader({ dataDir: 'data', exchange: 'bybit', market: 'BTC/USD', strategy, options })
     },
     ETHUSD(strategy, options={}) {
+      options.baseURL = process.env.TA_BYBIT_BASE_URL
+      options.key = process.env.TA_BYBIT_KEY
+      options.secret = process.env.TA_BYBIT_SECRET
       return new Trader({ dataDir: 'data', exchange: 'bybit', market: 'ETH/USD', strategy, options })
     }
   }
