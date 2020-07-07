@@ -33,6 +33,7 @@ class Trader {
   constructor({dataDir, exchange, market, strategy, options, logger}) {
     this.opts = { dataDir, exchange, market, strategy, options }
     this.logger = logger || DEFAULT_LOGGER
+    this.baseTimeframe = '1m' // XXX It would be nice to not hardcode this, but I almost always want 1m for live trading
     this.isWarmedUp = false
     this.isRealtime = false
     this.exchange = exchanges[exchange]
@@ -44,7 +45,6 @@ class Trader {
     this.strategy = s
     this.indicatorSpecs = indicatorSpecs
     // Instantiate a pipeline with the strategy's indicatorSpecs
-    this.baseTimeframe = '1m' // XXX It would be nice to not hardcode this, but I almost always want 1m.
     this.mainLoop = pipeline.mainLoopFn(this.baseTimeframe, indicatorSpecs)
     // Setup variables used by the loop
     this.marketState = undefined
