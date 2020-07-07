@@ -12,17 +12,24 @@ function create(options) {
   let executedOrders = []
   const client = bybit({
     baseURL: options.baseURL,
-    key: options.key,
-    secret: options.secret
+    key:     options.key,
+    secret:  options.secret
   })
 
   return async function bybit(orders) {
-    let results = await Bluebird.map(orders, (order) => {
+    let exchangeOrder = {};
+    let results = await Bluebird.map(orders, async (order) => {
       switch (order.type) {
       case 'market':
+        exchangeOrder.side   = order.action === 'buy' ? 'Buy' : 'Sell';
+        exchangeOrder.symbol = order.symbol
+        exchangeOrder.qty    = order.quantity;
+        return await client.createOrder(exchangeOrder)
         break;
+      default:
+        return {} // not implemented yet
       }
-    })
+    });
     return [exchangeState, executedOrders]
   }
 }
