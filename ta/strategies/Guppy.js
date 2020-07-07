@@ -81,7 +81,7 @@ function init(baseTimeframe, customConfig) {
   function strategy(strategyState, marketState, executedOrders) {
     let state  = strategyState ? clone(strategyState) : initialState
     let orders = []
-    let price  = marketState.imd1m.close[0]
+    let price  = marketState[`imd${config.guppyTf}`].close[0]
     let size   = config.fixedPositionSize // (config.fixedPositionSize * 10000) / price
     //let size   = (config.fixedPositionSize * 10000) / price
     //console.log('>> ', config.fixedPositionSize, (config.fixedPositionSize * 10000) / price)
