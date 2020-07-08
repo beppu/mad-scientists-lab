@@ -12,6 +12,16 @@ const defaultConfig = {
   fixedPositionSize: 2,  // If we're using fixed position sizing, how many units should a position be?
 }
 
+/**
+ * Return a stringified version of the config suitable for use as a directory name.
+ * This will be used by logging code to organize log files.
+ * @param {Object} config - Parameter description.
+ * @returns {String} human-readable path part that can be used to identify a config for this strategy.
+ */
+function configSlug(config) {
+  return `g@${config.guppyTf}.r@${config.rsiTf}.t@${config.rsiThreshold}`
+}
+
 function shouldBuy(marketState, config) {
   const logger   = config.logger
   const guppyImd = marketState[`imd${config.guppyTf}`]
@@ -173,6 +183,7 @@ function init(baseTimeframe, customConfig) {
 
 module.exports = {
   defaultConfig,
+  configSlug,
   shouldBuy,
   shouldSell,
   calculateSize,
