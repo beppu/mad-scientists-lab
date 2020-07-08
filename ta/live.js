@@ -34,9 +34,12 @@ class Trader {
     this.opts = { dataDir, exchange, market, strategy, options }
     this.logger = logger || DEFAULT_LOGGER
     this.baseTimeframe = '1m' // XXX It would be nice to not hardcode this, but I almost always want 1m for live trading
+    // XXX I'm not sure if I really need baseTimeframe anymore.
+    // XXX I think I may have made changes to pipeline.js that made it unnecessary
     this.isWarmedUp = false
     this.isRealtime = false
     this.exchange = exchanges[exchange]
+    this.symbol = market.replace(/\//, '')
 
     // Instantiate strategy and get its indicatorSpecs
     const _s = findStrategy(strategy)
@@ -158,7 +161,7 @@ class Trader {
     return candle
   }
 
-  iterate(candles) {
+  async iterate(candles) {
     // This is not async and I think this is where I'm going to differentiate
     // between live testing and live trading.
     Promise.each(candles, async (c) => {
@@ -167,7 +170,7 @@ class Trader {
       let xo = clone(this.executedOrders)
       let [strategyState, orders] = this.strategy(this.strategyState, this.marketState, xo)
       this.strategyState = strategyState
-      this.orders = orders
+      this.orders = orders.map((o) => { o.symbol = this.symbol; return o })
       this.executedOrders = undefined;
       // give orders to tradeExecutor
       let [exchangeState, executedOrders] = await this.executor(orders);
@@ -175,6 +178,15 @@ class Trader {
       // this.executedOrders = executedOrders
       // XXX - I just realized that a real exchange can return executedOrders at any time.
     })
+  }
+
+  /**
+   * Feed executedOrders into the strategy.
+   * They will typically come back from the websocket.
+   * This is unique to the Trader.  The simulator doesn't do this.
+   * @param {Type of executedOrders} executedOrders - Parameter description.
+   */
+  async iterateExecutedOrders(executedOrders) {
   }
 }
 
