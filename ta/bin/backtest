@@ -19,6 +19,7 @@ const strategies  = require('../strategies')
 const research    = require('../research')
 const simulator   = require('../exchanges/simulator')
 const interactive = require('../interactive')
+const log         = require('../log')
 
 const {DateTime} = luxon
 
@@ -29,13 +30,13 @@ const parseIntB10 = utils.parseIntB10
 const DEFAULT_STRATEGY = 'BuyAndHold'
 
 function lookupStrategy(pr) {
-  let init
+  let strategy
   if (pr.research) {
-    init = research[pr.research].init
+    strategy = research[pr.research]
   } else {
-    init = strategies[pr.strategy].init
+    strategy = strategies[pr.strategy]
   }
-  if (!init) {
+  if (!strategy) {
     const strategyType = pr.research ? 'Research Strategy' : 'Trading Strategy'
     const strategyName = pr.research ? pr.research : pr.strategy
     console.error(`${strategyType} "${strategyName}" not found.`)
@@ -46,7 +47,7 @@ function lookupStrategy(pr) {
     }
     process.exit(-1)
   }
-  return init
+  return strategy
 }
 
 function parseDateTime(d) {
@@ -88,6 +89,7 @@ async function main() {
     .option('--begin <DATETIME>', 'DateTime to begin the strategy', parseDateTime)
     .option('--end <DATETIME>', 'DateTime to end the strategy', parseDateTime)
     .option('-i, --interactive', 'Interactive mode')
+    .option('-l, --order-log <LOG_DIR>', 'Directory to store logs', (id) => id, './log')
     .option('-v, --verbose', 'Be verbose')
   program.parse(process.argv)
   let optionsAreMissing = false;
@@ -144,12 +146,23 @@ async function main() {
     } else {
       strategyConfig = config
     }
-    const strategyInit = lookupStrategy(program)
+    const Strategy = lookupStrategy(program)
+    const strategyInit = Strategy.init
+    console.log(Strategy)
     const [indicatorSpecs, strategy] = strategyInit(program.timeframe, strategyConfig)
     indicatorSpecs.inverted = true // force the pipeline to use the InvertedSeries data structure.
     if (program.verbose) {
       console.log('indicatorSpecs', indicatorSpecs)
     }
+
+    // Executed Order Logger
+    const orderLogger = log.createOrderLogger(
+      program.begin,
+      program.end,
+      program.orderLog,
+      [program.strategy, strategyConfig],
+      Strategy.configSlug // this is allowed to be undefined
+    )
 
     // Pipeline of Price Data
     const iterate = pipeline.mainLoopFn(program.timeframe, indicatorSpecs)
@@ -221,6 +234,17 @@ async function main() {
           console.log('executedOrders: ', executedOrders)
           console.log('equity: ', calculateEquity(exchangeState, close))
         }
+        // log executedOrders
+        executedOrders.forEach((o) => {
+          const line = {
+            timestamp: o.timestamp,
+            side: o.action,
+            symbol: program.market,
+            quantity: o.quantity,
+            price: o.fillPrice
+          }
+          orderLogger.info(line)
+        })
       }
       candle = await nextCandle()
 

@@ -25,7 +25,7 @@
     "lodash.zip": "^4.2.0",
     "luxon": "^1.18.0",
     "minimist": "^1.2.5",
-    "mkdirp": "^0.5.1",
+    "mkdirp": "^1.0.4",
     "node-notifier": "^6.0.0",
     "object-hash": "^2.0.3",
     "p-retry": "^4.1.0",
