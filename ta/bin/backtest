@@ -72,6 +72,18 @@ function calculateEquity(exchangeState, price) {
   }
 }
 
+function tradingFee(type, quantity, price) {
+  switch (type) {
+  case 'market':
+    return quantity * 0.00075 * price
+    break;
+  case 'limit':
+    return quantity * -0.00025 * price
+    break;
+  }
+  return 0
+}
+
 async function main() {
   const program   = new commander.Command();
   program
@@ -239,9 +251,11 @@ async function main() {
           const line = {
             timestamp: o.timestamp,
             side: o.action,
+            type: o.type,
             symbol: program.market,
             quantity: o.quantity,
-            price: o.fillPrice
+            price: o.fillPrice,
+            fee: tradingFee(o.type, o.quantity, o.price)
           }
           orderLogger.info(line)
         })
