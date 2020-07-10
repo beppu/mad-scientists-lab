@@ -51,8 +51,10 @@ function logName(begin, end) {
 
 function createOrderLogger(begin, end, prefix, config, fn) {
   const logDir = executedOrderLogDir(prefix, config, fn)
-  console.log(logDir)
   mkdirp.sync(logDir)
+  const inner = Object.assign({}, config[1])
+  delete inner.logger
+  fs.writeFileSync(`${logDir}/config.json`, JSON.stringify(inner, undefined, '  '))
   const name = logName(begin, end)
   const logFile = `${logDir}/${name}`
   return pino(pino.destination(logFile))
