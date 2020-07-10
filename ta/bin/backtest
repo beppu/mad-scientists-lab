@@ -267,7 +267,7 @@ async function main() {
             symbol: program.market,
             quantity: o.quantity,
             price: o.fillPrice,
-            fee: tradingFee(o.type, o.quantity, o.price)
+            fee: tradingFee(o.type, (o.quantity * o.fillPrice), o.fillPrice)
           }
           orderLogger.info(line)
         })
