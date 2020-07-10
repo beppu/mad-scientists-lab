@@ -77,13 +77,20 @@ function calculateEquity(exchangeState, price) {
   }
 }
 
+/**
+ * Calculate the fee (or rebate) for the trade
+ * @param {String} type - 'market' or 'limit' for specifying type of order
+ * @param {Number} quantity - quantity bought
+ * @param {Number} price - price the order was filled at
+ * @returns {Number} fee or rebate expressed in the same currency as price (usually USD)
+ */
 function tradingFee(type, quantity, price) {
   switch (type) {
   case 'market':
-    return quantity * FEES.taker * price
+    return (quantity/price) * FEES.taker * price
     break;
   case 'limit':
-    return quantity * FEES.maker * price
+    return (quantity/price) * FEES.maker * price
     break;
   }
   return 0
@@ -355,5 +362,6 @@ if (require.main === module) {
 
 // for repl debugging, export functions and variables here
 module.exports = {
+  tradingFee,
   main
 }
