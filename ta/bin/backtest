@@ -259,6 +259,7 @@ async function main() {
           console.log('equity: ', calculateEquity(exchangeState, close))
         }
         // log executedOrders
+        const tf = tradingFee // jslint was giving me a stupid warning so this is a hack around that
         executedOrders.forEach((o) => {
           const line = {
             timestamp: o.timestamp,
@@ -267,7 +268,7 @@ async function main() {
             symbol: program.market,
             quantity: o.quantity,
             price: o.fillPrice,
-            fee: tradingFee(o.type, (o.quantity * o.fillPrice), o.fillPrice)
+            fee: tf(o.type, (o.quantity * o.fillPrice), o.fillPrice)
           }
           orderLogger.info(line)
         })
