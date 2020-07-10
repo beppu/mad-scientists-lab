@@ -29,6 +29,11 @@ const parseIntB10 = utils.parseIntB10
 
 const DEFAULT_STRATEGY = 'BuyAndHold'
 
+const FEES = {
+  maker: -0.00025, // negative fee is a rebate you get back
+  taker: 0.00075
+}
+
 function lookupStrategy(pr) {
   let strategy
   if (pr.research) {
@@ -75,10 +80,10 @@ function calculateEquity(exchangeState, price) {
 function tradingFee(type, quantity, price) {
   switch (type) {
   case 'market':
-    return quantity * 0.00075 * price
+    return quantity * FEES.taker * price
     break;
   case 'limit':
-    return quantity * -0.00025 * price
+    return quantity * FEES.maker * price
     break;
   }
   return 0
