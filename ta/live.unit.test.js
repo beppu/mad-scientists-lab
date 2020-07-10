@@ -4,10 +4,12 @@ test("a trader should instantiate and have certain properties", () => {
   const exchange = 'bybit'
   const market = 'BTC/USD'
   const strategy = 'Guppy'
-  const btcusd = new live.Trader({ exchange, market, strategy, options: {} })
-  expect(btcusd).toBeDefined()
-  expect(btcusd.opts).toMatchObject({ exchange, market, strategy })
-  expect(btcusd.logger).toBeDefined()
+  if (process.env.OUTSIDE_USA) {
+    const btcusd = new live.Trader({ exchange, market, strategy, options: {} })
+    expect(btcusd).toBeDefined()
+    expect(btcusd.opts).toMatchObject({ exchange, market, strategy })
+    expect(btcusd.logger).toBeDefined()
+  }
 })
 
 test("warming up a trader instance should work", () => {
