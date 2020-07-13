@@ -16,9 +16,13 @@
 const fs = require('fs')
 const path = require('path')
 
+const Lazy = require('lazy.js')
 const mkdirp = require('mkdirp')
 const pino = require('pino')
 const hash = require('object-hash')
+
+const time = require('./time')
+const utils = require('./utils')
 
 /**
  * Return the directory a strategy's executed order logs should go.
@@ -49,6 +53,15 @@ function logName(begin, end) {
   }
 }
 
+/**
+ * Create a pino logger for a Strategy+config
+ * @param {DateTime} begin - DateTime where trading begins
+ * @param {DateTime} end - DateTime where trading ends
+ * @param {String} prefix - base log directory
+ * @param {Object} config - strategy config
+ * @param {Function} fn - (optional) function that transforms `config` into a path-friendly string
+ * @returns {Pino} A pino logger
+ */
 function createOrderLogger(begin, end, prefix, config, fn) {
   const logDir = executedOrderLogDir(prefix, config, fn)
   mkdirp.sync(logDir)
@@ -60,8 +73,57 @@ function createOrderLogger(begin, end, prefix, config, fn) {
   return pino(pino.destination(logFile))
 }
 
+/**
+ * Read an order log and generate stats from it.
+ * This only works for strategies where buys and sells are perfectly paired (usually via market orders)
+ * When I get limit orders figured out, I'll have to do something more sophisticated.
+ * @param {String} path - full path of order log file
+ * @returns {Object} stats about the trading session
+ */
+function summarizeOrderLog(path) {
+  const jsons = fs.readFileSync(path).toString().split("\n").filter((id) => id).map(JSON.parse)
+  const report = jsons.reduce((m, a) => {
+    if (m.open === undefined) {
+      m.open = a
+      return m
+    }
+    if (m.open && m.close === undefined) {
+      m.close = a
+      const trade = {
+        side: m.open.side,
+        type: m.open.type,
+        symbol: m.open.symbol,
+        quantity: m.open.quantity,
+        entryPrice: m.open.price,
+        entryAt: time.iso(m.open.timestamp),
+        entryFee: m.open.fee,
+        exitPrice: m.close.price,
+        exitAt: time.iso(m.close.timestamp),
+        exitFee: m.close.fee,
+      }
+      const profit = utils.profitLoss(m.open.quantity * m.open.price, m.open.price, m.close.price, 100, m.open.side === 'sell')
+      trade.profit = profit.profitLoss
+      trade.profit$ = m.close.price * profit.profitLoss
+      m.trades.push(trade)
+      m.open = undefined
+      m.close = undefined
+    }
+    return m
+  }, { trades: [], open: undefined, close: undefined })
+  const winners = Lazy(report.trades).filter((t) => t.profit > 0).toArray()
+  const losers = Lazy(report.trades).filter((t) => t.profit < 0).toArray()
+  report.winners = winners.length
+  report.losers = losers.length
+  report.winnersSum = Lazy(winners).map((t) => t.profit$).sum()
+  report.losersSum = Lazy(losers).map((t) => t.profit$).sum()
+  delete report.open
+  delete report.close
+  return report
+}
+
 module.exports = {
   executedOrderLogDir,
   logName,
-  createOrderLogger // This is the function most users will care about.
+  createOrderLogger, // This is the function most users will care about.
+  summarizeOrderLog
 }

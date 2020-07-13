@@ -32,6 +32,7 @@ global.analysis   = require('./analysis')
 global.exchanges  = require('./exchanges')
 global.live       = require('./live')
 global.preset     = global.strategies.preset
+global.log        = require('./log')
 global.misc       = require('./misc')
 
 global.pnl = global.profitLoss = global.utils.profitLoss
