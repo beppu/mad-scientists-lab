@@ -1,5 +1,7 @@
+const fs      = require('fs')
 const request = require('request-promise')
-const time = require('./time')
+const time    = require('./time')
+const clone   = require('clone')
 
 /**
  * Sound an alarm on interval boundaries
@@ -15,6 +17,22 @@ async function intervalAlarm(tf) {
   return id
 }
 
+/**
+ * Help me write out a bunch of derivative configs for systematic backtesting
+ * list.forEach((c) => misc.writeConfigSync(gp, c, strategies.Guppy.configSlug))
+ * @param {Object} base - gp.json (Guppy strategy config)
+ * @param {Array} params - an array with customized guppyTf and rsiTf
+ * @param {Function} fn - a function that takes a Guppy strategy config and stringifies it in a path-friendly way
+ */
+function writeConfigSync(base, params, fn) {
+  const newConfig = clone(base)
+  newConfig.guppyTf = params[0]
+  newConfig.rsiTf = params[1]
+  const filename = `configs/${fn(newConfig)}.json`
+  fs.writeFileSync(filename, JSON.stringify(newConfig, undefined, '  '))
+}
+
 module.exports = {
-  intervalAlarm
+  intervalAlarm,
+  writeConfigSync
 }
