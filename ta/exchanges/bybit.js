@@ -26,6 +26,13 @@ function create(options) {
         exchangeOrder.qty    = order.quantity;
         return await client.createOrder(exchangeOrder)
         break;
+      case 'limit':
+        exchangeOrder.side   = order.action === 'buy' ? 'Buy' : 'Sell';
+        exchangeOrder.symbol = order.symbol
+        exchangeOrder.qty    = order.quantity
+        exchangeOrder.price  = order.price
+        return await client.createOrder(exchangeOrder)
+        break;
       default:
         return {} // not implemented yet
       }
