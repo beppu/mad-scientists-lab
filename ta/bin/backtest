@@ -77,25 +77,6 @@ function calculateEquity(exchangeState, price) {
   }
 }
 
-/**
- * Calculate the fee (or rebate) for the trade
- * @param {String} type - 'market' or 'limit' for specifying type of order
- * @param {Number} quantity - quantity bought
- * @param {Number} price - price the order was filled at
- * @returns {Number} fee or rebate expressed in the same currency as price (usually USD)
- */
-function tradingFee(type, quantity, price) {
-  switch (type) {
-  case 'market':
-    return (quantity/price) * FEES.taker * price
-    break;
-  case 'limit':
-    return (quantity/price) * FEES.maker * price
-    break;
-  }
-  return 0
-}
-
 async function main() {
   const program   = new commander.Command();
   program
@@ -259,8 +240,8 @@ async function main() {
           console.log('equity: ', calculateEquity(exchangeState, close))
         }
         // log executedOrders
-        const tf = tradingFee // jslint was giving me a stupid warning so this is a hack around that
         executedOrders.forEach((o) => {
+          const rate = o.type === 'market' ? FEES.taker : FEES.maker
           const line = {
             timestamp: o.timestamp,
             side: o.action,
@@ -268,8 +249,9 @@ async function main() {
             symbol: program.market,
             quantity: o.quantity,
             price: o.fillPrice,
-            fee: tf(o.type, (o.quantity * o.fillPrice), o.fillPrice)
+            fee: utils.tradingFee(rate, (o.quantity * o.fillPrice), o.fillPrice)
           }
+          line.fee$ = line.fee * o.fillPrice
           orderLogger.info(line)
         })
       }

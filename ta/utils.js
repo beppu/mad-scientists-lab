@@ -135,6 +135,18 @@ function profitLoss(quantity, entry, exit, leverage, short) {
 }
 
 /**
+ * Calculate the fee for the trade
+ * https://help.bybit.com/hc/en-us/articles/360039261154-Trading-fee-calculation
+ * @param {Number} fee - percent * 0.01  (example: 0.075% => 0.00075)
+ * @param {Number} quantity - number of contracts
+ * @param {Number} price - price of asset at time of trade
+ * @returns {Number} fee in BTC
+ */
+function tradingFee(fee, quantity, price) {
+  return (quantity / price) * fee
+}
+
+/**
  * An array with 2 numbers in it representing the x and y coordinates of a point in a chart
  * @typedef {Array<Number>} Point
  */
@@ -288,6 +300,7 @@ module.exports = {
   findLocalLow,
   findLocalHigh,
   profitLoss,
+  tradingFee,
   slope,
   log10Slope,
   lineFn,
