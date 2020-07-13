@@ -39,7 +39,7 @@ function confluence(r, v, k) {
   return r
 }
 
-function init(baseTimeframe, config) {
+function init(config) {
   const { logger, balance } = config
 
   // override divergenceOptions

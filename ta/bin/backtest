@@ -29,6 +29,7 @@ const parseIntB10 = utils.parseIntB10
 
 const DEFAULT_STRATEGY = 'BuyAndHold'
 
+// TODO - Make fees configurable
 const FEES = {
   maker: -0.00025, // negative fee is a rebate you get back
   taker: 0.00075
@@ -154,7 +155,7 @@ async function main() {
     const Strategy = lookupStrategy(program)
     const strategyInit = Strategy.init
     console.log(Strategy)
-    const [indicatorSpecs, strategy] = strategyInit(program.timeframe, strategyConfig)
+    const [indicatorSpecs, strategy] = strategyInit(strategyConfig)
     indicatorSpecs.inverted = true // force the pipeline to use the InvertedSeries data structure.
     if (program.verbose) {
       console.log('indicatorSpecs', indicatorSpecs)
@@ -345,6 +346,5 @@ if (require.main === module) {
 
 // for repl debugging, export functions and variables here
 module.exports = {
-  tradingFee,
   main
 }

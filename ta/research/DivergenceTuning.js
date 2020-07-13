@@ -37,7 +37,7 @@ function _printIndicators(marketState) {
   }
 }
 
-function init(baseTimeframe, config) {
+function init(config) {
   const { logger, balance } = config
 
   // override divergenceOptions

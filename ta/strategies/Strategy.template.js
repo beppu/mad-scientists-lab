@@ -9,7 +9,7 @@ const analysis = require('../analysis')
 const defaultConfig = {
 }
 
-function init(baseTimeframe, customConfig) {
+function init(customConfig) {
   // merge defaultConfig and customConfig to arrive at the final strategy config
   const config = Object.assign({}, defaultConfig, customConfig)
   // a pino logger for debugging

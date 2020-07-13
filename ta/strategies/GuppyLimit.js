@@ -76,9 +76,10 @@ function calculateSizeSpot(n) {
   return n
 }
 
-function init(customConfig) {
+function init(baseTimeframe, customConfig) {
   const config = Object.assign({}, defaultConfig, customConfig)
   const logger = config.logger
+  console.log({ logger })
   const indicatorSpecs = {}
   indicatorSpecs[config.guppyTf] = analysis.guppy.allEMAs.map((period) => ['ema', period])
   indicatorSpecs[config.rsiTf]   = [ ['rsi'] ]

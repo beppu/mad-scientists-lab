@@ -106,7 +106,7 @@ const defaults = {
   testsBeforeEntry: 1, // number of tests into area of value before attempting to make an entry
 }
 
-function init(baseTimeframe, custom) {
+function init(custom) {
   const config = Object.assign({}, defaults, custom)
   const indicatorSpecs = {}
   indicatorSpecs[config.tf] = [

@@ -5,10 +5,9 @@
 
 const clone = require('clone')
 
-function init(baseTimeframe, config) {
+function init(config) {
   const indicatorSpecs = {
   }
-  indicatorSpecs[baseTimeframe] = []
   function strategy(strategyState, marketState, executedOrders) {
     let state = strategyState ? clone(strategyState) : {}
     return [state, []]

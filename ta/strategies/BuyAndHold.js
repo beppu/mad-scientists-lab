@@ -8,9 +8,12 @@
 
 const clone = require('clone')
 
-function init(baseTimeframe, opts) {
+const defaultTf = '4h'
+
+function init(opts) {
   const indicatorSpecs = {}
-  const imdKey = `imd${baseTimeframe}`
+  const tf = opts.tf || defaultTf
+  const imdKey = `imd${tf}`
   function buyAndHold(strategyState, marketState, executedOrders) {
     let state = strategyState ? clone(strategyState) : { hasBought: false }
     if (!state.hasBought) {

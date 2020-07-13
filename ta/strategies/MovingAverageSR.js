@@ -18,11 +18,18 @@
 
 const clone = require('clone')
 
+const defaultConfig = {
+  tf: '1h',
+  ma: 'sma',
+  period: 20
+}
+
 function init(baseTimeframe, config) {
-  const ma = config.ma || 'sma'
-  const period = config.period || 20
+  const ma = config.ma || defaultConfig.ma
+  const period = config.period || defaultConfig.period
+  const tf = config.tf || defaultConfig.tf
   const indicatorSpecs = {}
-  indicatorSpecs[baseTimeframe] = [ [ma, period ] ]
+  indicatorSpecs[tf] = [ [ma, period ] ]
   function movingAverageSR(strategyState, marketState, executedOrders) {
     let state = strategyState ? clone(strategyState) : {}
     return [state, []]

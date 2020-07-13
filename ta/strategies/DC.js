@@ -1,4 +1,5 @@
 /**
+ * DC stands for Divergence Confluence.
  * This is the actual strategy I want to write.
  * This is the strategy I've been trading manually and have had the most success with.
  * However, my human weaknesses can make execution difficult at times.
@@ -13,7 +14,7 @@ const defaultConfig = {
   biasTf: '12h'
 }
 
-function init(baseTimeframe, customConfig) {
+function init(customConfig) {
   const { logger, balance } = customConfig
   const config = Object.assign({}, defaultConfig, customConfig)
   delete config.logger
