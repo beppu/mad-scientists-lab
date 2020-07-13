@@ -94,7 +94,7 @@ async function main() {
     .option('--begin <DATETIME>', 'DateTime to begin the strategy', parseDateTime)
     .option('--end <DATETIME>', 'DateTime to end the strategy', parseDateTime)
     .option('-i, --interactive', 'Interactive mode')
-    .option('-l, --order-log <LOG_DIR>', 'Directory to store logs', (id) => id, './log')
+    .option('-l, --order-log <LOG_DIR>', 'Directory to store logs', (id) => id, './log/backtest')
     .option('-v, --verbose', 'Be verbose')
   program.parse(process.argv)
   let optionsAreMissing = false;
