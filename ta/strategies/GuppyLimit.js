@@ -6,8 +6,8 @@ const clone = require('clone')
 const analysis = require('../analysis')
 
 const defaultConfig = {
-  guppyTf:      '15m',   // timeframe to use for guppy color changes.
-  rsiTf:        '4h',    // timeframe to use for RSI crosses
+  guppyTf:      '1m',    // timeframe to use for guppy color changes.
+  rsiTf:        '10m',   // timeframe to use for RSI crosses
   rsiThreshold: 2,       // distance from RSI 50 required for confluence.  Higher numbers are more aggressive and cause buying/selling to happen sooner.
   fixedPositionSize: 2,  // If we're using fixed position sizing, how many units should a position be?
 }
@@ -79,7 +79,6 @@ function calculateSizeSpot(n) {
 function init(baseTimeframe, customConfig) {
   const config = Object.assign({}, defaultConfig, customConfig)
   const logger = config.logger
-  console.log({ logger })
   const indicatorSpecs = {}
   indicatorSpecs[config.guppyTf] = analysis.guppy.allEMAs.map((period) => ['ema', period])
   indicatorSpecs[config.rsiTf]   = [ ['rsi'] ]
