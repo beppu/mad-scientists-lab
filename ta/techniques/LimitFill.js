@@ -20,6 +20,14 @@
   It takes the same inputs of marketState and executedOrders.
   What separates it from a larger strategy is its limited scope.
 
+  I noticed one difference though.  A microstrategy doesn't currently return
+  indicatorSpecs, because the first one I want to write doesn't need them.
+  Will I need them in the future?  Initially, I thought no, but what if I
+  implemented ChandelierExit and needed ATR to be calculated?  Then, I would
+  need indicatorSpecs. Maybe for consistency with strategy init functions, I
+  should continue returning indicatorSpecs even if their empty.
+
+
   // States
   - Neutral
   - Want to Buy/Sell
@@ -43,9 +51,132 @@
 
  */
 
-function init(options) {
-  return function limitFillMicroStrategy(strategyState, marketstate, executedOrders) {
+const clone = require('clone')
+const uuid = require('uuid')
+
+/**
+ * TODO Determine whether an existing limit order needs to be updated.
+ * @param {Object} strategyState - the current state of the LimitSell microstrategy
+ * @param {Object} marketState - the current market state (prices and indicators)
+ * @returns {Boolean} true if it's time to update an unfilled order
+ */
+function needToUpdate(strategyState, marketState) {
+  // Q: How do I know if I've just moved into a timeframe boundary?
+  // A: I could keep track of timestamps internally.
+
+  // We're updating the price in order to make a fill more likely.
+  // Think of it as a slow chase.
+
+  return false
+}
+
+/**
+ * Return true if price has moved too far against us, and we want to use market orders to force us into position.
+ * @param {Object} strategyState - the current state of the LimitSell microstrategy
+ * @param {Number} lastPrice - the last close price
+ * @returns {Boolean} true if we want to fall back to market orders
+ */
+function beyondPriceThreshold(strategyState, lastPrice) {
+  if (strategyState.side === 'buy') {
+    return lastPrice >= strategyState.priceThreshold
+  } else {
+    return lastPrice <= strategyState.priceThreshold
   }
+}
+
+/**
+ * Initialize the LimitFill microstrategy for filling a position with limit orders.
+ * Every time a trading strategy wants to buy or sell with limit orders, a new LimitFill strategy
+ * should be initialized.
+ * @param {Object} options - strategy configuration
+ * @param {String} options.side - 'buy' or 'sell'
+ * @param {Number} options.quantity - desired position size
+ * @param {Number} options.priceThreshold - price at which we give up on limit orders and use market orders to force fill the position
+ * @param {String} options.tf - timeframe interval for updating price of unfilled limit orders
+ * @returns {Array<Any>} Return an array containing indicatorSpecs and a microstrategy function
+ */
+function init(options) {
+  const initialState = {
+    node:           'start',
+    side:           options.side,              // 'buy' or 'sell'
+    quantity:       options.quantity,          // quantity desired
+    filled:         0,                         // quantity filled
+    price:          undefined,                 // price of current limit order
+    priceStep:      0.5,                       // smallest amount a price can change
+    priceThreshold: options.priceThreshold,    // price to give up on limit orders and use market orders to fill the remainder of the position
+    tf:             options.tf,                // timeframe boundary to update price of unfilled limit orders
+    group:          options.group              // (optional) group id (to be used later by log analyzers to group related trades together)
+  }
+  const indicatorSpecs = {}                    // No special indicators needed.
+
+  function limitFillMicroStrategy(strategyState, marketState, executedOrders) {
+    // This strategyState is separate from the outside (GuppyLimit) strategyState
+    // Here, strategyState is all about whether we've filled the position or not.
+    // GuppyLimit (or whatever other strategy) told us to buy or sell, and it's up
+    // to this strategy to get the position filled.
+    const ns = strategyState ? clone(strategyState) : clone(initialState)
+    const orders = []
+    const tf = ns.tf
+    const imd = marketState[`imd${tf}`]
+    const lastPrice = imd.close[0]
+    // If no group id is given, create a new group id.
+    if (!ns.group) {
+      ns.group = uuid.v4()
+    }
+
+    executedOrders.forEach((eo) => {
+    })
+
+    switch (ns.node) {
+    case 'start':
+      const orderPrice = ns.side === 'buy' ? lastPrice - ns.priceStep : lastPrice + ns.priceStep
+      const firstLimitOrder = {
+        type: 'limit',
+        action: ns.side,
+        quantity: ns.quantity,
+        price: orderPrice,
+        group: ns.group,
+        id: `limit-${ns.side}`
+      }
+      ns.price = orderPrice
+      ns.node = 'waiting-for-fill'
+      orders.push(firstLimitOrder)
+      break;
+    case 'waiting-for-fill':
+      // If we're on a brand new candle, and we're not filled yet, update the order.
+      if (needToUpdate(ns, marketState)) {
+        const newPrice = ns.side === 'buy' ? lastPrice - ns.priceStep : lastPrice + ns.priceStep
+        const updateOrder = {
+          action: 'update',
+          id: `limit-${ns.side}`,
+          price: newPrice
+        }
+        orders.push(updateOrder)
+      }
+
+      // If price has moved beyond our priceThreshold, cancel the limit order and fill the remainder with a market order
+      if (beyondPriceThreshold(ns, lastPrice)) {
+        const cancelLimitOrder = {
+          action: 'cancel',
+          id: `limit-${ns.side}`
+        }
+        const marketOrder = {
+          type: 'market',
+          action: ns.side,
+          quantity: ns.quantity - ns.filled
+        }
+        orders.push(cancelLimitOrder, marketOrder)
+      }
+
+      break;
+    case 'filled':
+      // Mission Accomplished.  Nothing left to do.
+      break;
+    }
+    return [ns, orders]
+  }
+
+  return [indicatorSpecs, limitFillMicroStrategy]
 }
 
 module.exports = {

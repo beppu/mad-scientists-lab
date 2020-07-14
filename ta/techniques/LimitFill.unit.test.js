@@ -6,6 +6,6 @@ test("LimitFill should export an init function", () => {
 })
 
 test("Calling Limitfill.init should return a microstrategy function", () => {
-  const microStrategy = LimitFill.init({})
+  const [indicatorSpecs, microStrategy] = LimitFill.init({})
   expect(kindOf(microStrategy)).toBe("function")
 })
