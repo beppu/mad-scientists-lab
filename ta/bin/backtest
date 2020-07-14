@@ -306,6 +306,9 @@ async function main() {
             if (key.name === 'm') {
               console.log(candle[4]) // TODO partial marketState
             }
+            if (key.name === 'k') {
+              console.log(Object.keys(marketState))
+            }
             if (key.name === 'o') {
               console.log({ orders, executedOrders })
             }
