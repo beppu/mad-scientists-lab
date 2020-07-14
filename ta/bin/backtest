@@ -23,7 +23,7 @@ const log         = require('../log')
 
 const {DateTime} = luxon
 
-const logger = pino()
+let logger
 
 const parseIntB10 = utils.parseIntB10
 
@@ -94,8 +94,8 @@ async function main() {
     .option('--start-processing-at <DATETIME>', 'Refrain from indicator calculation until the given DateTime is reached', parseDateTime)
     .option('--begin <DATETIME>', 'DateTime to begin the strategy', parseDateTime)
     .option('--end <DATETIME>', 'DateTime to end the strategy', parseDateTime)
+    .option('-l, --log <LOG_DIR>', 'Directory to store logs', (id) => id, './log/backtest')
     .option('-i, --interactive', 'Interactive mode')
-    .option('-l, --order-log <LOG_DIR>', 'Directory to store logs', (id) => id, './log/backtest')
     .option('-v, --verbose', 'Be verbose')
   program.parse(process.argv)
   let optionsAreMissing = false;
@@ -138,6 +138,10 @@ async function main() {
 
     // Let's feel this out.
 
+    // Strategy Logger
+    const strategyLogPath = `${program.log}/strategy.log`
+    logger = pino(pino.destination(strategyLogPath))
+
     // Exchange Simulator
     let config = { balance: program.balance, logger }
     const exchange = simulator.create(config)
@@ -154,7 +158,6 @@ async function main() {
     }
     const Strategy = lookupStrategy(program)
     const strategyInit = Strategy.init
-    console.log(Strategy)
     const [indicatorSpecs, strategy] = strategyInit(strategyConfig)
     indicatorSpecs.inverted = true // force the pipeline to use the InvertedSeries data structure.
     if (program.verbose) {
@@ -165,7 +168,7 @@ async function main() {
     const orderLogger = log.createOrderLogger(
       program.begin,
       program.end,
-      program.orderLog,
+      program.log,
       [program.strategy, strategyConfig],
       Strategy.configSlug // this is allowed to be undefined
     )
@@ -237,7 +240,7 @@ async function main() {
           allExecutedOrders.push(...executedOrders)
           const key = `imd${program.timeframe}`
           const close = marketState[key].close[0]
-          console.log('executedOrders: ', executedOrders)
+          //console.log('executedOrders: ', executedOrders)
           console.log('equity: ', calculateEquity(exchangeState, close))
         }
         // log executedOrders
