@@ -55,7 +55,7 @@ const clone = require('clone')
 const uuid = require('uuid')
 
 /**
- * TODO Determine whether an existing limit order needs to be updated.
+ * Determine whether an existing limit order needs to be updated.
  * @param {Object} strategyState - the current state of the LimitSell microstrategy
  * @param {Object} marketState - the current market state (prices and indicators)
  * @returns {Boolean} true if it's time to update an unfilled order
@@ -66,8 +66,9 @@ function needToUpdate(strategyState, marketState) {
 
   // We're updating the price in order to make a fill more likely.
   // Think of it as a slow chase.
+  const currentTimestamp = marketState[imd`${strategyState.tf}`].timestamp[0]
 
-  return false
+  return (strategyState.node === 'waiting-for-fill' &&  currentTimestamp > strategyState.ts)
 }
 
 /**
@@ -104,7 +105,8 @@ function init(options) {
     price:          undefined,                 // price of current limit order
     priceStep:      0.5,                       // smallest amount a price can change
     priceThreshold: options.priceThreshold,    // price to give up on limit orders and use market orders to fill the remainder of the position
-    tf:             options.tf,                // timeframe boundary to update price of unfilled limit orders
+    ts:             undefined,                 // timestamp of last seen candle
+    tf:             options.tf,                // timeframe boundary to update price of unfilled limit orders (typically '1m') :: also used for imd selection
     group:          options.group              // (optional) group id (to be used later by log analyzers to group related trades together)
   }
   const indicatorSpecs = {}                    // No special indicators needed.
@@ -119,18 +121,25 @@ function init(options) {
     const tf = ns.tf
     const imd = marketState[`imd${tf}`]
     const lastPrice = imd.close[0]
-    // If no group id is given, create a new group id.
+    // create a new group id if no group id is given.
     if (!ns.group) {
       ns.group = uuid.v4()
     }
 
     executedOrders.forEach((eo) => {
+      // This block is important, because this is what gets us to the filled state.
+      if (eo.type === 'limit' && eo.status === 'filled') {
+        ns.filled += eo.quantity
+        if (ns.filled === ns.quantity) {
+          ns.node = 'filled'
+        }
+      }
     })
 
     switch (ns.node) {
     case 'start':
       const orderPrice = ns.side === 'buy' ? lastPrice - ns.priceStep : lastPrice + ns.priceStep
-      const firstLimitOrder = {
+      const limitOrder = {
         type: 'limit',
         action: ns.side,
         quantity: ns.quantity,
@@ -140,18 +149,18 @@ function init(options) {
       }
       ns.price = orderPrice
       ns.node = 'waiting-for-fill'
-      orders.push(firstLimitOrder)
+      orders.push(limitOrder)
       break;
     case 'waiting-for-fill':
       // If we're on a brand new candle, and we're not filled yet, update the order.
       if (needToUpdate(ns, marketState)) {
         const newPrice = ns.side === 'buy' ? lastPrice - ns.priceStep : lastPrice + ns.priceStep
-        const updateOrder = {
+        const updateLimitOrder = {
           action: 'update',
           id: `limit-${ns.side}`,
           price: newPrice
         }
-        orders.push(updateOrder)
+        orders.push(updateLimitOrder)
       }
 
       // If price has moved beyond our priceThreshold, cancel the limit order and fill the remainder with a market order
@@ -173,6 +182,8 @@ function init(options) {
       // Mission Accomplished.  Nothing left to do.
       break;
     }
+
+    ns.ts = imd.timestamp[0]
     return [ns, orders]
   }
 
