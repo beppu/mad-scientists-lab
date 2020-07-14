@@ -4,6 +4,7 @@
 
 const clone = require('clone')
 const analysis = require('../analysis')
+const time = require('../time')
 
 const defaultConfig = {
   guppyTf:      '15m',   // timeframe to use for guppy color changes.
@@ -30,7 +31,7 @@ function shouldBuy(marketState, config) {
   const rsiValue = rsiImd.rsi[0]
   const isGreen  = analysis.guppy.isSlowEMAColoredNow(guppyImd, 'green')
   if (isGreen && (rsiValue + config.rsiThreshold > 50)) {
-    logger.info({ message: 'buy signal', rsi: rsiValue, close: guppyImd.close[0] })
+    logger.info({ ts: time.iso(guppyImd.timestamp[0]), message: 'buy signal', rsi: rsiValue, close: guppyImd.close[0] })
     return true
   } else {
     return false
@@ -45,7 +46,7 @@ function shouldSell(marketState, config) {
   const rsiValue = rsiImd.rsi[0]
   const isRed    = analysis.guppy.isSlowEMAColoredNow(guppyImd, 'red')
   if (isRed && (rsiValue - config.rsiThreshold < 50)) {
-    logger.info({ message: 'sell signal', rsi: rsiValue, close: guppyImd.close[0] })
+    logger.info({ ts: time.iso(guppyImd.timestamp[0]), message: 'sell signal', rsi: rsiValue, close: guppyImd.close[0] })
     return true
   } else {
     return false
