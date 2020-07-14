@@ -1,8 +1,16 @@
 {
   "guppy1m30m": ["Guppy", {
-    "rsiThreshold": -1.5,
-    "rsiTf": "30m",
     "guppyTf": "1m",
+    "rsiTf": "30m",
+    "rsiThreshold": -1.5,
+    "balance": 100000,
+    "sizeMode": "spot",
+    "fixedPositionSize": 3.25
+  }],
+  "guppy1m10m": ["Guppy", {
+    "guppyTf": "1m",
+    "rsiTf": "10m",
+    "rsiThreshold": -2,
     "balance": 100000,
     "sizeMode": "spot",
     "fixedPositionSize": 3.25
