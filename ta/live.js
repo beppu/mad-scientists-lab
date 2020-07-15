@@ -63,7 +63,7 @@ class Trader {
     const options = this.opts.options
     const _s = findStrategy(strategy)
     if (!_s) throw(`Can't find strategy '${strategy}'`)
-    let [indicatorSpecs, s] = _s.init(this.baseTimeframe, Object.assign({ logger: this.activityLogger }, options))
+    let [indicatorSpecs, s] = _s.init(Object.assign({ logger: this.activityLogger }, options))
     indicatorSpecs.inverted = true
     this.strategy = s
     this.indicatorSpecs = indicatorSpecs
