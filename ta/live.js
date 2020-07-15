@@ -12,16 +12,20 @@ const Promise    = require('bluebird')
 const pino       = require('pino')
 const luxon      = require('luxon')
 const clone      = require('clone')
+const mkdirp     = require('mkdirp')
+
 const ta         = require('./index')
 const utils      = require('./utils')
 const pipeline   = require('./pipeline')
 const strategies = require('./strategies')
 const research   = require('./research')
 const exchanges  = require('./exchanges')
+const log        = require('./log')
 
 const {DateTime} = luxon
 
-const DEFAULT_LOGGER = pino()
+const LOG_LIVETEST = process.env.TA_LOG_LIVETEST || './log/livetest'
+const LOG_TRADE    = process.env.TA_LOG_TRADE || './log/trade'
 
 function findStrategy(name) {
   if (strategies[name]) return strategies[name]
@@ -30,9 +34,8 @@ function findStrategy(name) {
 }
 
 class Trader {
-  constructor({dataDir, exchange, market, strategy, options, logger}) {
-    this.opts = { dataDir, exchange, market, strategy, options }
-    this.logger = logger || DEFAULT_LOGGER
+  constructor({dataDir, logDir, exchange, market, strategy, options}) {
+    this.opts = { dataDir, logDir, exchange, market, strategy, options }
     this.baseTimeframe = '1m' // XXX It would be nice to not hardcode this, but I almost always want 1m for live trading
     // XXX I'm not sure if I really need baseTimeframe anymore.
     // XXX I think I may have made changes to pipeline.js that made it unnecessary
@@ -44,25 +47,46 @@ class Trader {
     // Instantiate strategy and get its indicatorSpecs
     const _s = findStrategy(strategy)
     if (!_s) throw(`Can't find strategy '${strategy}'`)
-    let [indicatorSpecs, s] = _s.init(this.baseTimeframe, Object.assign({ logger }, options))
-    this.strategy = s
-    this.indicatorSpecs = indicatorSpecs
-    // Instantiate a pipeline with the strategy's indicatorSpecs
-    this.mainLoop = pipeline.mainLoopFn(this.baseTimeframe, indicatorSpecs)
+
     // Setup variables used by the loop
     this.marketState = undefined
     this.strategyState = undefined
     this.orders = undefined
     this.executedOrders = undefined
     this.initializeTradeExecutor()
+    this.initializeActivityLogger()
   }
-  // XXX - I can't implment a full trader yet.
-  // I need exchanges/bybit to implement more of the exchange bits.
-  // Position Before Submission
+
+  initializeStrategyAndPipeline(since) {
+    // Instantiate strategy and get its indicatorSpecs
+    const strategy = this.opts.strategy
+    const options = this.opts.options
+    const _s = findStrategy(strategy)
+    if (!_s) throw(`Can't find strategy '${strategy}'`)
+    let [indicatorSpecs, s] = _s.init(this.baseTimeframe, Object.assign({ logger: this.activityLogger }, options))
+    indicatorSpecs.inverted = true
+    this.strategy = s
+    this.indicatorSpecs = indicatorSpecs
+    // Instantiate a pipeline with the strategy's indicatorSpecs
+    this.mainLoop = pipeline.mainLoopFn(this.baseTimeframe, indicatorSpecs)
+    // Instantiate Executed Order Logger
+    const orderLogger = log.createOrderLogger(
+      since,
+      undefined,
+      this.opts.logDir,
+      [strategy, options],
+      _s.configSlug // this is allowed to be undefined
+    )
+  }
 
   initializeTradeExecutor() {
     const options = Object.assign({ }, this.exchangeOptions || {})
     this.executor = this.exchange.create(options)
+  }
+
+  initializeActivityLogger() {
+    mkdirp.sync(this.opts.logDir)
+    this.activityLogger = pino(pino.destination(`${this.opts.logDir}/activity.log`))
   }
 
   async sanityCheck() {
@@ -72,6 +96,7 @@ class Trader {
 
   async warmUp(since) {
     await this.sanityCheck()
+    this.initializeStrategyAndPipeline(since)
     // This is the same for both.
     // Load candles from the filesystem until we can't.
     const nextCandle = await pipeline.loadCandlesFromFS(this.opts.dataDir, this.opts.exchange, this.opts.market, this.baseTimeframe, since)
@@ -191,12 +216,12 @@ class Trader {
 }
 
 /*
-   The main difference between trading and simulation is where execution happens.
-   A Simulator instance may consume price from a real exchange, but execution happens
+   The main difference between trading and testing is where execution happens.
+   A Tester instance may consume price from a real exchange, but execution happens
    on a simulated exchange.  Unfortunately, the function signature for a simulated
    exchange is different from a real exchange in that it needs to be fed candles.
  */
-class Simulator extends Trader {
+class Tester extends Trader {
   constructor(opts) {
     super(opts)
   }
@@ -235,35 +260,41 @@ const trade = {
       options.baseURL = process.env.TA_BYBIT_BASE_URL
       options.key = process.env.TA_BYBIT_KEY
       options.secret = process.env.TA_BYBIT_SECRET
-      return new Trader({ dataDir: 'data', exchange: 'bybit', market: 'BTC/USD', strategy, options })
+      return new Trader({ dataDir: 'data', logDir: LOG_TRADE, exchange: 'bybit', market: 'BTC/USD', strategy, options })
     },
     ETHUSD(strategy, options={}) {
       options.baseURL = process.env.TA_BYBIT_BASE_URL
       options.key = process.env.TA_BYBIT_KEY
       options.secret = process.env.TA_BYBIT_SECRET
-      return new Trader({ dataDir: 'data', exchange: 'bybit', market: 'ETH/USD', strategy, options })
+      return new Trader({ dataDir: 'data', logDir: LOG_TRADE, exchange: 'bybit', market: 'ETH/USD', strategy, options })
+    }
+  },
+  ftx: {
+    LINKPERP(strategy, options={}) {
     }
   }
 }
 
-const simulate = {
+const test = {
   bybit: {
     BTCUSD(strategy, options={}) {
-      return new Simulator({ dataDir: 'data', exchange: 'bybit', market: 'BTC/USD', strategy, options, logger: DEFAULT_LOGGER })
+      return new Tester({ dataDir: 'data', logDir: LOG_LIVETEST, exchange: 'bybit', market: 'BTC/USD', strategy, options })
+    },
+    ETHUSD(strategy, options={}) {
+      return new Tester({ dataDir: 'data', logDir: LOG_LIVETEST, exchange: 'bybit', market: 'ETH/USD', strategy, options })
+    },
+  },
+  ftx: {
+    LINKPERP(strategy, options={}) {
     }
   }
 }
-
-const btc = trade.bybit.BTCUSD
-const btcs = simulate.bybit.BTCUSD
 
 module.exports = {
   Trader,
-  Simulator,
+  Tester,
   trade,
-  simulate,
-  btc,
-  btcs
+  test
 }
 
 /**
@@ -271,8 +302,8 @@ module.exports = {
    How do I use this thing?
 
    // Instantiate a live simulator with a Guppy strategy
-   s = live.simulate.bybit.BTCUSD(...preset.guppy1m30m)
-   since = DateTime.fromISO('2020-07-04')
+   s = live.test.bybit.BTCUSD(...preset.guppy1m10m)
+   since = DateTime.fromISO('2020-07-14')
    s.go(since).then(cl)
 
  */
