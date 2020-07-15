@@ -138,9 +138,11 @@ async function main() {
 
     // Let's feel this out.
 
-    // Strategy Logger
-    const strategyLogPath = `${program.log}/strategy.log`
-    logger = pino(pino.destination(strategyLogPath))
+    // Activity Logger
+    // - A strategy's log output goes here.
+    // - Use this to debug decision-making.
+    const activityLogPath = `${program.log}/activity.log`
+    logger = pino(pino.destination(activityLogPath))
 
     // Exchange Simulator
     let config = { balance: program.balance, logger }
@@ -247,7 +249,7 @@ async function main() {
         executedOrders.forEach((o) => {
           const rate = o.type === 'market' ? FEES.taker : FEES.maker
           const line = {
-            timestamp: o.timestamp,
+            ts: time.iso(o.timestamp),
             side: o.action,
             type: o.type,
             symbol: program.market,
