@@ -319,6 +319,8 @@ async function runLoop(loop, nextCandle) {
  */
 async function validateCandles(timeframe, nextCandle) {
   const findings = {}
+  // TODO - This is a data sanitation check that would be nice to have, but I could probably get away
+  // with not checking this.
   return findings
 }
 
