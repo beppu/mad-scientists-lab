@@ -77,6 +77,7 @@ class Trader {
       [strategy, options],
       _s.configSlug // this is allowed to be undefined
     )
+    this.orderLogger = orderLogger
   }
 
   initializeTradeExecutor() {
@@ -138,6 +139,7 @@ class Trader {
     // This is the same for both.
     if (this.isWarmedUp) {
       this.events.on(this.candleChannel, (message) => {
+        this.activityLogger.info(message.data)
         const candles = (message.data)
           ? message.data.map((d) => [ d.start * 1000, d.open, d.high, d.low, d.close, d.volume ])
           : []
@@ -173,15 +175,17 @@ class Trader {
     await this.start()
   }
 
-  lastCandle() {
-    const i = this.marketState.imd1m
+  lastCandle(_tf, _n) {
+    const tf = _tf || this.baseTimeframe
+    const imd = this.marketState[`imd${tf}`]
+    const n = _n || 0
     const candle = [
-      i.timestamp[0],
-      i.open[0],
-      i.high[0],
-      i.low[0],
-      i.close[0],
-      i.volume[0],
+      imd.timestamp[n],
+      imd.open[n],
+      imd.high[n],
+      imd.low[n],
+      imd.close[n],
+      imd.volume[n],
     ]
     return candle
   }
@@ -249,6 +253,20 @@ class Tester extends Trader {
       let [exchangeState, executedOrders] = await this.executor(orders, this.exchangeState, candle);
       this.exchangeState = exchangeState
       this.executedOrders = executedOrders
+      executedOrders.forEach((o) => {
+        //const rate = o.type === 'market' ? FEES.taker : FEES.maker
+        const line = {
+          ts: time.iso(o.timestamp),
+          side: o.action,
+          type: o.type,
+          symbol: this.opts.market,
+          quantity: o.quantity,
+          price: o.fillPrice,
+          //fee: utils.tradingFee(rate, (o.quantity * o.fillPrice), o.fillPrice)
+        }
+        line.fee$ = line.fee * o.fillPrice
+        this.orderLogger.info(line)
+      })
       // XXX - I just realized that a real exchange can return executedOrders at any time.
     })
   }
