@@ -95,10 +95,10 @@ function summarizeOrderLog(path) {
         symbol: m.open.symbol,
         quantity: m.open.quantity,
         entryPrice: m.open.price,
-        entryAt: time.iso(m.open.timestamp),
+        entryAt: m.open.ts,
         entryFee: m.open.fee,
         exitPrice: m.close.price,
-        exitAt: time.iso(m.close.timestamp),
+        exitAt: m.close.ts,
         exitFee: m.close.fee,
       }
       const profit = utils.profitLoss(m.open.quantity * m.open.price, m.open.price, m.close.price, 100, m.open.side === 'sell')
