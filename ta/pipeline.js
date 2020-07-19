@@ -209,8 +209,13 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
       state[aggregatorKey] = aggregatorFn(tf)
     }
   })
+  const baseImd = state[`imd${baseTimeframe}`]
 
   return function mainLoop(candle) {
+    if (baseImd.timestamp[0] && baseImd.timestamp[0] > candle[0]) {
+      // refuse to take candles in the past and return state immediately
+      return state
+    }
     timeframes.forEach((tf) => {
       const imdKey  = `imd${tf}`
       const mdKey   = `md${tf}`
