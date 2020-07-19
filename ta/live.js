@@ -161,14 +161,20 @@ class Trader {
     this.isWarmedUp = true
   }
 
+  /**
+   * Call this once to start listening on a websocket.
+   * @throws {Exception Type} Exception description.
+   */
   async switchToRealtime() {
     // This is the same for both.
     if (this.isWarmedUp) {
       this.activityLogger.info({ message: 'switching to realtime' })
       this.events.on(this.candleChannel, (message) => {
+        /*
         message.data.forEach((d) => {
           this.activityLogger.info({ confirm: d.confirm, timestamp: d.start * 1000, ts: time.iso(d.start * 1000) })
         })
+        */
         const candles = (message.data)
           ? message.data.map((d) => [ d.start * 1000, d.open, d.high, d.low, d.close, d.volume ])
           : []
