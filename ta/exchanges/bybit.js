@@ -33,6 +33,31 @@ function create(options) {
         exchangeOrder.price  = order.price
         return await client.createOrder(exchangeOrder)
         break;
+      case 'modify':
+        const id = exchangeState.localToRemote[order.id] // TODO - Populate localToRemote
+        if (order.action === 'cancel') {
+          if (id) {
+            return await client.cancelActiveOrder(exchangeOrder)
+          } else {
+            return new Error(`order.id ${order.id} not found`)
+          }
+        } else if (order.action === 'update') {
+          if (id) {
+            const replacementOrder = {
+              order_id:  id,
+              symbol:    order.symbol,
+            }
+            if (order.price)
+              replacementOrder.p_r_price = order.price
+            if (order.quantity) {
+              replcementOrder.p_r_qty = order.quantity
+            }
+            return await client.post('/open-api/order/replace', replacementOrder)
+          } else {
+            return new Error(`order.id ${order.id} not found`)
+          }
+        }
+        break
       default:
         return {} // not implemented yet
       }
