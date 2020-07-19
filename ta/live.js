@@ -21,6 +21,7 @@ const strategies = require('./strategies')
 const research   = require('./research')
 const exchanges  = require('./exchanges')
 const log        = require('./log')
+const time       = require('./time')
 
 const {DateTime} = luxon
 
@@ -55,6 +56,15 @@ class Trader {
     this.executedOrders = undefined
     this.initializeTradeExecutor()
     this.initializeActivityLogger()
+    this.announceSelf()
+  }
+
+  name() {
+    return 'Trader'
+  }
+
+  announceSelf() {
+    this.activityLogger.info({ name: this.name(), exchange: this.opts.exchange, market: this.opts.market, strategy: this.opts.strategy })
   }
 
   initializeStrategyAndPipeline(since) {
@@ -96,7 +106,9 @@ class Trader {
   }
 
   async warmUp(since) {
+    this.activityLogger.info({ message: 'warming up' })
     await this.sanityCheck()
+    console.log('since', since.toISO())
     this.initializeStrategyAndPipeline(since)
     // This is the same for both.
     // Load candles from the filesystem until we can't.
@@ -124,13 +136,27 @@ class Trader {
       200 minutes.  For BitMEX, it can't be more than 1000 minutes.
      */
     let lastTimestamp = this.marketState.imd1m.timestamp[0]
+    console.log('lastTimestamp', lastTimestamp, time.iso(lastTimestamp))
     let limit = this.exchange.limits.maxCandles || 200
     let candles = await ta.loadCandles(this.opts.exchange, this.opts.market, this.baseTimeframe, lastTimestamp, limit)
+    let z = candles.length - 1
+    // XXX - DEBUG
+    console.log({
+      first: {
+        timestamp: candles[0][0],
+        ts: time.iso(candles[0][0])
+      },
+      last: {
+        timestamp: candles[z][0],
+        ts: time.iso(candles[z][0])
+      }
+    })
     /*
       DONE - give ta.loadCandles a limit parameter
       DONE - store exchange limits in exchanges/$exchange.js
      */
-    console.log('candles', candles)
+    console.log('candles', candles.length, candles)
+    // TODO - so far so good, hmmm, try using activityLogger to log various parts of imd1m.
     candles.forEach((c) => this.marketState = this.mainLoop(c))
     this.isWarmedUp = true
   }
@@ -138,8 +164,11 @@ class Trader {
   async switchToRealtime() {
     // This is the same for both.
     if (this.isWarmedUp) {
+      this.activityLogger.info({ message: 'switching to realtime' })
       this.events.on(this.candleChannel, (message) => {
-        this.activityLogger.info(message.data)
+        message.data.forEach((d) => {
+          this.activityLogger.info({ confirm: d.confirm, timestamp: d.start * 1000, ts: time.iso(d.start * 1000) })
+        })
         const candles = (message.data)
           ? message.data.map((d) => [ d.start * 1000, d.open, d.high, d.low, d.close, d.volume ])
           : []
@@ -228,6 +257,10 @@ class Trader {
 class Tester extends Trader {
   constructor(opts) {
     super(opts)
+  }
+
+  name() {
+    return 'Tester'
   }
 
   initializeTradeExecutor() {
@@ -321,7 +354,7 @@ module.exports = {
 
    // Instantiate a live simulator with a Guppy strategy
    s = live.test.bybit.BTCUSD(...preset.guppy1m10m)
-   since = DateTime.fromISO('2020-07-14')
+   since = DateTime.fromISO('2020-07-17')
    s.go(since).then(cl)
 
  */
