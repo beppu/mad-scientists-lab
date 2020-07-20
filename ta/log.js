@@ -29,7 +29,7 @@ const utils = require('./utils')
  * @param {String} prefix - base log directory
  * @param {Object} config - strategy config
  * @param {Function} fn - (optional) function that transforms `config` into a path-friendly string
- * @returns {String} Return description.
+ * @returns {String} Return directory to store order logs
  */
 function executedOrderLogDir(prefix, config, fn) {
   const slugFn = fn ? fn : hash
@@ -51,6 +51,19 @@ function logName(begin, end) {
   } else {
     return "all"
   }
+}
+
+/**
+ * Concat executedOrderLogDir and logName together
+ * @param {DateTime} begin - The DateTime the strategy should begin
+ * @param {DateTime} end - The DateTime the strategy should end
+ * @param {String} prefix - base log directory
+ * @param {Object} config - strategy config
+ * @param {Function} fn - (optional) function that transforms `config` into a path-friendly string
+ * @returns {String} Return full path of order log
+ */
+function fullExecutedOrderLogName(begin, end, prefix, config, fn) {
+  return path.join(executedOrderLogDir(prefix, config, fn), logName(begin, end))
 }
 
 /**
@@ -124,6 +137,7 @@ function summarizeOrderLog(path) {
 module.exports = {
   executedOrderLogDir,
   logName,
+  fullExecutedOrderLogName,
   createOrderLogger, // This is the function most users will care about.
   summarizeOrderLog
 }
