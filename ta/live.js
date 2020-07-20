@@ -80,14 +80,20 @@ class Trader {
     // Instantiate a pipeline with the strategy's indicatorSpecs
     this.mainLoop = pipeline.mainLoopFn(this.baseTimeframe, indicatorSpecs)
     // Instantiate Executed Order Logger
-    const orderLogger = log.createOrderLogger(
+    this.orderLogPath = log.fullExecutedOrderLogName(
       since,
       undefined,
       this.opts.logDir,
       [strategy, options],
       _s.configSlug // this is allowed to be undefined
     )
-    this.orderLogger = orderLogger
+    this.orderLogger = log.createOrderLogger(
+      since,
+      undefined,
+      this.opts.logDir,
+      [strategy, options],
+      _s.configSlug // this is allowed to be undefined
+    )
   }
 
   initializeTradeExecutor() {
@@ -98,6 +104,14 @@ class Trader {
   initializeActivityLogger() {
     mkdirp.sync(this.opts.logDir)
     this.activityLogger = pino(pino.destination(`${this.opts.logDir}/activity.log`))
+  }
+
+  /**
+   * Summarize the current executed order log.
+   * @returns {Object} a report on executed trades and profits/losses
+   */
+  summarize() {
+    return log.summarizeOrderLog(this.orderLogPath)
   }
 
   async sanityCheck() {
