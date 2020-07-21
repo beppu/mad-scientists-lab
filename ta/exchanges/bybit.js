@@ -105,6 +105,11 @@ function connect(apiKey, endpoint=WEBSOCKET_ENDPOINT) {
     const topic = data.topic || 'unknown'
     ee.emit(topic, data)
   })
+
+  // TODO - detect disconnections and try to periodically reconnect
+  ws.on('close', () => {
+  })
+
   return [ws, ee]
 }
 
