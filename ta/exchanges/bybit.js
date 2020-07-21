@@ -132,6 +132,11 @@ const limits = {
   maxCandles: 200
 }
 
+const fees = {
+  maker: -0.00025, // negative fee is a rebate you get back
+  taker: 0.00075
+}
+
 //ws.send(JSON.stringify({ op: 'unsubscribe', args: [ 'klineV2.1.BTCUSD' ] }))
 
 // I'm not sure what the websocket side should look like yet.
@@ -145,6 +150,7 @@ module.exports = {
   connect,
   subscribeCandles,
   subscribePrivate,
-  limits
+  limits,
+  fees
 }
 
