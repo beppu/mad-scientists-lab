@@ -307,7 +307,7 @@ class Tester extends Trader {
       this.exchangeState = exchangeState
       this.executedOrders = executedOrders
       executedOrders.forEach((o) => {
-        //const rate = o.type === 'market' ? FEES.taker : FEES.maker
+        const rate = o.type === 'market' ? this.exchange.fees.taker : this.exchange.fees.maker
         const line = {
           ts: time.iso(o.timestamp),
           side: o.action,
@@ -315,7 +315,7 @@ class Tester extends Trader {
           symbol: this.opts.market,
           quantity: o.quantity,
           price: o.fillPrice,
-          //fee: utils.tradingFee(rate, (o.quantity * o.fillPrice), o.fillPrice)
+          fee: utils.tradingFee(rate, (o.quantity * o.fillPrice), o.fillPrice)
         }
         line.fee$ = line.fee * o.fillPrice
         this.orderLogger.info(line)
