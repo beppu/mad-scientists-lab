@@ -39,9 +39,18 @@ module.exports = function bbandsFn(period=20) {
       imd[key2].unshift(lastMiddleBand[0])
       imd[key3].unshift(lastLowerBand[0])
     } else {
-      imd[key1] = lastUpperBand
-      imd[key2] = lastMiddleBand
-      imd[key3] = lastLowerBand
+      if (ta.isInvertedSeries(imd.close)) {
+        imd[key1] = ta.createInvertedSeries()
+        imd[key2] = ta.createInvertedSeries()
+        imd[key3] = ta.createInvertedSeries()
+        imd[key1].unshift(lastUpperBand)
+        imd[key2].unshift(lastMiddleBand)
+        imd[key3].unshift(lastLowerBand)
+      } else {
+        imd[key1] = lastUpperBand
+        imd[key2] = lastMiddleBand
+        imd[key3] = lastLowerBand
+      }
     }
     return EMPTY_STATE
   }

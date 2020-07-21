@@ -430,6 +430,8 @@ const invertedSeriesHandler = {
       return target.push.bind(target)
     case 'length':
       return target.series.length
+    case 'toArray':
+      return target.toArray.bind(target)
     default:
       const i = invertedIndexForGet(target.series, key)
       return target.series[i]
@@ -457,6 +459,13 @@ const invertedSeriesMethods = {
   push: function(value) {
     // only the batch ops use this, and it'll be max 1000 candles, so no biggy.
     return this.series.unshift(value)
+  },
+  toArray: function() {
+    const reverse = this.series.reduce((m, a) => {
+      m.unshift(a)
+      return m
+    }, [])
+    return reverse
   }
 }
 
@@ -470,6 +479,20 @@ const invertedSeriesMethods = {
 function createInvertedSeries() {
   const target = Object.assign({ series: [] }, invertedSeriesMethods)
   return new Proxy(target, invertedSeriesHandler)
+}
+
+/**
+ * Return true if the given parameter is an InvertedSeries Proxy object
+ * @param {Any} is - Parameter description.
+ * @returns {Boolean} Return description.
+ */
+function isInvertedSeries(is) {
+  // This is ghetto and wrong in some cases,
+  // but in the situation I use this, it'll be right and sufficient.
+  // It only happens once in the beginning of processing, so it doesn't
+  // need to be speed efficient.
+  const keys = Object.keys(is)
+  return (keys.length === 5) && keys[0] === 'series'
 }
 
 module.exports = {
@@ -487,6 +510,7 @@ module.exports = {
   scan,
   id,
   createInvertedSeries,
+  isInvertedSeries,
   _previousMd,
   _previousImd,
   _goBack

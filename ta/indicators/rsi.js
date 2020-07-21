@@ -64,7 +64,12 @@ module.exports = function rsiFn(period=14) {
       const avgD = sumD / period
       const rs = avgU / avgD
       const rsiValue = 100 - (100 / (1 + rs))
-      imd[key] = [ rsiValue ]
+      if (ta.isInvertedSeries(imd.close)) {
+        imd[key] = ta.createInvertedSeries()
+        imd[key].unshift(rsiValue)
+      } else {
+        imd[key] = [ rsiValue ]
+      }
       const newState = { rsiValue, avgU, avgD }
       //console.log('first time', newState)
       return newState

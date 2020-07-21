@@ -27,7 +27,12 @@ module.exports = function smaFn(period) {
     if (imd[key]) {
       imd[key].unshift(last[0])
     } else {
-      imd[key] = last
+      if (ta.isInvertedSeries(imd.close)) {
+        imd[key] = ta.createInvertedSeries()
+        imd[key].unshift(last[0])
+      } else {
+        imd[key] = last
+      }
     }
     return EMPTY_STATE
   }
