@@ -119,6 +119,13 @@ class Trader {
     return true
   }
 
+  /**
+   * Load as many candles as possible from the FS,
+   * then load as many candles as necessary via the REST API to fill in the gaps,
+   * and finally get the websocket connnection started in preparation for
+   * switchToRealtime.
+   * @param {DateTime} since - the timestamp for the earliest candle desired in marketState
+   */
   async warmUp(since) {
     this.activityLogger.info({ message: 'warming up' })
     await this.sanityCheck()
@@ -171,6 +178,20 @@ class Trader {
      */
     console.log('candles', candles.length, candles)
     // TODO - so far so good, hmmm, try using activityLogger to log various parts of imd1m.
+    candles.forEach((c) => this.marketState = this.mainLoop(c))
+    this.isWarmedUp = true
+  }
+
+  /**
+   * In the event of a network disconnection, we must load up all the candles
+   * we missed during the downtime and reconnect to the websocket.
+   * @param {DateTime} _since - DateTime of last candle before disconnection
+   */
+  async catchUp(_since) {
+    let lastTimestamp = this.marketState.imd1m.timestamp[0]
+    console.log('lastTimestamp', lastTimestamp, time.iso(lastTimestamp))
+    let limit = this.exchange.limits.maxCandles || 200
+    let candles = await ta.loadCandles(this.opts.exchange, this.opts.market, this.baseTimeframe, lastTimestamp, limit)
     candles.forEach((c) => this.marketState = this.mainLoop(c))
     this.isWarmedUp = true
   }
