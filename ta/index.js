@@ -154,12 +154,30 @@ function marketDataTakeLast(marketData, n, wantAll) {
 }
 
 /**
+ * Return a pristine InvertedMarketData that uses InvertedSeries instead of arrays
+ * @param {Object} opts - options for InvertedSeries
+ * @returns {InvertedMarketData<InvertedSeries>} a pristine InvertedMarketData using InvertedSeries
+ */
+function initialInvertedMarketDataWithSeries(opts={}) {
+  const inverted = {
+    timestamp: createInvertedSeries(opts),
+    open:      createInvertedSeries(opts),
+    high:      createInvertedSeries(opts),
+    low:       createInvertedSeries(opts),
+    close:     createInvertedSeries(opts),
+    volume:    createInvertedSeries(opts)
+  }
+  return inverted
+}
+
+/**
  * Invert marketData such that index 0 is the newest value rather than the oldest value
  * @param {Object<Array<Number>>} marketData  - An object that has arrays for open, high, low, close and volume
+ * @param {Object} opts                       - options for invertedMarketData construction
  * @returns {Object<Array<Number>>}           - marketData but inverted
  */
-function invertedMarketData(marketData) {
-  const inverted = {}
+function invertedMarketData(marketData, opts={}) {
+  const inverted = opts.invertedSeries ? initialInvertedMarketDataWithSeries({}) : {}
   Object.keys(marketData).forEach((key) => {
     invertedAppend(inverted, key, marketData[key])
   })
@@ -174,7 +192,8 @@ function invertedMarketData(marketData) {
  * @returns {Object<Array<Number>>}                   invertedMarketData with series from `data` appended to it
  */
 function invertedAppend(invertedMarketData, key, data) {
-  invertedMarketData[key] = []
+  if (!invertedMarketData[key])
+    invertedMarketData[key] = []
   const start = data.length - 1
   for (let i = start; i >= 0; i--) {
     invertedMarketData[key].push(data[i])
