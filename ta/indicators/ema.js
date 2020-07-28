@@ -34,7 +34,7 @@ module.exports = function emaFn(period) {
       let lastEma = state.lastEma
       const newEma = lastEma + multiplier * (imd.close[0] - lastEma)
       imd[key].unshift(newEma)
-      const newState = { lastEma: newEma }
+      const newState = { lastEma: newEma, timestamp: imd.timestamp[0] }
       return newState
     }
   }
@@ -43,7 +43,7 @@ module.exports = function emaFn(period) {
     let lastEma = state.lastEma
     const newEma = lastEma + multiplier * (imd.close[0] - lastEma)
     imd[key][0] = newEma
-    const newState = { lastEma: newEma }
+    const newState = { lastEma: newEma, timestamp: imd.timestamp[0] }
     return newState
   }
   return [emaInsert, emaUpdate, key]

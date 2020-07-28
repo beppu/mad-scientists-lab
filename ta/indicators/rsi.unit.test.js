@@ -29,7 +29,7 @@ test('RSI stream calculations should be consistent with RSI batch calculations',
 
   // batch calculation copied and adapted from bin/price
   const marketData         = ta.marketDataFromCandles(candles)
-  const indicatorSettings  = ta.id['rsi'](marketData, period)
+  const indicatorSettings  = ta.id.rsi(marketData, period)
   const r                  = talib.execute(indicatorSettings)
   const invertedMarketData = ta.invertedMarketData(marketData)
   ta.invertedAppend(invertedMarketData, key, r.result.outReal)

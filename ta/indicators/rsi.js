@@ -41,7 +41,7 @@ module.exports = function rsiFn(period=14) {
     prevGain /= period
     let tempValue1 = prevGain + prevLoss
     let rsiValue = 100*(prevGain/tempValue1)
-    const newState = { rsiValue, avgU: prevGain, avgD: prevLoss }
+    const newState = { rsiValue, avgU: prevGain, avgD: prevLoss, timestamp: md.timestamp[last] }
     return newState
   }
 
@@ -70,7 +70,7 @@ module.exports = function rsiFn(period=14) {
       } else {
         imd[key] = [ rsiValue ]
       }
-      const newState = { rsiValue, avgU, avgD }
+      const newState = { rsiValue, avgU, avgD, timestamp: imd.timestamp[0] }
       //console.log('first time', newState)
       return newState
     } else {

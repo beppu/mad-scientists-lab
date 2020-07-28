@@ -22,8 +22,9 @@ test('An SMA value should not be calculated if the number of candles is insuffic
 })
 
 test('An SMA value should be calculated if the number of candles is sufficent', () => {
+  let wantAll = true
   const md = ta.marketDataFromCandles(candles)
-  const md2 = ta.marketDataTake(md, 20)
+  const md2 = ta.marketDataTake(md, 20, wantAll)
   let imd2 = ta.invertedMarketData(md2)
   const [smaInsert, smaUpdate] = sma(20)
   smaInsert(md2, imd2)

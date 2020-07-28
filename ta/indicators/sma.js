@@ -34,7 +34,7 @@ module.exports = function smaFn(period) {
         imd[key] = last
       }
     }
-    return EMPTY_STATE
+    return { timestamp: imd.timestamp[0] }
   }
 
   function smaUpdate(md, imd, state) {
@@ -42,7 +42,7 @@ module.exports = function smaFn(period) {
     const last = smaIterate(md)
     const key = `sma${period}`
     imd[key][0] = last[0]
-    return EMPTY_STATE
+    return { timestamp: imd.timestamp[0] }
   }
 
   return [smaInsert, smaUpdate, key]

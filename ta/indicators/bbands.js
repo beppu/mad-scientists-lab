@@ -9,8 +9,6 @@ function keySuffix(period) {
   }
 }
 
-const EMPTY_STATE = {}
-
 /**
  * Generate functions for inserting and updating Bollinger Band data into invertedMarketData
  * @param {Number} period - length of the simple moving average
@@ -52,7 +50,7 @@ module.exports = function bbandsFn(period=20) {
         imd[key3] = lastLowerBand
       }
     }
-    return EMPTY_STATE
+    return { timestamp: imd.timestamp[0] }
   }
 
   function bbandsUpdate(md, imd, state) {
@@ -61,7 +59,7 @@ module.exports = function bbandsFn(period=20) {
     imd[key1][0] = lastUpperBand[0]
     imd[key2][0] = lastMiddleBand[0]
     imd[key3][0] = lastLowerBand[0]
-    return EMPTY_STATE
+    return { timestamp: imd.timestamp[0] }
   }
   // FIXME - Actually, in pipeline.js, be able to handle an array of keys.
   return [bbandsInsert, bbandsUpdate, [key1, key2, key3]]
