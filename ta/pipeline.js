@@ -129,8 +129,15 @@ function mergeCandle(lastCandle, candle) {
     candle[4],      // close
     lastCandle[5] + candle[5] // volume
   ]
-  newCandle[2] = lastCandle[2] > candle[2] ? lastCandle[2] : candle[2]
-  newCandle[3] = lastCandle[3] < candle[3] ? lastCandle[3] : candle[3]
+  if (typeof lastCandle[1] === 'undefined') {
+    // special case for the very first candle
+    newCandle[1] = candle[1] // open
+    newCandle[2] = candle[2] // high
+    newCandle[3] = candle[3] // low
+  } else {
+    newCandle[2] = lastCandle[2] > candle[2] ? lastCandle[2] : candle[2]
+    newCandle[3] = lastCandle[3] < candle[3] ? lastCandle[3] : candle[3]
+  }
   return newCandle;
 }
 
@@ -140,7 +147,7 @@ function mergeCandle(lastCandle, candle) {
  * @returns {Function} a function that takes lower timeframe candles and returns an aggregated candle
  */
 function aggregatorFn(desiredTimeframe) {
-  let ax = [0, 0, 0, 0, 0]
+  let ax = [0, undefined, undefined, undefined, undefined, 0]
   // candle is assumed to come from a timeframe that's smaller and evenly divisible by desiredTimeframe
   return function(candle) {
     // check to see if we're on timeframe boundary
