@@ -58,6 +58,12 @@ function translatePeriods(periods, tfSrc, tfDst) {
   return periods.map((p) => p * factor)
 }
 
+/**
+ * Given a timeframe and a timestamp, is the timestamp on a timeframe boundary (aka the beginning of the timeframe block)
+ * @param {String} timeframe - timeframe
+ * @param {DateTime} time - timestamp
+ * @returns {Boolean} True if this timestamp at the beginning of a timeframe boundary
+ */
 function isTimeframeBoundary(timeframe, time) {
   const match  = timeframe.match(/(\d+)(\w+)/);
   if (!match) {
