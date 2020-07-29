@@ -16,7 +16,7 @@ module.exports = function emaFn(period) {
       const emaSettings = ta.id.ema(amd, period)
       const ema = talib.execute(emaSettings)
       const last = ema.result.outReal.slice(ema.result.outReal.length - 1) // take only the last value
-      const newState = { lastEma: last[0] }
+      const newState = { lastEma: last[0], timestamp: imd.timestamp[0] }
       if (imd[key]) {
         imd[key].unshift(last[0])
       } else {
