@@ -249,6 +249,12 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
 
       const indicatorsKey = `indicators${tf}`
       state[indicatorsKey].forEach(([insert, update, key, previousState, currentState], i) => {
+        // insert        => insert function
+        // update        => update function
+        // key           => name(s) of indicator value(s) in invertedMarketData structure
+        // previousState => ?
+        // currentState  => ? I forgot the distinction between these two.
+        // XXX - I think if I get rid of the hack, I can get rid of key and previousState and let currentState just be 'state'.
         if (isBoundaryForTf) {
           let k, kind
           if (kindOf(key) === 'array') {
@@ -262,6 +268,7 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
           // the first iteration that generates a value has to be fixed,
           // because update cannot be called with an undefined state
           // like insert can.
+          // (What I don't get is the lack of state.  Doesn't the first insert create state?  As long as you insert first, you should be fine.)
           let indicatorState
           if (imd[k] && imd[k].length === 1) {
             // fix the first value
@@ -291,7 +298,6 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
           // however, if we're aggregating, we need to wait until the last partial candle and do a full insertion
           // it would be nice if the very first insertion didn't need a special case.
           state[indicatorsKey][i][4] = insert(md, imd, indicatorState)
-          //console.log('insert', indicatorState, '=>', state[indicatorsKey][i][4], imd.close[0])
         } else {
           // when updating, repeatedly use the last known insertState as the base
           // however, i need a special case when we're updating the very first value.
