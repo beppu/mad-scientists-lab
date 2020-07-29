@@ -303,9 +303,7 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
           // however, i need a special case when we're updating the very first value.
           // - I don't know if the first value can be created with a partial insert and update.
           // - I think the first value can only be inserted correctly with a full candle
-          const indicatorState = previousState
-          state[indicatorsKey][i][4] = update(md, imd, indicatorState)
-          //console.warn('update', indicatorState, '=>', state[indicatorsKey][i][4], imd.close[0])
+          state[indicatorsKey][i][4] = update(md, imd, previousState)
         }
       })
     })
