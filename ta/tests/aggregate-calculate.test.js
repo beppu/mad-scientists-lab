@@ -183,6 +183,34 @@ test("simultaneous aggregation should calculate the right RSI values", async () 
   })
 })
 
+test("repeated candles using the same timestamp should not grow imd", () => {
+  const specs = {'5m': [[ 'ema', 5 ]]}
+  const mainLoop = pipeline.mainLoopFn('1m', specs)
+  const candles = require('./fixtures/subminute.json')
+  const cless = candles.slice(0, 360)
+
+  let marketState
+  cless.forEach((c) => {
+    marketState = mainLoop(c)
+  })
+  //expect(marketState.imd5m.ema5).toHaveLength(1)
+  console.log(marketState.imd5m)
+
+  /*
+    // stepping through this bug
+    sub = require('./tests/fixtures/subminute.json')
+    s360 = sub.slice(0, 360)
+
+    global.flag = false
+    loop = pipeline.mainLoopFn('1m', { '5m': [[ 'ema', 5 ]]})
+    for (i = 0; i < 355; i++) { marketState = loop(s360[i]) }
+
+    global.flag = true
+    marketState = loop(s360[355])
+    // 356 357 358 359
+   */
+})
+
 /*
   // repl snippet
 
