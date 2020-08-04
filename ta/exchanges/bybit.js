@@ -159,3 +159,10 @@ module.exports = {
   fees
 }
 
+/*
+  // instantiate a client
+  $e = process.env
+  bliv = exchanges.bybit.create({ baseURL: $e.TA_BYBIT_API_URL, key: $e.TA_BYBIT_API_KEY, secret: $e.TA_BYBIT_API_SECRET })
+  orders = [{ type: 'limit', action: 'buy', quantity: 1, price: 10500 }]
+  bliv(orders).then(cl).catch(console.error)
+ */
