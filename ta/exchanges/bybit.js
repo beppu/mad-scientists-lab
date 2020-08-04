@@ -50,7 +50,7 @@ function create(options) {
             if (order.price)
               replacementOrder.p_r_price = order.price
             if (order.quantity) {
-              replcementOrder.p_r_qty = order.quantity
+              replacementOrder.p_r_qty = order.quantity
             }
             return await client.post('/open-api/order/replace', replacementOrder)
           } else {
