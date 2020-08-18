@@ -1,0 +1,20 @@
+mixin signal(s)
+  li
+    if s.message.match(/^buy/)
+      div.signal.buy
+        h2 #{s.message.replace(/ signal/, '')} #{s.close}
+        h3 #{s.timestamp.setZone('America/Los_Angeles').toFormat('FFF')}
+    else
+      div.signal.sell
+        h2 #{s.message.replace(/ signal/, '')} #{s.close}
+        h3 #{s.timestamp.setZone('America/Los_Angeles').toFormat('FFF')}
+html
+  head
+    title Signals
+    link(rel="stylesheet" href="/css")
+    script(src="/js")
+  body
+    h1 Signals
+    ul.signals
+      each s in signals
+        +signal(s)
