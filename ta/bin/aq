@@ -1,0 +1,36 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use JSON;
+
+my $DB = "$ENV{HOME}/.local/share/alerts.db";
+my $prefix = qq{
+.mode col
+.header on
+};
+
+my %REPORTS;
+$REPORTS{gold} = encode_json qq{
+$prefix
+.width 10 -4 -12 -16 32
+select market, timeframe, candle_at, datetime(candle_at/1000, 'unixepoch') as ts, message from sent where timeframe in ("4h", "12h", "1d") and message like "%gold%" order by candle_at desc limit 20;
+};
+
+$REPORTS{death} = encode_json qq{
+$prefix
+.width 10 -4 -12 -16 32
+select market, timeframe, candle_at, datetime(candle_at/1000, 'unixepoch') as ts, message from sent where timeframe in ("4h", "12h", "1d") and message like "%death%" order by candle_at desc limit 20;
+};
+
+my $query = shift;
+if ($query) {
+  my $report = $REPORTS{$query};
+  if ($report) {
+    system("echo $report | sqlite3 $DB")
+  } else {
+    warn "Report '$report' not available.\n";
+  }
+} else {
+  warn "Usage: aq <QUERY_NAME>\n"
+}
