@@ -5,7 +5,7 @@ use warnings;
 use JSON;
 my $json = JSON->new->allow_nonref;
 
-my $DB = "$ENV{HOME}/.local/share/alerts.db";
+my $DB = "$ENV{HOME}/.local/share/ta/alerts.db";
 my $prefix = qq{
 .mode col
 .header on
