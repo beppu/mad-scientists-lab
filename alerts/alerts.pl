@@ -133,8 +133,6 @@ my %active_alerts = (
     price_below_sh('1h', 'sma', 200),
     bullish_divergence_sh('1h'),
     bearish_divergence_sh('1h'),
-    cross_sh('1h', 'sma', 34, 68),
-    cross_sh('1h', 'sma', 68, 34),
     aligned_sh('1h', 'sma', 50, 100, 200),
     aligned_sh('1h', 'sma', 200, 100, 50),
     guppy_green_sh('1h'),
