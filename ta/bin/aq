@@ -11,6 +11,8 @@ my $prefix = qq{
 .header on
 };
 
+my $generic_query = q{select market, timeframe, candle_at, datetime(candle_at/1000, 'unixepoch') as ts, message from sent where market = "%s", timeframe in ("4h", "12h", "1d") and message like "%%%s%%" order by candle_at desc limit 10;};
+
 my %REPORTS;
 $REPORTS{gold} = $json->encode(qq{
 $prefix
@@ -18,10 +20,22 @@ $prefix
 select market, timeframe, candle_at, datetime(candle_at/1000, 'unixepoch') as ts, message from sent where timeframe in ("4h", "12h", "1d") and message like "%gold%" order by candle_at desc limit 20;
 });
 
+$REPORTS{'gold.BTC/USDT'} = $json->encode(qq{
+$prefix
+.width 10 -4 -12 -16 32
+@({[ sprintf $generic_query, 'BTC/USDT', 'gold' ]})
+});
+
 $REPORTS{death} = $json->encode(qq{
 $prefix
 .width 10 -4 -12 -16 32
 select market, timeframe, candle_at, datetime(candle_at/1000, 'unixepoch') as ts, message from sent where timeframe in ("4h", "12h", "1d") and message like "%death%" order by candle_at desc limit 20;
+});
+
+$REPORTS{'death.BTC/USDT'} = $json->encode(qq{
+$prefix
+.width 10 -4 -12 -16 32
+@({[ sprintf $generic_query, 'BTC/USDT', 'death' ]})
 });
 
 my $query = shift;
