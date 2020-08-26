@@ -20,8 +20,8 @@ select market, timeframe, candle_at, datetime(candle_at/1000, 'unixepoch') as ts
 
 $REPORTS{'gold.BTC/USDT'} = $json->encode(qq{
 $prefix
-.width 10 -4 -12 -16 32
-select market, timeframe, candle_at, datetime(candle_at/1000, 'unixepoch') as ts, message from sent where market = 'BTC/USDT' and timeframe in ("4h", "12h", "1d") and message like "%gold%" order by candle_at desc limit 7;
+.width -4 -16 32
+select timeframe, datetime(candle_at/1000, 'unixepoch') as ts, message from sent where market = 'BTC/USDT' and timeframe in ("4h", "12h", "1d") and message like "%gold%" order by candle_at desc limit 7;
 });
 
 $REPORTS{death} = $json->encode(qq{
@@ -32,8 +32,8 @@ select market, timeframe, candle_at, datetime(candle_at/1000, 'unixepoch') as ts
 
 $REPORTS{'death.BTC/USDT'} = $json->encode(qq{
 $prefix
-.width 10 -4 -12 -16 32
-select market, timeframe, candle_at, datetime(candle_at/1000, 'unixepoch') as ts, message from sent where market = 'BTC/USDT' and timeframe in ("4h", "12h", "1d") and message like "%death%" order by candle_at desc limit 7;
+.width -4 -16 32
+select timeframe, datetime(candle_at/1000, 'unixepoch') as ts, message from sent where market = 'BTC/USDT' and timeframe in ("4h", "12h", "1d") and message like "%death%" order by candle_at desc limit 7;
 });
 
 my $query = shift;
