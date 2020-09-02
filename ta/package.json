@@ -8,6 +8,7 @@
     "@rauschma/stringio": "^1.4.0",
     "bluebird": "^3.5.5",
     "bybit": "^1.0.5",
+    "bybit-api": "^1.1.7",
     "cache-all": "^2.0.4",
     "ccxt": "^1.24.89",
     "clone": "^2.1.2",
