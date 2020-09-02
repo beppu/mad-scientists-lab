@@ -139,15 +139,19 @@ class Trader {
       this.marketState = this.mainLoop(candle)
       candle = await nextCandle()
     }
+
     // Get websockets started in the background so switching can be seemless later.
+    // XXX - redo websockets
+    /*
     const [ws, events] = this.exchange.connect(undefined) // XXX undefined should be an API key
     this.ws = ws
     this.events = events
     this.pingInterval = this.exchange.pingAtInterval(ws, 30000)
     this.candleChannel = await this.exchange.subscribeCandles(this.ws, this.opts.market)
+    */
+
     // Load from memory one last time if necessary.
     /*
-      DONE - This is the part I hate.
       Loading up 1m candles from the beginning of an exchange's trading history can
       take considerably longer than 1m.  Furthermore, I don't have any guarantee that
       the FS has enough data downloaded.
@@ -204,6 +208,7 @@ class Trader {
     // This is the same for both.
     if (this.isWarmedUp) {
       this.activityLogger.info({ message: 'switching to realtime' })
+      // XXX - I think this.events can stay.
       this.events.on(this.candleChannel, (message) => {
         /*
         message.data.forEach((d) => {
@@ -361,6 +366,10 @@ const trade = {
       return new Trader({ dataDir: 'data', logDir: LOG_TRADE, exchange: 'bybit', market: 'ETH/USD', strategy, options })
     }
   },
+  delta: {
+    LINKPERP(strategy, options={}) {
+    }
+  },
   ftx: {
     LINKPERP(strategy, options={}) {
     }
@@ -375,6 +384,10 @@ const test = {
     ETHUSD(strategy, options={}) {
       return new Tester({ dataDir: 'data', logDir: LOG_LIVETEST, exchange: 'bybit', market: 'ETH/USD', strategy, options })
     },
+  },
+  delta: {
+    LINKPERP(strategy, options={}) {
+    }
   },
   ftx: {
     LINKPERP(strategy, options={}) {
@@ -399,3 +412,5 @@ module.exports = {
    s.go(since).then(cl)
 
  */
+
+
