@@ -240,6 +240,15 @@ function parseIntB10(n) {
   return parseInt(n, 10)
 }
 
+function percentDifference(a, b) {
+  // x/100 = b/a
+  // x*a = b*100
+  // x = b*100/a
+  const percent = (b*100.0) / a
+  const diff = percent - 100
+  return diff
+}
+
 /**
  * Dump a JSON serializable data struct to a file
  * @param {Any} data - data to dump to a file
@@ -308,6 +317,7 @@ module.exports = {
   dataPath,
   missing,
   parseIntB10,
+  percentDifference,
   dump,
   _cc
 }
