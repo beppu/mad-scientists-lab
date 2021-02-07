@@ -81,8 +81,8 @@ function marketDataFromCandles(candles) {
 
 /**
  * Append one candle to an existing marketData struct
- * @param {Object} candle - one candle
  * @param {MarketData} md - a MarketData structure
+ * @param {Object} candle - one candle
  * @returns {MarketData} a MarketData structure with one candle appended to it
  */
 function marketDataAppendCandle(marketData, candle) {
@@ -95,6 +95,12 @@ function marketDataAppendCandle(marketData, candle) {
   return marketData
 }
 
+/**
+ * Update the last candle in an existing marketData struct
+ * @param {MarketData} md - a MarketData structure
+ * @param {Object} candle - one candle
+ * @returns {MarketData} a MarketData structure with the last candle updated
+ */
 function marketDataUpdateCandle(marketData, candle) {
   let last
   if (marketData.timestamp.length === 0) {

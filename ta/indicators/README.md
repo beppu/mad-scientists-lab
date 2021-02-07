@@ -101,7 +101,7 @@ reuse it or not at the caller's discretion. This lets me be hypothetical.
 ### rsi.js
 
 RSI was the first indicator to implement the new streaming API. Since it uses
-W.ilder's SMMA which is very similar to an EMA in how it's calculated, it really
+Wilder's SMMA which is very similar to an EMA in how it's calculated, it really
 wanted a streaming implementation for both speed and accuracy.
 
 ### ema.js
@@ -117,3 +117,13 @@ my developer time, I can continue to use talib to calculate this without
 sacrificing accuracy. The sacrifice in speed is relatively small too. They will
 support the streaming API, but their internal implementation will continue to
 use talib for now.
+
+
+# A More Elegant Way?
+
+There has to be a more elegant way to do this.  The ideal would be to provide a
+pure function that calculates the desired values, and the other plumbing for 
+stream and state management should be automatically derived.  It would make
+adding indicators a lot easier if this could be abstracted to that level.  It
+sucks that I have to figure out state management from scratch for every new
+indicator I want.

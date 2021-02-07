@@ -194,7 +194,7 @@ test("repeated candles using the same timestamp should not grow imd", () => {
     marketState = mainLoop(c)
   })
   //expect(marketState.imd5m.ema5).toHaveLength(1)
-  console.log(marketState.imd5m)
+  //console.log(marketState.imd5m)
 
   /*
     // stepping through this bug
