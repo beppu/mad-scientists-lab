@@ -20,7 +20,7 @@ cache.init({
 })
 
 /**
- * Load candlestick data
+ * Load candlestick data from an exchange's REST API
  * @param {String} exchange  - Name of exchange
  * @param {String} market    - Symbol for market
  * @param {String} timeframe - Duration of candle (5m, 30m, 1h, 1d, etc)
