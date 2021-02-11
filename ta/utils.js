@@ -249,6 +249,18 @@ function percentDifference(a, b) {
   return diff
 }
 
+
+/**
+ * Round a number with a custom granularity.
+ * https://stackoverflow.com/a/55622522/493051
+ * @param {Number} num - Number to round
+ * @param {Number} granularity - granularity or precision of rounding
+ * @returns {Number} Rounded number
+ */
+function round(num, granularity) {
+  return Math.round(num / granularity) * granularity
+}
+
 /**
  * Dump a JSON serializable data struct to a file
  * @param {Any} data - data to dump to a file
@@ -318,6 +330,7 @@ module.exports = {
   missing,
   parseIntB10,
   percentDifference,
+  round,
   dump,
   _cc
 }
