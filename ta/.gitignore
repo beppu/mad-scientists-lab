@@ -5,3 +5,4 @@ data
 *.temp
 strategies/Debug.js
 agg.js
+**/.tern-port
