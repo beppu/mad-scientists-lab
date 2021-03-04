@@ -457,6 +457,8 @@ const invertedSeriesHandler = {
       return target.series.length
     case 'toArray':
       return target.toArray.bind(target)
+    case 'toJSON':
+      return target.toArray.bind(target) // toArray and toJSON do the same thing
     default:
       const i = invertedIndexForGet(target.series, key)
       return target.series[i]
@@ -520,6 +522,20 @@ function isInvertedSeries(is) {
   return (keys.length === 5) && keys[0] === 'series'
 }
 
+function _flatten(imd) {
+  let candles = []
+  const keys = Object.keys(imd)
+  const length = imd.timestamp.length
+  for (let i = 0; i < length; i++) {
+    let candle = {}
+    keys.forEach((k) => {
+      candle[k] = imd[k][length - 1 - i]
+    })
+    candles.push(candle)
+  }
+  return candles
+}
+
 module.exports = {
   loadCandles,
   marketDataFromCandles,
@@ -538,7 +554,8 @@ module.exports = {
   isInvertedSeries,
   _previousMd,
   _previousImd,
-  _goBack
+  _goBack,
+  _flatten
 };
 
 /*
