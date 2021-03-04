@@ -211,6 +211,18 @@ test("repeated candles using the same timestamp should not grow imd", () => {
    */
 })
 
+test("heikin ashi should not delete the first calculated value on aggregation", async () => {
+  // pipeline.js around line 273 is a bitch
+  const mainLoop   = newMainLoop([['heikinAshi']])
+  const nextCandle = await newNextCandle()
+  let candle       = await nextCandle()
+  let marketState
+  marketState = mainLoop(candle)
+  candle = await nextCandle()
+  marketState = mainLoop(candle)
+  expect(marketState.imd4h.haLow[0]).toBeDefined()
+})
+
 /*
   // repl snippet
 
