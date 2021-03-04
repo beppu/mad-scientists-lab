@@ -43,6 +43,23 @@ test('the first iteration should create a heikin ashi candle', () => {
   expect(imd.haOpen).toHaveLength(1)
 })
 
+test('update should work', () => {
+  let md = ta.marketDataFromCandles([])
+  let imd = ta.invertedMarketData(md)
+  const [insert, update] = heikinAshi()
+  let state
+  let c = candles4h[0]
+  md = ta.marketDataAppendCandle(md, c)
+  imd = ta.invertedAppendCandle(imd, c)
+  state = insert(md, imd, state)
+  //console.log(imd)
+  c = candles4h[1]
+  md = ta.marketDataUpdateCandle(md, c)
+  imd = ta.invertedUpdateCandle(imd, c)
+  state = update(md, imd, state)
+  //console.log(imd)
+})
+
 /*
   md = ta.marketDataFromCandles([])
   imd = ta.invertedMarketData(md)
@@ -57,17 +74,21 @@ test('the first iteration should create a heikin ashi candle', () => {
   x.cs.forEach((c) => { md = ta.marketDataAppendCandle(md, c); imd = ta.invertedAppendCandle(imd, c); state = insert(md, imd, state) })
 
   // or load a ton of candles
-  d = DateTime.fromObject({ year: 2020, month: 1, day: 1 })
-  pipeline.loadCandlesFromFS('data', 'bybit', 'BTC/USD', '4h', d).then((nc) => x.nc = nc)
+  ha = reload('./indicators/heikinAshi')
+  [insert, update] = ha()
+  d = DateTime.fromObject({ year: 2021, month: 2, day: 18 })
+  pipeline.loadCandlesFromFS('data', 'bybit', 'BTC/USD', '4h', d).then((nextCandle) => x.nextCandle = nextCandle)
   md = ta.marketDataFromCandles([])
   imd = ta.invertedMarketData(md)
+  state = undefined
   function loop(c) {
     md = ta.marketDataAppendCandle(md, c)
     imd = ta.invertedAppendCandle(imd, c)
-    insert(md, imd, c);
+    state = insert(md, imd, state);
     return { md, imd }
   }
-  pipeline.runLoop(loop, x.nc).then((marketState) => x.marketState).then((ms) => x.ms = ms)
+
+  pipeline.runLoop(loop, x.nextCandle).then((ms) => x.ms = ms)
 
 
 */
