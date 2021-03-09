@@ -449,6 +449,8 @@ const invertedSeriesHandler = {
     switch (key) {
     case 'unshift':
       return target.unshift.bind(target)
+    case 'shift':
+      return target.shift.bind(target)
     case 'slice':
       return target.slice.bind(target)
     case 'push':
@@ -477,6 +479,10 @@ const invertedSeriesMethods = {
     // this speeds up the pipeline considerably
     return this.series.push(value)
   },
+  shift: function() {
+    // luckily this is fast too.
+    return this.series.pop()
+  },
   // sacrificing a lot of speed here
   slice: function() {
     // this slows scan down but it's only batch ops that scan right now.
@@ -487,6 +493,7 @@ const invertedSeriesMethods = {
     // only the batch ops use this, and it'll be max 1000 candles, so no biggy.
     return this.series.unshift(value)
   },
+  // aka toJSON
   toArray: function() {
     const reverse = this.series.reduce((m, a) => {
       m.unshift(a)
