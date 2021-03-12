@@ -2,17 +2,19 @@
 
 The code under `exchanges/` is responsible for the following.
 
-* Realtime candle retrieval.
-* Order execution
+* Realtime Candle Retrieval
+* Order Execution
+* Exchange Event Notification
 
 ## Candle Retrieval
 
 If possible, an exchange's WebSocket API should be used to fetch high resolution candles (1m or less) and
-prepare it the data pipeline that does candle aggregation, indicator calculation, and strategy execution.
+prepare the data pipeline that does candle aggregation, indicator calculation, and strategy execution.
 
 ## Order Execution
 
-Orders are returned by strategy functions as inert JavaScript objects that have a flat structure.
+Orders are returned by strategy functions as inert JavaScript objects that have a flat structure.  The following
+order types are the bare minimum a driver has to implement.
 
 ### Market Orders
 
@@ -53,3 +55,8 @@ according to their internal rules.
 ```
 
 If `price` is reached, a market order is performed by the exchange.
+
+## Exchange Event Notification
+
+When orders are filled, the driver needs relay that back to us.  In most cases, it's the strategy that needs to have
+this information fed back into it, so that it can make decisions.
