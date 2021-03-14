@@ -4,11 +4,13 @@ const {DateTime} = require('luxon')
 const kindOf = require('kind-of')
 const {RestClient, WebsocketClient} = require('bybit-api')
 const Bluebird = require('bluebird')
+const utils = require('../utils')
 
 class BybitDriver {
   constructor(opts) {
     this.exchangeState = {}
     this.client = new RestClient(opts.key, opts.secret, !!opts.livenet)
+    this.opts = opts
   }
 
   /**
@@ -18,7 +20,7 @@ class BybitDriver {
    */
   async connect(market, handlers) {
     const events = ['open', 'reconnected', 'update', 'response', 'close', 'reconnect', 'error']
-    this.ws = new WebsocketClient({ key: this.opts.key, secret: this.opts.secret, livenet: this.opts.livenet })
+    this.ws = new WebsocketClient({ key: this.opts.key, secret: this.opts.secret, livenet: this.opts.livenet }, utils.nullLogger)
     /*
      * Price needs to be communicated back to the live.Trader (or live.Tester).
      *   'update'
