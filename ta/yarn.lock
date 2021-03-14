@@ -839,9 +839,9 @@ caseless@~0.12.0:
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
 ccxt@^1.24.89:
-  version "1.24.89"
-  resolved "https://registry.yarnpkg.com/ccxt/-/ccxt-1.24.89.tgz#e6b511da26ab77800ec3c715a424f9607a114cc5"
-  integrity sha512-l7MnAJJJtcSdwL8KW0wGxAfQcSqQ6AZs4I4TMO/HAPFLOeSN9hUcdQ7oowihIucsowcncpclyCMIasPIS8j3tw==
+  version "1.43.17"
+  resolved "https://registry.yarnpkg.com/ccxt/-/ccxt-1.43.17.tgz#5a25831434ff2ca82f1081bdb9b0a2446ab0c448"
+  integrity sha512-ynNCpuwgE8KcUdC49rLy8dLWSljwzcLL+nLdwdferVQKFgqoF5lO30pqI6w0KXNlls8PxjrSHN9s0vu9DYXXdA==
 
 chalk@^2.0.0:
   version "2.4.2"
