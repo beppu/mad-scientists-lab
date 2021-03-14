@@ -291,6 +291,13 @@ function dump(data, filename) {
 
 */
 
+/**
+ * Function description.
+ * @param {Type of it} it - Parameter description.
+ * @param {Type of start} start - Parameter description.
+ * @param {Type of count} count - Parameter description.
+ * @returns {Return Type} Return description.
+ */
 async function _cc(it, start, count) {
   let ax = []
   let candle = await it()
@@ -310,6 +317,23 @@ async function _cc(it, start, count) {
     candle = await it()
   }
   return ax
+}
+
+/**
+ * This function does nothing.
+ */
+function noop() { }
+
+/*
+ * This is mostly to silence the websocket client for exchanges.bybit.Driver.
+ */
+const nullLogger = {
+  silly:   noop,
+  debug:   noop,
+  notice:  noop,
+  info:    noop,
+  warning: noop,
+  error:   noop
 }
 
 module.exports = {
@@ -332,5 +356,7 @@ module.exports = {
   percentDifference,
   round,
   dump,
-  _cc
+  _cc,
+  noop,
+  nullLogger
 }
