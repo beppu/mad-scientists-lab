@@ -41,7 +41,7 @@ async function main() {
     break
   }
   onFinish = (elapsed) => {
-    console.log("\n")
+    process.stdout.write("\n")
   }
   onProgress(0)
   const timer = countdown.startTimer(duration, opts.step, onProgress, onFinish)
