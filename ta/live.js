@@ -149,6 +149,8 @@ class Trader {
     this.pingInterval = this.exchange.pingAtInterval(ws, 30000)
     this.candleChannel = await this.exchange.subscribeCandles(this.ws, this.opts.market)
     */
+    const {key, secret, livenet} = this.opts.options
+    this.driver = new this.exchange.Driver({ key, secret, livenet })
 
     // Load from memory one last time if necessary.
     /*
@@ -165,22 +167,10 @@ class Trader {
     let limit = this.exchange.limits.maxCandles || 200
     let candles = await ta.loadCandles(this.opts.exchange, this.opts.market, this.baseTimeframe, lastTimestamp, limit)
     let z = candles.length - 1
-    // XXX - DEBUG
-    console.log({
-      first: {
-        timestamp: candles[0][0],
-        ts: time.iso(candles[0][0])
-      },
-      last: {
-        timestamp: candles[z][0],
-        ts: time.iso(candles[z][0])
-      }
-    })
     /*
       DONE - give ta.loadCandles a limit parameter
       DONE - store exchange limits in exchanges/$exchange.js
      */
-    console.log('candles', candles.length, candles)
     // TODO - so far so good, hmmm, try using activityLogger to log various parts of imd1m.
     candles.forEach((c) => this.marketState = this.mainLoop(c))
     this.isWarmedUp = true
@@ -208,17 +198,19 @@ class Trader {
     // This is the same for both.
     if (this.isWarmedUp) {
       this.activityLogger.info({ message: 'switching to realtime' })
-      // XXX - I think this.events can stay.
-      this.events.on(this.candleChannel, (message) => {
-        /*
-        message.data.forEach((d) => {
-          this.activityLogger.info({ confirm: d.confirm, timestamp: d.start * 1000, ts: time.iso(d.start * 1000) })
-        })
-        */
-        const candles = (message.data)
-          ? message.data.map((d) => [ d.start * 1000, d.open, d.high, d.low, d.close, d.volume ])
-          : []
-        this.iterate(candles)
+      const res = await this.driver.connect(this.opts.market, {
+        // onCandle
+        update: (message) => {
+          const candles = (message.data)
+            ? message.data.map((d) => [ d.start * 1000, d.open, d.high, d.low, d.close, d.volume ])
+            : []
+          this.iterate(candles)
+        },
+        // onExecution
+        response: (message) => {
+          // What does this even look like?
+          console.log('response', message)
+        }
       })
     } else {
       throw("We're not warmed up yet.")
@@ -296,17 +288,17 @@ class Trader {
 
 /*
    The main difference between trading and testing is where execution happens.
-   A Tester instance may consume price from a real exchange, but execution happens
+   A Simulator instance may consume price from a real exchange, but execution happens
    on a simulated exchange.  Unfortunately, the function signature for a simulated
    exchange is different from a real exchange in that it needs to be fed candles.
  */
-class Tester extends Trader {
+class Simulator extends Trader {
   constructor(opts) {
     super(opts)
   }
 
   name() {
-    return 'Tester'
+    return 'Simulator'
   }
 
   initializeTradeExecutor() {
@@ -351,24 +343,42 @@ class Tester extends Trader {
   }
 }
 
-const trade = {
+const mainnet = {
   bybit: {
     BTCUSD(strategy, options={}) {
-      options.baseURL = process.env.TA_BYBIT_BASE_URL
       options.key = process.env.TA_BYBIT_KEY
       options.secret = process.env.TA_BYBIT_SECRET
+      options.livenet = true
       return new Trader({ dataDir: 'data', logDir: LOG_TRADE, exchange: 'bybit', market: 'BTC/USD', strategy, options })
     },
     ETHUSD(strategy, options={}) {
-      options.baseURL = process.env.TA_BYBIT_BASE_URL
       options.key = process.env.TA_BYBIT_KEY
       options.secret = process.env.TA_BYBIT_SECRET
+      options.livenet = true
       return new Trader({ dataDir: 'data', logDir: LOG_TRADE, exchange: 'bybit', market: 'ETH/USD', strategy, options })
     }
-  },
-  delta: {
-    LINKPERP(strategy, options={}) {
+  }
+}
+
+const testnet = {
+  bybit: {
+    BTCUSD(strategy, options={}) {
+      options.key = process.env.TA_BYBIT_KEY
+      options.secret = process.env.TA_BYBIT_SECRET
+      options.livenet = false
+      return new Trader({ dataDir: 'data', logDir: LOG_TRADE, exchange: 'bybit', market: 'BTC/USD', strategy, options })
     }
+  }
+}
+
+const simulator = {
+  bybit: {
+    BTCUSD(strategy, options={}) {
+      return new Simulator({ dataDir: 'data', logDir: LOG_LIVETEST, exchange: 'bybit', market: 'BTC/USD', strategy, options })
+    },
+    ETHUSD(strategy, options={}) {
+      return new Simulator({ dataDir: 'data', logDir: LOG_LIVETEST, exchange: 'bybit', market: 'ETH/USD', strategy, options })
+    },
   },
   ftx: {
     LINKPERP(strategy, options={}) {
@@ -376,39 +386,33 @@ const trade = {
   }
 }
 
-const test = {
+module.exports.testnet = {
   bybit: {
     BTCUSD(strategy, options={}) {
-      return new Tester({ dataDir: 'data', logDir: LOG_LIVETEST, exchange: 'bybit', market: 'BTC/USD', strategy, options })
-    },
-    ETHUSD(strategy, options={}) {
-      return new Tester({ dataDir: 'data', logDir: LOG_LIVETEST, exchange: 'bybit', market: 'ETH/USD', strategy, options })
-    },
-  },
-  delta: {
-    LINKPERP(strategy, options={}) {
-    }
-  },
-  ftx: {
-    LINKPERP(strategy, options={}) {
+      options.key = process.env.TA_BYBIT_KEY
+      options.secret = process.env.TA_BYBIT_SECRET
+      options.livenet = false
+      return new Trader({ dataDir: 'data', logDir: LOG_TRADE, exchange: 'bybit', market: 'BTC/USD', strategy, options })
     }
   }
 }
 
 module.exports = {
   Trader,
-  Tester,
-  trade,
-  test
+  Simulator,
+  mainnet,
+  simulator
 }
+// DONE trade and test should be deprecated.
+// DONE Tester should also be renamed Simulator.
 
 /**
 
    How do I use this thing?
 
    // Instantiate a live simulator with a Guppy strategy
-   s = live.test.bybit.BTCUSD(...preset.guppy1m10m)
-   since = DateTime.fromISO('2020-07-17')
+   s = live.simulator.bybit.BTCUSD(...preset.guppy1m10m)
+   since = DateTime.fromISO('2021-03-17')
    s.go(since).then(cl)
 
  */
