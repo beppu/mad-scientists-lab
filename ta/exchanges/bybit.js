@@ -7,9 +7,16 @@ const Bluebird = require('bluebird')
 const utils = require('../utils')
 
 class BybitDriver {
+  /**
+   * Constructor
+   * @param {Object} opts options
+   * @param {string} opts.key API key
+   * @param {string} opts.secret API secret
+   * @param {boolean} opts.livenet true to use real exchange, false to use testnet exchange.
+   */
   constructor(opts) {
     this.exchangeState = {}
-    this.client = new RestClient(opts.key, opts.secret, !!opts.livenet)
+    this.client = new RestClient(opts.key, opts.secret, opts.livenet)
     this.opts = opts
   }
 
@@ -17,6 +24,8 @@ class BybitDriver {
    * Establish an authenticated websocket connection and setup handlers
    * @param {String} market price data requested
    * @param {Object<String,Function>} handlers
+   * @param {Function} handlers.update candle data streams to the update event
+   * @param {Function} handlers.response exchange event info streams to the response event
    */
   async connect(market, handlers) {
     const events = ['open', 'reconnected', 'update', 'response', 'close', 'reconnect', 'error']
@@ -186,7 +195,6 @@ class BybitDriver {
 
 }
 
-
 function connect(apiKey) {
   /*
     // connect, subscribe to klines, and pass kline data through my own eventemitter
@@ -271,6 +279,7 @@ module.exports = {
 module.exports.Driver = BybitDriver
 
 /*
+  // OLD
   // instantiate a client
   $e = process.env
   bliv = exchanges.bybit.create({ baseURL: $e.TA_BYBIT_API_URL, key: $e.TA_BYBIT_API_KEY, secret: $e.TA_BYBIT_API_SECRET })
@@ -278,8 +287,8 @@ module.exports.Driver = BybitDriver
   bliv(orders).then(cl).catch(console.error)
 
   $e = process.env
-  bybitAPI = require('bybit-api')
-  client = new bybitAPI.RestClient($e.TA_BYBIT_API_KEY, $e.TA_BYBIT_API_SECRET, false) // false for testnet, true for live
+  BybitAPI = require('bybit-api')
+  client = new BybitAPI.RestClient($e.TA_BYBIT_API_KEY, $e.TA_BYBIT_API_SECRET, false) // false for testnet, true for live
  */
 
 /**
@@ -313,4 +322,14 @@ module.exports.Driver = BybitDriver
 
    Maybe I should just make a driver class.
 
-   */
+*/
+
+/**
+ * New
+
+ key = process.env.TA_BYBIT_API_KEY
+ secret = process.env.TA_BYBIT_API_SECRET
+ livenet = false
+ bb = new exchanges.bybit.Driver({ key, secret, livenet })
+
+ */
