@@ -29,6 +29,7 @@ class BybitDriver {
    */
   async connect(market, handlers) {
     const events = ['open', 'reconnected', 'update', 'response', 'close', 'reconnect', 'error']
+    this.market = market.replace(/\//, '')
     this.ws = new WebsocketClient({ key: this.opts.key, secret: this.opts.secret, livenet: this.opts.livenet }, utils.nullLogger)
     /*
      * Price needs to be communicated back to the live.Trader (or live.Tester).
@@ -78,17 +79,23 @@ class BybitDriver {
     let results = await Bluebird.map(orders, async (order) => {
       switch (order.type) {
       case 'market':
-        exchangeOrder.side   = order.action === 'buy' ? 'Buy' : 'Sell';
-        exchangeOrder.symbol = order.symbol
-        exchangeOrder.qty    = order.quantity;
-        return await client.createOrder(exchangeOrder)
+        exchangeOrder.side          = order.action === 'buy' ? 'Buy' : 'Sell';
+        exchangeOrder.symbol        = this.market
+        exchangeOrder.order_type    = 'Market'
+        exchangeOrder.qty           = order.quantity;
+        exchangeOrder.time_in_force = order.time_in_force || 'GoodTillCancel'
+        console.log(exchangeOrder)
+        return await client.placeActiveOrder(exchangeOrder)
         break;
       case 'limit':
-        exchangeOrder.side   = order.action === 'buy' ? 'Buy' : 'Sell';
-        exchangeOrder.symbol = order.symbol
-        exchangeOrder.qty    = order.quantity
-        exchangeOrder.price  = order.price
-        return await client.createOrder(exchangeOrder)
+        exchangeOrder.side          = order.action === 'buy' ? 'Buy' : 'Sell';
+        exchangeOrder.symbol        = this.market
+        exchangeOrder.order_type    = 'Limit'
+        exchangeOrder.qty           = order.quantity
+        exchangeOrder.time_in_force = order.time_in_force || 'PostOnly'
+        exchangeOrder.price         = order.price
+        console.log(exchangeOrder)
+        return await client.placeActiveOrder(exchangeOrder)
         break;
       case 'modify':
         const id = this.exchangeState.localToRemote[order.id] // TODO - Populate localToRemote
