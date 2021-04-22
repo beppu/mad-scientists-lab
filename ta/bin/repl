@@ -1,3 +1,3 @@
 #!/bin/sh
 
-node -r ./.repl "$@"
+node --experimental-repl-await -r ./.repl "$@"
