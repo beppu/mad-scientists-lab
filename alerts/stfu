@@ -1,2 +1,2 @@
 #!/bin/sh
-killall aplay mpg123 2> /dev/null
+killall aplay mpg123 mplayer 2> /dev/null
