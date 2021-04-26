@@ -65,6 +65,7 @@ class BybitDriver {
   }
 
   subscribePrivate() {
+    // test commit
     this.ws.subscribe(['position', 'execution', 'order', 'stop_order'])
   }
 
@@ -83,7 +84,7 @@ class BybitDriver {
         exchangeOrder.symbol        = this.market
         exchangeOrder.order_type    = 'Market'
         exchangeOrder.qty           = order.quantity;
-        exchangeOrder.time_in_force = order.time_in_force || 'GoodTillCancel'
+        exchangeOrder.time_in_force = order.time_in_force || 'ImmediateOrCancel'
         console.log(exchangeOrder)
         return await client.placeActiveOrder(exchangeOrder)
         break;
@@ -92,10 +93,24 @@ class BybitDriver {
         exchangeOrder.symbol        = this.market
         exchangeOrder.order_type    = 'Limit'
         exchangeOrder.qty           = order.quantity
-        exchangeOrder.time_in_force = order.time_in_force || 'PostOnly'
+        exchangeOrder.time_in_force = order.opts && order.opts.time_in_force || 'PostOnly'
         exchangeOrder.price         = order.price
         console.log(exchangeOrder)
         return await client.placeActiveOrder(exchangeOrder)
+        break;
+      case 'stop-market':
+        exchangeOrder.side          = order.action === 'buy' ? 'Buy' : 'Sell';
+        exchangeOrder.symbol        = this.market
+        exchangeOrder.order_type    = 'Market'
+        exchangeOrder.base_price    = order.opts && order.opts.base_price // I really hate this.  It's like the current price.
+        exchangeOrder.stop_px       = order.price // the price for triggering the stop order.
+        exchangeOrder.qty           = order.quantity
+        exchangeOrder.time_in_force = order.opts && order.opts.time_in_force || 'GoodTillCancel'
+        if (order.reduceOnly) {
+          exchangeOrder.close_on_trigger = true
+        }
+        console.log(exchangeOrder)
+        return await client.placeConditionalOrder(exchangeOrder) // FIXME - What method do I really need?
         break;
       case 'modify':
         const id = this.exchangeState.localToRemote[order.id] // TODO - Populate localToRemote
