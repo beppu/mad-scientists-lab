@@ -95,6 +95,12 @@ class BybitDriver {
         exchangeOrder.qty           = order.quantity
         exchangeOrder.time_in_force = order.opts && order.opts.time_in_force || 'PostOnly'
         exchangeOrder.price         = order.price
+        if (order.reduceOnly) {
+          exchangeOrder.close_on_trigger = true
+        }
+        if (order.id) {
+          exchangeOrder.order_link_id = id
+        }
         console.log(exchangeOrder)
         return await client.placeActiveOrder(exchangeOrder)
         break;
@@ -108,6 +114,9 @@ class BybitDriver {
         exchangeOrder.time_in_force = order.opts && order.opts.time_in_force || 'GoodTillCancel'
         if (order.reduceOnly) {
           exchangeOrder.close_on_trigger = true
+        }
+        if (order.id) {
+          exchangeOrder.order_link_id = id
         }
         console.log(exchangeOrder)
         return await client.placeConditionalOrder(exchangeOrder) // FIXME - What method do I really need?
