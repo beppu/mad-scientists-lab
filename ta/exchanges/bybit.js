@@ -99,7 +99,7 @@ class BybitDriver {
           exchangeOrder.close_on_trigger = true
         }
         if (order.id) {
-          exchangeOrder.order_link_id = id
+          exchangeOrder.order_link_id = order.id
         }
         console.log(exchangeOrder)
         return await client.placeActiveOrder(exchangeOrder)
@@ -116,7 +116,7 @@ class BybitDriver {
           exchangeOrder.close_on_trigger = true
         }
         if (order.id) {
-          exchangeOrder.order_link_id = id
+          exchangeOrder.order_link_id = order.id
         }
         console.log(exchangeOrder)
         return await client.placeConditionalOrder(exchangeOrder) // FIXME - What method do I really need?
