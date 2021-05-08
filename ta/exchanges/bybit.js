@@ -89,7 +89,28 @@ class BybitDriver {
         return await client.placeActiveOrder(exchangeOrder)
         break;
       case 'limit':
-        exchangeOrder.side          = order.action === 'buy' ? 'Buy' : 'Sell';
+        if (order.action === 'cancel') {
+          exchangeOrder.order_link_id = order.id
+          exchangeOrder.symbol = this.market
+          return await client.cancelActiveOrder(exchangeOrder)
+        }
+        if (order.action === 'update') {
+          exchangeOrder.order_link_id = order.id
+          exchangeOrder.symbol = this.market
+          if (order.price) {
+            exchangeOrder.p_r_price = order.price
+          }
+          if (order.quantity) {
+            exchangeOrder.p_r_qty = order.quantity
+          }
+          return await client.replaceActiveOrder(exchangeOrder)
+        }
+        if (order.action === 'buy') {
+          exchangeOrder.side = 'Buy'
+        }
+        if (order.action === 'sell') {
+          exchangeOrder.side = 'Sell'
+        }
         exchangeOrder.symbol        = this.market
         exchangeOrder.order_type    = 'Limit'
         exchangeOrder.qty           = order.quantity
@@ -105,7 +126,28 @@ class BybitDriver {
         return await client.placeActiveOrder(exchangeOrder)
         break;
       case 'stop-market':
-        exchangeOrder.side          = order.action === 'buy' ? 'Buy' : 'Sell';
+        if (order.action === 'cancel') {
+          exchangeOrder.order_link_id = order.id
+          exchangeOrder.symbol = this.market
+          return await client.cancelConditionalOrder(exchangeOrder)
+        }
+        if (order.action === 'update') {
+          exchangeOrder.order_link_id = order.id
+          exchangeOrder.symbol = this.market
+          if (order.price) {
+            exchangeOrder.p_r_trigger_price = order.price
+          }
+          if (order.quantity) {
+            exchangeOrder.p_r_qty = order.quantity
+          }
+          return await client.replaceConditionalOrder(exchangeOrder)
+        }
+        if (order.action === 'buy') {
+          exchangeOrder.side = 'Buy'
+        }
+        if (order.action === 'sell') {
+          exchangeOrder.side = 'Sell'
+        }
         exchangeOrder.symbol        = this.market
         exchangeOrder.order_type    = 'Market'
         exchangeOrder.base_price    = order.opts && order.opts.base_price // I really hate this.  It's like the current price.
