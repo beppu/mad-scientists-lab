@@ -18,6 +18,7 @@ class BybitDriver {
     this.exchangeState = {}
     this.client = new RestClient(opts.key, opts.secret, opts.livenet)
     this.opts = opts
+    this.handlers = {}
   }
 
   /**
@@ -28,24 +29,18 @@ class BybitDriver {
    * @param {Function} handlers.response exchange event info streams to the response event
    */
   async connect(market, handlers) {
+    this.handlers.onCandle = handlers.onCandle
+    this.handlers.onExecution = handlers.onExecution
     const events = ['open', 'reconnected', 'update', 'response', 'close', 'reconnect', 'error']
     this.market = market.replace(/\//, '')
     this.ws = new WebsocketClient({ key: this.opts.key, secret: this.opts.secret, livenet: this.opts.livenet }, utils.nullLogger)
     /*
      * Price needs to be communicated back to the live.Trader (or live.Tester).
-     *   'update'
      * Order execution needs to be communicated back.
-     *   'response'
-     * Disconnection and reconnection need to be communicated back.
+     *   'update' topic covers the above cases
+     * Does disconnection and reconnection need to be communicated back?
      *   'close'
      *   'reconnected'
-     */
-
-    /*
-     * To make the driver design work for the general case, I need my own events for:
-     * - price
-     * - execution
-     * - reconnected
      */
     events.forEach((ev) => {
       if (handlers[ev]) {
@@ -174,73 +169,41 @@ class BybitDriver {
   // Handle websocket events
 
   /**
-   * Handle the WebSocket client's open event with a custom handler if provided.
-   */
-  handleOpen() {
-    if (this.handlers.open) {
-      this.handlers.open()
-    }
-  }
-
-  /**
-   * Handle the WebSocket client's open event with a custom handler if provided.
-   */
-  handleClose() {
-    if (this.handlers.close) {
-      this.handlers.close()
-    }
-  }
-
-  /**
-   * Handle the WebSocket client's open event with a custom handler if provided.
-   */
-  handleReconnect() {
-    if (this.handlers.reconnect) {
-      this.handlers.reconnect()
-    }
-  }
-
-  /**
-   * Handle the WebSocket client's open event with a custom handler if provided.
-   */
-  handleReconnected() {
-    if (this.handlers.reconnected) {
-      this.handlers.reconnected()
-    }
-  }
-
-  /**
-   * If an error handler is provided, pass the error to the handler.
-   * @param {Object} error - Parameter description.
-   */
-  handleError(error) {
-    if (this.handlers.error) {
-      this.handlers.error()
-    }
-  }
-
-  // The following two handlers are special in that they aren't simple pass-throughs like the previous handlers.
-  // handleUpdate - consume candles from the websocket and publish them via a 'price' handler if provided.
-  // handleResponse - consume private channels and normalize them into order executions as understood by my strategies.
-
-  /**
-   * Run the candle handler when realtime candles come over the websocket.
+   * Both candles and order execution comes through the `update` topic.
    * @param {Type of update} update - Parameter description.
    */
   async handleUpdate(update) {
-    if (this.handlers.onCandle) {
-      const candle = []
-      this.handlers.onCandle(candle)
+    let type
+    if (update.topic && update.topic.match(/^kline/)) {
+      type = 'candle'
+    } else {
+      type = 'execution'
+    }
+    switch (type) {
+      case 'candle':
+        if (this.handlers.onCandle) {
+          const candles = update.data
+          this.handlers.onCandle(candles)
+        }
+        break;
+      case 'execution':
+        if (this.handlers.onExecution) {
+          const events = this.transformExchangeEvents(update.data)
+          this.handlers.onExecution(events)
+        }
+        break;
+      default:
     }
   }
 
-  async handleResponse(response) {
-    if (this.handlers.onExecution) {
-      const execution = {}
-      this.handlers.onExecution(execution)
-    }
+  /**
+   * Transform bybit exchange events into simplified ta exchange events that strategies can consume.
+   * @param {Array<Object>} data  - an array of exchange events
+   * @return {Array<Object>} - an array of simplified exchange events
+   */
+  transformExchangeEvents(events) {
+    return []
   }
-
 }
 
 const limits = {
