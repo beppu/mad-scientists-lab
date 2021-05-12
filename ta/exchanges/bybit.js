@@ -85,7 +85,7 @@ class BybitDriver {
         exchangeOrder.order_type    = 'Market'
         exchangeOrder.qty           = order.quantity;
         exchangeOrder.time_in_force = order.time_in_force || 'ImmediateOrCancel'
-        console.log(exchangeOrder)
+        //console.log(exchangeOrder)
         return await client.placeActiveOrder(exchangeOrder)
         break;
       case 'limit':
@@ -122,7 +122,7 @@ class BybitDriver {
         if (order.id) {
           exchangeOrder.order_link_id = order.id
         }
-        console.log(exchangeOrder)
+        //console.log(exchangeOrder)
         return await client.placeActiveOrder(exchangeOrder)
         break;
       case 'stop-market':
@@ -160,7 +160,7 @@ class BybitDriver {
         if (order.id) {
           exchangeOrder.order_link_id = order.id
         }
-        console.log(exchangeOrder)
+        //console.log(exchangeOrder)
         return await client.placeConditionalOrder(exchangeOrder) // FIXME - What method do I really need?
         break;
       default:
