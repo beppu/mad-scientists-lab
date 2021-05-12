@@ -8,7 +8,7 @@ module.exports.GET = async (req, res) => {
   const payload = req.query.message
     ? { sound,
         speech: req.query.message,
-        desktop: { title: 'tvaa2', message: req.query.message } }
+        desktop: { title: req.query.title || 'tvaa2', message: req.query.message } }
     : { sound }
   alert.send(payload)
   send(res, 200, { success: true, sound })
