@@ -4,6 +4,7 @@
  */
 
 const clone = require('clone')
+const uuid = require('uuid')
 const analysis = require('../analysis')
 const time = require('../time')
 const utils = require('../utils')
@@ -118,11 +119,11 @@ function init(customConfig) {
     // This means update the strategyState to reflect new order executions
     if (executedOrders && executedOrders.length) {
       executedOrders.forEach((o) => {
-        if (o.id === 'open-long' && o.status === 'filled') {
+        if (o.id === state.openLongId && o.status === 'filled') {
           state.positionBias = 'long'
           state.longFilled = true
         }
-        if (o.id === 'open-short' && o.status === 'filled') {
+        if (o.id === state.openShortId && o.status === 'filled') {
           state.positionBias = 'short'
           state.shortFilled = true
         }
@@ -135,13 +136,13 @@ function init(customConfig) {
       if (shouldSell(marketState, state, config)) {
         let lastSize = state.lastSize
         let size = calculateSize(config, price)
+        state.openShortId = uuid.v4()
         orders.push({
-          id: 'close-long',
           type: 'market',
           action: 'sell',
           quantity: lastSize
         }, {
-          id: 'open-short',
+          id: state.openShortId,
           type: 'market',
           action: 'sell',
           quantity: size
@@ -155,13 +156,13 @@ function init(customConfig) {
       if (shouldBuy(marketState, state, config)) {
         let lastSize = state.lastSize
         let size = calculateSize(config, price)
+        state.openLongId = uuid.v4()
         orders.push({
-          id: 'close-short',
           type: 'market',
           action: 'buy',
           quantity: lastSize
         }, {
-          id: 'open-long',
+          id: state.openLongId,
           type: 'market',
           action: 'buy',
           quantity: size
@@ -174,8 +175,9 @@ function init(customConfig) {
       // If we're not in a position, figure out which way to go.
       if (shouldBuy(marketState, state, config)) {
         let size = calculateSize(config, price)
+        state.openLongId = uuid.v4()
         orders.push({
-          id: 'open-long',
+          id: state.openLongId,
           type: 'market',
           action: 'buy',
           quantity: size
@@ -185,8 +187,9 @@ function init(customConfig) {
       }
       if (shouldSell(marketState, state, config)) {
         let size = calculateSize(config, price)
+        state.openShortId = uuid.v4()
         orders.push({
-          id: 'open-short',
+          id: state.openShortId,
           type: 'market',
           action: 'sell',
           quantity: size
