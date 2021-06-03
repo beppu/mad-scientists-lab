@@ -8,6 +8,7 @@ const merge       = require('lodash.merge')
 const reverse     = require('lodash.reverse')
 const zip         = require('lodash.zip')
 const pino        = require('pino')
+const sprintf     = require('sprintf')
 const fs          = require('fs')
 const pkg         = require('../package.json')
 const ta          = require('../index')
@@ -228,13 +229,28 @@ async function main() {
       }
       if (program.verbose) {
         if (time.isTimeframeBoundary('1d', time.dt(candle[0]))) {
-          console.log(time.dt(candle[0]).toISO(), candle)
+          // TODO - I want to show {close,positionDirection,equity,positionSize}
+          let close = candle[4]
+          let equity = 0
+          let entry = 0
+          let positionDirection = '-'
+          let positionSize = 0
+          if (exchangeState) {
+            if (exchangeState.position > 0) {
+              positionDirection = 'L'
+            } else if (exchangeState.position < 0) {
+              positionDirection = 'S'
+            }
+            equity = calculateEquity(exchangeState, close)
+            positionSize = Math.abs(exchangeState.position)
+            entry = exchangeState.averageEntryPrice
+          }
+          console.log(time.dt(candle[0]).toISO(), `close:${close} direction:${positionDirection} size:${positionSize} entry:${entry} equity:${equity}`)
         }
       }
       if (begin) {
         ;[strategyState, orders] = strategy(strategyState, marketState, executedOrders)
         if (program.verbose && orders && orders.length) {
-          console.log('-- ', time.iso(candle[0]), candle)
           console.log('orders: ', orders)
         }
         ;[exchangeState, executedOrders] = await exchange(orders, exchangeState, candle)
@@ -325,7 +341,8 @@ async function main() {
     }
 
     // What's the damage?
-    console.log(strategyState)
+    //utils.dump(marketState.imd4h, 'imd4h_2.json')
+    //utils.dump(strategyState, 'state.json')
     console.log(exchangeState)
     const key = `imd${program.timeframe}`
     const close = marketState[key].close[0]

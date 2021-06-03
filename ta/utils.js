@@ -240,6 +240,27 @@ function parseIntB10(n) {
   return parseInt(n, 10)
 }
 
+function percentDifference(a, b) {
+  // x/100 = b/a
+  // x*a = b*100
+  // x = b*100/a
+  const percent = (b*100.0) / a
+  const diff = percent - 100
+  return diff
+}
+
+
+/**
+ * Round a number with a custom granularity.
+ * https://stackoverflow.com/a/55622522/493051
+ * @param {Number} num - Number to round
+ * @param {Number} granularity - granularity or precision of rounding
+ * @returns {Number} Rounded number
+ */
+function round(num, granularity) {
+  return Math.round(num / granularity) * granularity
+}
+
 /**
  * Dump a JSON serializable data struct to a file
  * @param {Any} data - data to dump to a file
@@ -270,6 +291,13 @@ function dump(data, filename) {
 
 */
 
+/**
+ * Function description.
+ * @param {Type of it} it - Parameter description.
+ * @param {Type of start} start - Parameter description.
+ * @param {Type of count} count - Parameter description.
+ * @returns {Return Type} Return description.
+ */
 async function _cc(it, start, count) {
   let ax = []
   let candle = await it()
@@ -291,6 +319,23 @@ async function _cc(it, start, count) {
   return ax
 }
 
+/**
+ * This function does nothing.
+ */
+function noop() { }
+
+/*
+ * This is mostly to silence the websocket client for exchanges.bybit.Driver.
+ */
+const nullLogger = {
+  silly:   noop,
+  debug:   noop,
+  notice:  noop,
+  info:    noop,
+  warning: noop,
+  error:   noop
+}
+
 module.exports = {
   isAscending,
   isDescending,
@@ -308,6 +353,10 @@ module.exports = {
   dataPath,
   missing,
   parseIntB10,
+  percentDifference,
+  round,
   dump,
-  _cc
+  _cc,
+  noop,
+  nullLogger
 }

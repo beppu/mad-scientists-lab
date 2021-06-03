@@ -118,7 +118,7 @@ test("pipeline.mainLoopFn should return a function that calculates correctly whe
   ta.invertedAppend(invertedMarketData, 'ema9', r.result.outReal)
   //console.warn({ agg: state.imd2h.open.slice(0), md: state.md2h.open })
   //console.warn({ 'wasWrongButNotAnymore': state.imd2h.ema9, right: invertedMarketData.ema9 })
-  expect(invertedMarketData.ema9).toEqual(state.imd2h.ema9.toArray())
+  expect(invertedMarketData.ema9).toEqual(state.imd2h.ema9)
 })
 
 /*

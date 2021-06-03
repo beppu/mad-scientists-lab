@@ -20,7 +20,7 @@ cache.init({
 })
 
 /**
- * Load candlestick data
+ * Load candlestick data from an exchange's REST API
  * @param {String} exchange  - Name of exchange
  * @param {String} market    - Symbol for market
  * @param {String} timeframe - Duration of candle (5m, 30m, 1h, 1d, etc)
@@ -81,8 +81,8 @@ function marketDataFromCandles(candles) {
 
 /**
  * Append one candle to an existing marketData struct
- * @param {Object} candle - one candle
  * @param {MarketData} md - a MarketData structure
+ * @param {Object} candle - one candle
  * @returns {MarketData} a MarketData structure with one candle appended to it
  */
 function marketDataAppendCandle(marketData, candle) {
@@ -95,6 +95,12 @@ function marketDataAppendCandle(marketData, candle) {
   return marketData
 }
 
+/**
+ * Update the last candle in an existing marketData struct
+ * @param {MarketData} md - a MarketData structure
+ * @param {Object} candle - one candle
+ * @returns {MarketData} a MarketData structure with the last candle updated
+ */
 function marketDataUpdateCandle(marketData, candle) {
   let last
   if (marketData.timestamp.length === 0) {
@@ -443,6 +449,8 @@ const invertedSeriesHandler = {
     switch (key) {
     case 'unshift':
       return target.unshift.bind(target)
+    case 'shift':
+      return target.shift.bind(target)
     case 'slice':
       return target.slice.bind(target)
     case 'push':
@@ -451,6 +459,8 @@ const invertedSeriesHandler = {
       return target.series.length
     case 'toArray':
       return target.toArray.bind(target)
+    case 'toJSON':
+      return target.toArray.bind(target) // toArray and toJSON do the same thing
     default:
       const i = invertedIndexForGet(target.series, key)
       return target.series[i]
@@ -469,6 +479,10 @@ const invertedSeriesMethods = {
     // this speeds up the pipeline considerably
     return this.series.push(value)
   },
+  shift: function() {
+    // luckily this is fast too.
+    return this.series.pop()
+  },
   // sacrificing a lot of speed here
   slice: function() {
     // this slows scan down but it's only batch ops that scan right now.
@@ -479,6 +493,7 @@ const invertedSeriesMethods = {
     // only the batch ops use this, and it'll be max 1000 candles, so no biggy.
     return this.series.unshift(value)
   },
+  // aka toJSON
   toArray: function() {
     const reverse = this.series.reduce((m, a) => {
       m.unshift(a)
@@ -514,6 +529,20 @@ function isInvertedSeries(is) {
   return (keys.length === 5) && keys[0] === 'series'
 }
 
+function _flatten(imd) {
+  let candles = []
+  const keys = Object.keys(imd)
+  const length = imd.timestamp.length
+  for (let i = 0; i < length; i++) {
+    let candle = {}
+    keys.forEach((k) => {
+      candle[k] = imd[k][length - 1 - i]
+    })
+    candles.push(candle)
+  }
+  return candles
+}
+
 module.exports = {
   loadCandles,
   marketDataFromCandles,
@@ -532,7 +561,8 @@ module.exports = {
   isInvertedSeries,
   _previousMd,
   _previousImd,
-  _goBack
+  _goBack,
+  _flatten
 };
 
 /*

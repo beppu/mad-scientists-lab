@@ -66,7 +66,7 @@ test('EMA stream calculations should be consistent with EMA batch calculations w
   // batch and stream should have the same values
   //console.warn(invertedMarketData[key], imd[key].toArray())
   //console.warn(invertedMarketData[key])
-  expect(invertedMarketData[key]).toEqual(imd[key].toArray())
+  expect(invertedMarketData[key]).toEqual(imd[key])
 })
 
 test('EMA stream update calculations should be correct and not corrupt the calculations', () => {

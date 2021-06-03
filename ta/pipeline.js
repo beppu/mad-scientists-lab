@@ -1,3 +1,4 @@
+const assert     = require('assert')
 const Bluebird   = require('bluebird')
 const fs         = Bluebird.promisifyAll(require('fs'))
 const kindOf     = require('kind-of')
@@ -59,7 +60,10 @@ function _cleanCandleFilenames(filenames, start) {
 }
 
 /**
- * Return an iterator function that returns the next candle
+ * Return an iterator function that returns the next candle.
+ * GOTCHA:  The first candle is often earlier than the given start time.
+ *          The first candle is the first candle in the file that contains the candle
+ *          nearest to the given start time.
  * @param {String} dataDir - directory where OHLCV candlestick data is organized
  * @param {String} exchange - exchange name
  * @param {String} market - market symbol
@@ -218,9 +222,10 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
   })
   const baseImd = state[`imd${baseTimeframe}`]
 
-  return function mainLoop(candle) {
+  return function mainLoop(candle, debug=false) {
     if (baseImd.timestamp[0] && baseImd.timestamp[0] > candle[0]) {
       // refuse to take candles in the past and return state immediately
+      //console.warn(time.iso(candle[0]), candle)
       return state
     }
     timeframes.forEach((tf) => {
@@ -248,14 +253,15 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
       }
 
       const indicatorsKey = `indicators${tf}`
+      //                             0       1       2    3              4
       state[indicatorsKey].forEach(([insert, update, key, previousState, currentState], i) => {
         // insert        => insert function
         // update        => update function
         // key           => name(s) of indicator value(s) in invertedMarketData structure
-        // previousState => ?
-        // currentState  => ? I forgot the distinction between these two.
-        // XXX - I think if I get rid of the hack, I can get rid of key and previousState and let currentState just be 'state'.
+        // previousState => I believe this is the state used to generate the most recent insert
+        // currentState  => I believe this is the state that should eventually be used to generate the next insert
         if (isBoundaryForTf) {
+          if (debug) console.log('insert')
           let k, kind
           if (kindOf(key) === 'array') {
             kind = 'array'
@@ -270,7 +276,7 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
           // like insert can.
           // (What I don't get is the lack of state.  Doesn't the first insert create state?  As long as you insert first, you should be fine.)
           let indicatorState
-          if (imd[k] && imd[k].length === 1) {
+          if (imd[k] && imd[k].length === 1) { // XXX FIND A BETTER WAY!!!!
             // fix the first value
             // -clone and rewind md and imd
             let md2 = ta._previousMd(md)
@@ -297,8 +303,24 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
           // when inserting, use the last updateState to start the new candle
           // however, if we're aggregating, we need to wait until the last partial candle and do a full insertion
           // it would be nice if the very first insertion didn't need a special case.
-          state[indicatorsKey][i][4] = insert(md, imd, indicatorState)
+          if (debug) {
+            console.log('imd.timestamp[0] === candle[0]', imd.timestamp[0] === candle[0])
+            console.log('(currentState && currentState.timestamp == candle[0])', (currentState && currentState.timestamp == candle[0]))
+            console.log('(imd[k] && imd[k].length > 0)', (imd[k] && imd[k].length > 0))
+          }
+          if (imd.timestamp[0] === candle[0] && (currentState && currentState.timestamp == candle[0]) && (imd[k] && imd[k].length > 0)) {
+            if (debug) console.log('I should replace here.', previousState)
+            if (kind === 'array') {
+              key.forEach((name) => imd[name].shift())
+            } else {
+              imd[k].shift()
+            }
+            state[indicatorsKey][i][4] = insert(md, imd, previousState)
+          } else {
+            state[indicatorsKey][i][4] = insert(md, imd, indicatorState)
+          }
         } else {
+          if (debug) console.log('update')
           // when updating, repeatedly use the last known insertState as the base
           // however, i need a special case when we're updating the very first value.
           // - I don't know if the first value can be created with a partial insert and update.
@@ -333,11 +355,24 @@ async function runLoop(loop, nextCandle) {
  * @param {Function} nextCandle - an async function that returns the next candle
  * @returns {Object} report on findings
  */
-async function validateCandles(timeframe, nextCandle) {
+async function validateNextCandles(timeframe, nextCandle) {
   const findings = {}
   // TODO - This is a data sanitation check that would be nice to have, but I could probably get away
   // with not checking this.
   return findings
+}
+
+/**
+ * Aggregate an array of candles.
+ * @param {String} timeframe - timeframe to convert candles to
+ * @param {Array<Array<Number>>} candles - an array of candles in a smaller timeframe that the given timeframe
+ * @returns {Array<Array<Number>>} an aggregated array of candles
+ */
+function aggregateCandles(timeframe, candles) {
+  // TODO Expose aggregatorFn in a functional and easy-to-use way.
+  // It's useful for debugging in the REPL.
+  const results = []
+  return results
 }
 
 // What's a nice API for declaring that I want stuff calculdated on various timeframes
@@ -383,7 +418,9 @@ module.exports = {
   mergeCandle,
   aggregatorFn,
   mainLoopFn,
-  runLoop
+  runLoop,
+  validateNextCandles,
+  aggregateCandles
 }
 
 /*

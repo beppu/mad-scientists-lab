@@ -361,6 +361,9 @@ test("stop market orders should be able to open positions", async () => {
   expect(state.balance).toBe(balance - orders[0].price * orders[0].quantity)
 })
 
+// TODO Redo how edits work in the simulator
+// - type 'modify' goes away.  type has to mean order-type
+// - I may have to make the simulator auto-assign order_ids
 test("unexecuted orders should be editable", async () => {
   const balance = 100000
   const sx = simulator.create({ balance })

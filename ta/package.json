@@ -7,7 +7,7 @@
   "dependencies": {
     "@rauschma/stringio": "^1.4.0",
     "bluebird": "^3.5.5",
-    "bybit": "^1.0.5",
+    "bybit-api": "^1.3.2",
     "cache-all": "^2.0.4",
     "ccxt": "^1.24.89",
     "clone": "^2.1.2",
@@ -61,6 +61,7 @@
     "test": "jest"
   },
   "devDependencies": {
-    "jest": "^25.1.0"
+    "jest": "^25.1.0",
+    "pino-pretty": "^4.7.1"
   }
 }
