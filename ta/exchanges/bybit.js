@@ -15,7 +15,7 @@ class BybitDriver {
    * @param {boolean} opts.livenet true to use real exchange, false to use testnet exchange.
    */
   constructor(opts) {
-    this.exchangeState = {}
+    this.exchangeState = { orders: {}, stopOrders: {} }
     this.client = new RestClient(opts.key, opts.secret, opts.livenet)
     this.opts = opts
     this.handlers = {}
@@ -25,42 +25,47 @@ class BybitDriver {
    * Establish an authenticated websocket connection and setup handlers
    * @param {String} market price data requested
    * @param {Object<String,Function>} handlers
-   * @param {Function} handlers.update candle data streams to the update event
-   * @param {Function} handlers.response exchange event info streams to the response event
+   * @param {Function} handlers.candle candle data streams to the update event
+   * @param {Function} handlers.execution exchange event info streams to the response event
    */
   async connect(market, handlers) {
-    this.handlers.onCandle = handlers.onCandle
-    this.handlers.onExecution = handlers.onExecution
+    this.handlers.candle = handlers.candle
+    this.handlers.execution = handlers.execution
     const events = ['open', 'reconnected', 'update', 'response', 'close', 'reconnect', 'error']
     this.market = market.replace(/\//, '')
     this.ws = new WebsocketClient({ key: this.opts.key, secret: this.opts.secret, livenet: this.opts.livenet }, utils.nullLogger)
-    /*
-     * Price needs to be communicated back to the live.Trader (or live.Tester).
-     * Order execution needs to be communicated back.
-     *   'update' topic covers the above cases
-     * Does disconnection and reconnection need to be communicated back?
-     *   'close'
-     *   'reconnected'
-     */
+    // Raw event handlers that come straight from the exchange
     events.forEach((ev) => {
       if (handlers[ev]) {
         this.ws.on(ev, handlers[ev].bind(this))
       }
     })
+    // Standardized/Simplified Events
+    this.ws.on('update', this.handleUpdate.bind(this))
     this.subscribeCandles(market)
     if (this.opts.key && this.opts.secret) {
       this.subscribePrivate()
     }
   }
 
+  /**
+   * Subscribe to price updates that will be reported back on the update event.
+   * @param {String} market - market to subscribe to in $COIN/$BASE_CURRENCY format (with the slash)
+   */
   subscribeCandles(market) {
     const mkt = market.replace(/\//, '')
     const channel = `klineV2.1.${mkt}`
     this.ws.subscribe(channel)
   }
 
+  /**
+   * Subscribe to all private channels
+   * - position:   current position report
+   * - execution:  order fills and cancellations
+   * - order:      when a limit order is accepted or rejected
+   * - stop_order: when a stop order is accepted or rejected
+   */
   subscribePrivate() {
-    // test commit
     this.ws.subscribe(['position', 'execution', 'order', 'stop_order'])
   }
 
@@ -181,15 +186,15 @@ class BybitDriver {
     }
     switch (type) {
       case 'candle':
-        if (this.handlers.onCandle) {
+        if (this.handlers.candle) {
           const candles = update.data
-          this.handlers.onCandle(candles)
+          this.handlers.candle(candles)
         }
         break;
       case 'execution':
-        if (this.handlers.onExecution) {
-          const events = this.transformExchangeEvents(update.data)
-          this.handlers.onExecution(events)
+        if (this.handlers.execution) {
+          const events = this.transformExchangeEvents(update)
+          this.handlers.execution(events)
         }
         break;
       default:
@@ -198,10 +203,77 @@ class BybitDriver {
 
   /**
    * Transform bybit exchange events into simplified ta exchange events that strategies can consume.
-   * @param {Array<Object>} data  - an array of exchange events
+   * @param {Object} ev - an object that came from the WebSocket's update topic
+   * @param {String} ev.topic - the private topic that the event was emitted on
+   * @param {Array<Object>} ev.data - the data from the event
    * @return {Array<Object>} - an array of simplified exchange events
    */
-  transformExchangeEvents(events) {
+  transformExchangeEvents(ev) {
+    // TODO - This is the most important function for me to write.
+    // TODO - This function also needs to be tested.
+
+    switch (ev.topic) {
+    case 'position':
+      return ev.data.map((p) => {
+        let position = {
+          symbol:    p.symbol,
+          side:      p.side,
+          entry:     p.entry_price,
+          value:     p.position_value,
+          balance:   p.wallet_balance,
+          available: p.available_balance,
+          _:         p // save the original in _
+        }
+        return position
+      })
+      break
+    case 'order':
+      // Here, the exchange will let you whether it accepted or rejected a request.  ack/nack.
+      // You can also find the exchange-assigned order_id here.
+      // My simulator doesn't do anything with this, but it should.
+      const orderAcks = [] // TODO - order creation/rejection should be communicated
+      ev.data.forEach((o) => {
+        this.exchangeState.order[o.id] = o
+      })
+      return orderAcks
+      break
+    case 'stop_order':
+      // Similar to order, but for conditional orders.
+      const stopOrderAcks = [] // TODO - order creation/rejection should be communicated
+      ev.data.forEach((so) => {
+        this.exchangeState.stopOrder[so.id] = so
+      })
+      return stopOrderAcks
+      break
+    case 'execution':
+      // When an order is filled or executed, the `execution` topic is where it's communicated.
+      // This is the only part that strategies want so far, but they should want the other things too for completeness.
+      // I may have to redo some strategies and parts of the simulator to bring this more in line with how bybit works.
+      return ev.data.map((e) => {
+        let type, order
+        if (this.exchangeState.order[e.order_id]) {
+          order = this.exchangeState.order[e.order_id]
+          type = order.order_type.toLowerCase()
+        }
+        if (this.exchangeState.stopOrder[e.order_id]) {
+          order = this.exchangeState.stopOrder[e.order_id]
+          type = `stop-${order.order_type.toLowerCase()}` // almost always 'stop-market' in my case
+        }
+        const exec = {
+          type,
+          _id:      e.order_id,
+          status:   'filled',
+          action:   e.side.toLowerCase(),
+          quantity: e.exec_qty,
+          price:    e.price,
+          _:        e
+        }
+        if (e.order_link_id) exec.id = e.order_link_id
+        return exec
+      })
+      break
+    }
+    // It should never get here.
     return []
   }
 }
@@ -221,10 +293,9 @@ const fees = {
 
 module.exports = {
   limits,
-  fees
+  fees,
+  Driver: BybitDriver
 }
-
-module.exports.Driver = BybitDriver
 
 /*
   // OLD
