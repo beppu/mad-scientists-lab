@@ -19,6 +19,10 @@ function iso(ms) {
   return dt(ms).toISO()
 }
 
+function isoUTC(ms) {
+  return dt(ms).setZone('UTC').toISO()
+}
+
 function timeframeToMinutes(timeframe) {
   const match  = timeframe.match(/(\d+)(\w+)/);
   if (!match) {
@@ -93,6 +97,7 @@ function isTimeframeBoundary(timeframe, time) {
 module.exports = {
   dt,
   iso,
+  isoUTC,
   timeframeToMinutes,
   timeframeToMilliseconds,
   timestampForTimeframe,
