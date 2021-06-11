@@ -25,10 +25,11 @@ function writeCandles(imd, outputStream, begin, end=0) {
   const keys = Object.keys(imd)
   const realBegin = begin ? begin : findFullKeysIndex(imd)
   // header
-  outputStream.write(`# ${keys.join(",")}\n`)
+  outputStream.write(`# ${keys.map((key, index) => `${index+1}:${key}`).join(', ')}\n`)
+  // data
   let i = realBegin
   while (i >= end) {
-    console.log({i}, imd.timestamp[i])
+    //console.log({i}, imd.timestamp[i])
     keys.forEach((k) => {
       if (k === 'timestamp') {
         const ts = time.isoUTC(imd.timestamp[i]).replace(/\.000Z/, '')
