@@ -39,7 +39,7 @@ function timeframeToMinutes(timeframe) {
   case 'd':
     return 24 * 60 * n;
   case 'w':
-    return 24 * 60 * 7 * n;
+    return 24 * 60 * 7 * n; // FIXME - I have a feeling this might not be accurate enough.
   }
   throw new Error(`Unsupported timeframe: '${timeframe}'`);
 }
@@ -89,6 +89,8 @@ function isTimeframeBoundary(timeframe, time) {
     break;
   case 'd':
     if (utc.minute === 0 && utc.hour === 0 && dayOfYear % n === 0) return true;
+    break;
+  case 'w': // TODO - Implement weekly boundary
     break;
   }
   return false;
