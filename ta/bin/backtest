@@ -79,6 +79,53 @@ function calculateEquity(exchangeState, price) {
   }
 }
 
+let firstTimeInteractive = true
+async function interactiveLoop({marketState, exchangeState, strategyState, orders, executedOrders, candle}) {
+  if (breakpointExists({marketState, exchangeState, strategyState, orders, executedOrders})) {
+    if (firstTimeInteractive) {
+      console.log('Press "h" for help.')
+      firstTimeInteractive = false
+    }
+    prompt()
+    let key = await interactive.keyPress()
+    while (key.name !== 'n') { // n for next
+      if (key.name === 'q') {
+        process.exit(0)
+      }
+      if (key.name === 'e') {
+        console.log(calculateEquity(exchangeState, candle[4]))
+      }
+      if (key.name === 'x') {
+        console.log(exchangeState)
+      }
+      if (key.name === 's') {
+        console.log(strategyState)
+      }
+      if (key.name === 'm') {
+        console.log(`close: ${candle[4]} // marketState dumped to ...nothing yet`)
+        global._m = marketState
+      }
+      if (key.name === 'o') {
+        console.log({ orders, executedOrders })
+      }
+      if (key.name === 'h') {
+        console.log(`
+              h help
+              n next (continue backtesting)
+              q quit (stop backtesting)
+              e equity
+              x exchangeState
+              s strategyState
+              m marketState (but really current close)
+              o orders and executedOrders
+              `)
+      }
+      prompt()
+      key = await interactive.keyPress()
+    }
+  }
+}
+
 async function main() {
   const program   = new commander.Command();
   program
@@ -135,6 +182,9 @@ async function main() {
      *   + files are assumed to be in numeric order and without gaps
      * The analysis state should change as new data comes in.
      * Based on the analysis state, orders should be placed by the strategy when appropriate.
+     * The exchange simulator should execute those orders.
+     * - Exchange events like order creation and order execution should be reported back to the strategy.
+     * - Order rejection and order cancellation should also be reported back.
      */
 
     // Let's feel this out.
@@ -217,13 +267,20 @@ async function main() {
 
     while (candle && !end) {
 
-      // This is the heart of the analysis pipeline.
-      // - Calculate marketState using the latest candle.
-      // - Inform the strategy of the latest marketState and executedOrders.
-      // - Receive a new strategyState and a new list of orders.
-      // - Give the orders to the simulated exchange.
-      // - Receive a new exchangeState and a new list of executedOrders.
-      // - Load the next candle and repeat until and end condition is met.
+      /*
+        This is the heart of the analysis pipeline.
+        - Calculate marketState using the latest candle.
+        - Inform the strategy of the latest marketState and executedOrders.
+        - Receive a new strategyState and a new list of orders.
+        - Give the orders to the simulated exchange.
+        - Receive a new exchangeState and a new list of executedOrders.
+        - Load the next candle and repeat until and end condition is met.
+
+        // With the noise removed, the heart of the loop looks like this:
+        marketState = iterate(candle)
+        ;[strategyState, orders] = strategy(strategyState, marketState, executedOrders)
+        ;[exchangeState, executedOrders] = await exchange(orders, exchangeState, candle)
+      */
       if (startProcessing) {
         marketState = iterate(candle)
       }
@@ -248,6 +305,7 @@ async function main() {
           console.log(time.dt(candle[0]).toISO(), `close:${close} direction:${positionDirection} size:${positionSize} entry:${entry} equity:${equity}`)
         }
       }
+      // This if-block is the heart. Strategy and exchange processing happen here.
       if (begin) {
         ;[strategyState, orders] = strategy(strategyState, marketState, executedOrders)
         if (program.verbose && orders && orders.length) {
@@ -278,7 +336,6 @@ async function main() {
         })
       }
       candle = await nextCandle()
-
       // Check candle[0] for begin and end conditions
       if (candle) {
         let timestamp = time.dt(candle[0])
@@ -308,35 +365,7 @@ async function main() {
         }
       }
       if (program.interactive) {
-        if (breakpointExists({marketState, exchangeState, strategyState, orders, executedOrders})) {
-          prompt()
-          let key = await interactive.keyPress()
-          while (key.name !== 'n') { // n for next
-            if (key.name === 'q') {
-              process.exit(0)
-            }
-            if (key.name === 'e') {
-              console.log(calculateEquity(exchangeState, candle[4]))
-            }
-            if (key.name === 'x') {
-              console.log(exchangeState)
-            }
-            if (key.name === 's') {
-              console.log(strategyState)
-            }
-            if (key.name === 'm') {
-              console.log(candle[4]) // TODO partial marketState
-            }
-            if (key.name === 'k') {
-              console.log(Object.keys(marketState))
-            }
-            if (key.name === 'o') {
-              console.log({ orders, executedOrders })
-            }
-            prompt()
-            key = await interactive.keyPress()
-          }
-        }
+        await interactiveLoop({marketState, exchangeState, strategyState, orders, executedOrders, candle});
       }
     }
 
