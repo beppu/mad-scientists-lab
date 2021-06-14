@@ -209,9 +209,6 @@ class BybitDriver {
    * @return {Array<Object>} - an array of simplified exchange events
    */
   transformExchangeEvents(ev) {
-    // TODO - This is the most important function for me to write.
-    // TODO - This function also needs to be tested.
-
     switch (ev.topic) {
     case 'position':
       return ev.data.map((p) => {
@@ -231,32 +228,48 @@ class BybitDriver {
       // Here, the exchange will let you whether it accepted or rejected a request.  ack/nack.
       // You can also find the exchange-assigned order_id here.
       // My simulator doesn't do anything with this, but it should.
-      const orderAcks = [] // TODO - order creation/rejection should be communicated
+      const orderAcks = []
       ev.data.forEach((o) => {
-        this.exchangeState.order[o.id] = o
+        this.exchangeState.orders[o.order_id] = o
+        orderAcks.push({
+          type:     o.order_type.toLowerCase(),
+          action:   o.side.toLowerCase(),
+          quantity: o.qty,
+          status:   'created',    // TODO or 'rejected'
+          _id:      o.order_id    // send back the exchange generated order_id
+        })
       })
       return orderAcks
       break
     case 'stop_order':
       // Similar to order, but for conditional orders.
-      const stopOrderAcks = [] // TODO - order creation/rejection should be communicated
+      const stopOrderAcks = []
       ev.data.forEach((so) => {
-        this.exchangeState.stopOrder[so.id] = so
+        this.exchangeState.stopOrders[so.order_id] = so
+        stopOrderAcks.push({
+          type:     `stop-${so.order_type.toLowerCase()}`,
+          action:   so.side.toLowerCase(),
+          quantity: so.qty,
+          status:   'created',    // TODO or 'rejected'
+          _id:      so.order_id   // send back the exchange generated order_id
+        })
       })
       return stopOrderAcks
       break
     case 'execution':
       // When an order is filled or executed, the `execution` topic is where it's communicated.
-      // This is the only part that strategies want so far, but they should want the other things too for completeness.
-      // I may have to redo some strategies and parts of the simulator to bring this more in line with how bybit works.
+      // This is the only part that strategies want so far, but they should want the
+      // other things too for completeness.
+      // I may have to redo some strategies and parts of the simulator to bring this more in line
+      // with how bybit works.
       return ev.data.map((e) => {
         let type, order
-        if (this.exchangeState.order[e.order_id]) {
-          order = this.exchangeState.order[e.order_id]
+        if (this.exchangeState.orders[e.order_id]) {
+          order = this.exchangeState.orders[e.order_id]
           type = order.order_type.toLowerCase()
         }
-        if (this.exchangeState.stopOrder[e.order_id]) {
-          order = this.exchangeState.stopOrder[e.order_id]
+        if (this.exchangeState.stopOrders[e.order_id]) {
+          order = this.exchangeState.stopOrders[e.order_id]
           type = `stop-${order.order_type.toLowerCase()}` // almost always 'stop-market' in my case
         }
         const exec = {
