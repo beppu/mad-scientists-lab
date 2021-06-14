@@ -54,7 +54,7 @@ class Trader {
     this.strategyState = undefined
     this.orders = undefined
     this.executedOrders = undefined
-    this.initializeTradeExecutor()
+    this.initializeExchangeDriver()
     this.initializeActivityLogger()
     this.announceSelf()
   }
@@ -96,9 +96,10 @@ class Trader {
     )
   }
 
-  initializeTradeExecutor() {
-    const options = Object.assign({ }, this.exchangeOptions || {})
-    this.executor = this.exchange.create(options)
+  initializeExchangeDriver() {
+    // Get websockets started in the background so switching can be seemless later.
+    const {key, secret, livenet} = this.opts.options
+    this.driver = new this.exchange.Driver({ key, secret, livenet })
   }
 
   initializeActivityLogger() {
@@ -116,6 +117,7 @@ class Trader {
 
   async sanityCheck() {
     // TODO - Make sure we have some data in the FS first
+    // Maybe this should go in pipeline.js if it ever gets written.
     return true
   }
 
@@ -129,7 +131,7 @@ class Trader {
   async warmUp(since) {
     this.activityLogger.info({ message: 'warming up' })
     await this.sanityCheck()
-    console.log('since', since.toISO())
+    //console.log('since', since.toISO())
     this.initializeStrategyAndPipeline(since)
     // This is the same for both.
     // Load candles from the filesystem until we can't.
@@ -140,30 +142,19 @@ class Trader {
       candle = await nextCandle()
     }
 
-    // Get websockets started in the background so switching can be seemless later.
-    // XXX - redo websockets
-    /*
-    const [ws, events] = this.exchange.connect(undefined) // XXX undefined should be an API key
-    this.ws = ws
-    this.events = events
-    this.pingInterval = this.exchange.pingAtInterval(ws, 30000)
-    this.candleChannel = await this.exchange.subscribeCandles(this.ws, this.opts.market)
-    */
-    const {key, secret, livenet} = this.opts.options
-    this.driver = new this.exchange.Driver({ key, secret, livenet })
-
     // Load from memory one last time if necessary.
     /*
       Loading up 1m candles from the beginning of an exchange's trading history can
       take considerably longer than 1m.  Furthermore, I don't have any guarantee that
       the FS has enough data downloaded.
 
+      (Many months later, I realized that I don't have to start from the beginning of exchange history.)
+
       Once I get to the end of what the FS has, I have to fill the gap in time from
       the end of the FS to the current minute, and for ByBit, it can't be more than
       200 minutes.  For BitMEX, it can't be more than 1000 minutes.
      */
     let lastTimestamp = this.marketState.imd1m.timestamp[0]
-    console.log('lastTimestamp', lastTimestamp, time.iso(lastTimestamp))
     let limit = this.exchange.limits.maxCandles || 200
     let candles = await ta.loadCandles(this.opts.exchange, this.opts.market, this.baseTimeframe, lastTimestamp, limit)
     let z = candles.length - 1
@@ -171,7 +162,6 @@ class Trader {
       DONE - give ta.loadCandles a limit parameter
       DONE - store exchange limits in exchanges/$exchange.js
      */
-    // TODO - so far so good, hmmm, try using activityLogger to log various parts of imd1m.
     candles.forEach((c) => this.marketState = this.mainLoop(c))
     this.isWarmedUp = true
   }
@@ -186,6 +176,7 @@ class Trader {
     console.log('lastTimestamp', lastTimestamp, time.iso(lastTimestamp))
     let limit = this.exchange.limits.maxCandles || 200
     let candles = await ta.loadCandles(this.opts.exchange, this.opts.market, this.baseTimeframe, lastTimestamp, limit)
+    // TODO This doesn't handle the case where we need more than `limit` candles to catch up.
     candles.forEach((c) => this.marketState = this.mainLoop(c))
     this.isWarmedUp = true
   }
@@ -200,13 +191,17 @@ class Trader {
       this.activityLogger.info({ message: 'switching to realtime' })
       const res = await this.driver.connect(this.opts.market, {
         // onCandle
-        update: (message) => {
-          const candles = (message.data)
-            ? message.data.map((d) => [ d.start * 1000, d.open, d.high, d.low, d.close, d.volume ])
-            : []
+        candle: (data) => {
+          const candles = data.map((d) => [ d.start * 1000, d.open, d.high, d.low, d.close, d.volume ])
           this.iterate(candles)
         },
         // onExecution
+        execution: (data) => {
+          if (this.isStarted) {
+            this.iterateExchangeEvents(data) // On the simulator, this will never happen, and that's OK.
+          }
+        },
+        // response to websocket commands like subscribe
         response: (message) => {
           // What does this even look like?
           console.log('response', message)
@@ -219,29 +214,68 @@ class Trader {
   }
 
   /**
-   * Start the strategy
+   * Handle new candles
+   * @param {Type of candles} candles - Parameter description.
+   * @returns {Return Type} Return description.
    */
-  async start() {
-    // Not sure if this will be the same or not.
+  async iterate(candles) {
+    // This is not async and I think this is where I'm going to differentiate
+    // between live testing and live trading.
+    Promise.each(candles, async (c) => {
+      this.marketState = this.mainLoop(c)
+      // give marketState to strategy
+      let xo = []
+      let [strategyState, orders] = this.strategy(this.strategyState, this.marketState, xo)
+      this.strategyState = strategyState
+      if (orders) {
+        let _orders = orders.map((o) => { o.symbol = this.symbol; return o })
+        let res = await this.driver.execute(_orders);
+      }
+    })
   }
 
-  async stop() {
-    // Note that stopping a strategy doesn't mean that candle consumption is stopped.
-    // It only means that strategy execution is stopped.
-    // That should keep going until the trader instance is no longer being used.
+  /**
+   * Feed executedOrders into the strategy.
+   * They will typically come back from the websocket.
+   * This is unique to the Trader.  The simulator doesn't do this.
+   * @param {Type of executedOrders} executedOrders - Parameter description.
+   */
+  async iterateExchangeEvents(exchangeEvents) {
+    let [strategyState, orders] = this.strategy(this.strategyState, this.marketState, exchangeEvents)
+    this.strategyState = strategyState
+    if (orders) {
+      let _orders = orders.map((o) => { o.symbol = this.symbol; return o })
+      let res = await this.driver.execute(_orders);
+    }
   }
 
-  async reset() {
-    // Reset the strategy to its initial state.
-  }
-
+  /**
+   * Start the strategy
+   * @param {DateTime} since - datetime to start marketData calculation
+   */
   async go(since) {
     // TODO Use a default since that goes back far enough to get 1000 candles for the largest requested timeframe.
     await this.warmUp(since)
     await this.switchToRealtime()
-    await this.start()
+    this.start()
   }
 
+  start() {
+    this.isStarted = true
+  }
+
+  stop() {
+    this.isStarted = false
+  }
+
+  // FLUFF -----------------------------
+
+  /**
+   * Return the lastCandle for the current strategy's baseTimeframe
+   * @param {String} _tf - (optional) timeframe
+   * @param {Number} _n - (optional) index into imd (default: 0)
+   * @returns {Array<Number} the last candle
+   */
   lastCandle(_tf, _n) {
     const tf = _tf || this.baseTimeframe
     const imd = this.marketState[`imd${tf}`]
@@ -252,38 +286,21 @@ class Trader {
       imd.high[n],
       imd.low[n],
       imd.close[n],
-      imd.volume[n],
+      imd.volume[n]
     ]
     return candle
   }
 
-  async iterate(candles) {
-    // This is not async and I think this is where I'm going to differentiate
-    // between live testing and live trading.
-    Promise.each(candles, async (c) => {
-      this.marketState = this.mainLoop(c)
-      // give marketState to strategy
-      let xo = clone(this.executedOrders)
-      let [strategyState, orders] = this.strategy(this.strategyState, this.marketState, xo)
-      this.strategyState = strategyState
-      this.orders = orders.map((o) => { o.symbol = this.symbol; return o })
-      this.executedOrders = undefined;
-      // give orders to tradeExecutor
-      let [exchangeState, executedOrders] = await this.executor(orders);
-      this.exchangeState = exchangeState
-      // this.executedOrders = executedOrders
-      // XXX - I just realized that a real exchange can return executedOrders at any time.
-    })
+  /**
+   * An alias for lastCandle
+   * @param {String} _tf - (optional) timeframe
+   * @param {Number} _n - (optional) index into imd
+   * @returns {Array<Number} the last candle
+   */
+  l(_tf, _n) {
+    return this.lastCandle(_tf, _n)
   }
 
-  /**
-   * Feed executedOrders into the strategy.
-   * They will typically come back from the websocket.
-   * This is unique to the Trader.  The simulator doesn't do this.
-   * @param {Type of executedOrders} executedOrders - Parameter description.
-   */
-  async iterateExecutedOrders(executedOrders) {
-  }
 }
 
 /*
@@ -301,13 +318,14 @@ class Simulator extends Trader {
     return 'Simulator'
   }
 
-  initializeTradeExecutor() {
-    const options = Object.assign({ balance: 100000 }, this.exchangeOptions || {})
-    this.executor = exchanges.simulator.create(options)
+  initializeExchangeDriver() {
+    const options = Object.assign({ balance: 100000 }, this.exchangeOptions || {}) // this looks wrong under the new regime
+    this.executor = exchanges.simulator.create(options) // This is the old style of exchange initialization.
   }
 
-  // Is iteration the same?
-  // Almost, but not quite.  The tradeExecutor is synchronous during simulation but async in live trading.
+  // Is iteration the same in Trader vs Simulator?  No.
+  // Trade execution is synchronous during simulation but async in live trading.
+  // The simulator can do everything in one function.
   iterate(candles) {
     // This is not async and I think this is where I'm going to differentiate
     // between live testing and live trading.
@@ -319,9 +337,9 @@ class Simulator extends Trader {
       this.strategyState = strategyState
       this.orders = orders
       this.executedOrders = undefined;
-      // give orders to tradeExecutor
+      // give orders to exchange simulator to execute
       let candle = this.lastCandle()
-      let [exchangeState, executedOrders] = await this.executor(orders, this.exchangeState, candle);
+      let [exchangeState, executedOrders] = await this.executor(orders, this.exchangeState, candle); // this.executor in simulator vs this.driver.execute in trader
       this.exchangeState = exchangeState
       this.executedOrders = executedOrders
       executedOrders.forEach((o) => {
@@ -338,7 +356,6 @@ class Simulator extends Trader {
         line.fee$ = line.fee * o.fillPrice
         this.orderLogger.info(line)
       })
-      // XXX - I just realized that a real exchange can return executedOrders at any time.
     })
   }
 }
