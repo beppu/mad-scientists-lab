@@ -14,5 +14,10 @@
     "balance": 100000,
     "sizeMode": "spot",
     "fixedPositionSize": 3.25
+  }],
+  "ha1d": ["HeikinAshi", {
+    "trendTf": "1d",
+    "balance": 5000000,
+    "fixedPositionSize": 5.00
   }]
 }

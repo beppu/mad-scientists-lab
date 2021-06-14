@@ -17,7 +17,7 @@ const defaultConfig = {
 }
 
 function configSlug(config) {
-  return 'ha'
+  return `${config.trendTf}`
 }
 
 function haColor(imd, i=0) {

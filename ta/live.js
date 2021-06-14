@@ -411,7 +411,7 @@ module.exports = {
    How do I use this thing?
 
    // Instantiate a live simulator with a Guppy strategy
-   s = live.simulator.bybit.BTCUSD(...preset.guppy1m10m)
+   s = live.simulator.bybit.BTCUSD(...preset.ha1d)
    since = DateTime.fromISO('2021-03-17')
    s.go(since).then(cl)
 
