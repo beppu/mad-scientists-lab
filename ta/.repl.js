@@ -39,9 +39,10 @@ global.gnuplot    = require('./gnuplot')
 
 global.pnl = global.profitLoss = global.utils.profitLoss
 const ccxt = global.ccxt
-global.bitmex = new ccxt.bitmex()
 global.binance = new ccxt.binance()
+global.bitmex = new ccxt.bitmex()
 global.bybit = new ccxt.bybit()
+global.coinbase = new ccxt.coinbase()
 global.ftx = new ccxt.ftx()
 
 // Where I like to store my temporary results from async functions.
