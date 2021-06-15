@@ -74,7 +74,7 @@ function calculateSize(config, price) {
     return calculateSizeSpot(config.fixedPositionSize)
     break
   case 'contracts':
-    return 0
+    return config.fixedPositionSize
     break
   case 'emulateContracts':
     return calculateSizeEmulateContracts(config.fixedPositionSize, price)
