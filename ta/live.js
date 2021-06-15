@@ -411,21 +411,11 @@ const simulator = {
   }
 }
 
-module.exports.testnet = {
-  bybit: {
-    BTCUSD(strategy, options={}) {
-      options.key = process.env.TA_BYBIT_KEY
-      options.secret = process.env.TA_BYBIT_SECRET
-      options.livenet = false
-      return new Trader({ dataDir: 'data', logDir: LOG_TRADE, exchange: 'bybit', market: 'BTC/USD', strategy, options })
-    }
-  }
-}
-
 module.exports = {
   Trader,
   Simulator,
   mainnet,
+  testnet,
   simulator
 }
 
@@ -439,7 +429,7 @@ module.exports = {
    s.go(since).then(cl)
 
    // Let's try on the testnet
-   s = live.simulator.bybit.BTCUSD(...preset.ha1m_c)
+   s = live.testnet.bybit.BTCUSD(...preset.ha1m_c)
    since = DateTime.fromISO('2021-05-31')
    s.go(since).then(cl)
 
