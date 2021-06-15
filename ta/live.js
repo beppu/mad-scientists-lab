@@ -231,6 +231,7 @@ class Trader {
       this.strategyState = strategyState
       if (orders) {
         let _orders = orders.map((o) => { o.symbol = this.symbol; return o })
+        console.log('candles', _orders)
         let res = await this.driver.execute(_orders);
       }
     })
@@ -251,6 +252,7 @@ class Trader {
     this.strategyState = strategyState
     if (orders) {
       let _orders = orders.map((o) => { o.symbol = this.symbol; return o })
+      console.log('ee', _orders)
       let res = await this.driver.execute(_orders);
     }
   }
@@ -371,14 +373,14 @@ class Simulator extends Trader {
 const mainnet = {
   bybit: {
     BTCUSD(strategy, options={}) {
-      options.key = process.env.TA_BYBIT_KEY
-      options.secret = process.env.TA_BYBIT_SECRET
+      options.key = process.env.TA_BYBIT_API_KEY
+      options.secret = process.env.TA_BYBIT_API_SECRET
       options.livenet = true
       return new Trader({ dataDir: 'data', logDir: LOG_TRADE, exchange: 'bybit', market: 'BTC/USD', strategy, options })
     },
     ETHUSD(strategy, options={}) {
-      options.key = process.env.TA_BYBIT_KEY
-      options.secret = process.env.TA_BYBIT_SECRET
+      options.key = process.env.TA_BYBIT_API_KEY
+      options.secret = process.env.TA_BYBIT_API_SECRET
       options.livenet = true
       return new Trader({ dataDir: 'data', logDir: LOG_TRADE, exchange: 'bybit', market: 'ETH/USD', strategy, options })
     }
@@ -388,8 +390,8 @@ const mainnet = {
 const testnet = {
   bybit: {
     BTCUSD(strategy, options={}) {
-      options.key = process.env.TA_BYBIT_KEY
-      options.secret = process.env.TA_BYBIT_SECRET
+      options.key = process.env.TA_BYBIT_API_KEY
+      options.secret = process.env.TA_BYBIT_API_SECRET
       options.livenet = false
       return new Trader({ dataDir: 'data', logDir: LOG_TRADE, exchange: 'bybit', market: 'BTC/USD', strategy, options })
     }
