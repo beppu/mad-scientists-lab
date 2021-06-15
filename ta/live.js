@@ -28,6 +28,8 @@ const {DateTime} = luxon
 const LOG_LIVETEST = process.env.TA_LOG_LIVETEST || './log/livetest'
 const LOG_TRADE    = process.env.TA_LOG_TRADE || './log/trade'
 
+// TODO I need to factor this out and give it the ability to load strategies from arbitrary paths
+// Maybe move this to index.js while I'm at it.  (It's that necessary to the system.)
 function findStrategy(name) {
   if (strategies[name]) return strategies[name]
   if (research[name]) return research[name]
@@ -241,6 +243,10 @@ class Trader {
    * @param {Type of executedOrders} executedOrders - Parameter description.
    */
   async iterateExchangeEvents(exchangeEvents) {
+    console.log('exchange events', exchangeEvents)
+    exchangeEvents.filter((ev) => ev.type === 'position').forEach((ev) => {
+      this.exchangeState = ev
+    })
     let [strategyState, orders] = this.strategy(this.strategyState, this.marketState, exchangeEvents)
     this.strategyState = strategyState
     if (orders) {
@@ -312,15 +318,16 @@ class Trader {
 class Simulator extends Trader {
   constructor(opts) {
     super(opts)
+    this.orderLog = []
+    this.initializeExecutor(opts.balance || 500000)
   }
 
   name() {
     return 'Simulator'
   }
 
-  initializeExchangeDriver() {
-    const options = Object.assign({ balance: 100000 }, this.exchangeOptions || {}) // this looks wrong under the new regime
-    this.executor = exchanges.simulator.create(options) // This is the old style of exchange initialization.
+  initializeExecutor(balance) {
+    this.executor = exchanges.simulator.create({balance}) // This is the old style of exchange initialization.
   }
 
   // Is iteration the same in Trader vs Simulator?  No.
@@ -354,6 +361,7 @@ class Simulator extends Trader {
           fee: utils.tradingFee(rate, (o.quantity * o.fillPrice), o.fillPrice)
         }
         line.fee$ = line.fee * o.fillPrice
+        console.log('xo', line)
         this.orderLogger.info(line)
       })
     })
@@ -420,16 +428,19 @@ module.exports = {
   mainnet,
   simulator
 }
-// DONE trade and test should be deprecated.
-// DONE Tester should also be renamed Simulator.
 
-/**
+/*
 
    How do I use this thing?
 
-   // Instantiate a live simulator with a Guppy strategy
-   s = live.simulator.bybit.BTCUSD(...preset.ha1d)
+   // Instantiate a live simulator with a HeikinAshi strategy using 1m candles (for testing)
+   s = live.simulator.bybit.BTCUSD(...preset.ha1m)
    since = DateTime.fromISO('2021-03-17')
+   s.go(since).then(cl)
+
+   // Let's try on the testnet
+   s = live.simulator.bybit.BTCUSD(...preset.ha1m_c)
+   since = DateTime.fromISO('2021-05-31')
    s.go(since).then(cl)
 
  */

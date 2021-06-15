@@ -175,7 +175,7 @@ class BybitDriver {
 
   /**
    * Both candles and order execution comes through the `update` topic.
-   * @param {Type of update} update - Parameter description.
+   * @param {Object} update - this is an event from the websocket.
    */
   async handleUpdate(update) {
     let type
@@ -213,6 +213,7 @@ class BybitDriver {
     case 'position':
       return ev.data.map((p) => {
         let position = {
+          type:      'position',
           symbol:    p.symbol,
           side:      p.side,
           entry:     p.entry_price,
