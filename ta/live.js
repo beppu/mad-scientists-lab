@@ -46,6 +46,7 @@ class Trader {
     this.isRealtime = false
     this.exchange = exchanges[exchange]
     this.symbol = market.replace(/\//, '')
+    this.orderLog = []
 
     // Instantiate strategy and get its indicatorSpecs
     const _s = findStrategy(strategy)
@@ -231,7 +232,12 @@ class Trader {
       this.strategyState = strategyState
       if (orders) {
         let _orders = orders.map((o) => { o.symbol = this.symbol; return o })
-        console.log('candles', _orders)
+        if (_orders.length > 0) {
+          _orders.forEach((o) => {
+            this.orderLog.push(o)
+            console.log(o)
+          })
+        }
         let res = await this.driver.execute(_orders);
       }
     })
@@ -248,11 +254,32 @@ class Trader {
     exchangeEvents.filter((ev) => ev.type === 'position').forEach((ev) => {
       this.exchangeState = ev
     })
+    exchangeEvents.filter((ev) => ev.type === 'execution').forEach((ev) => {
+      //const rate = o.type === 'market' ? this.exchange.fees.taker : this.exchange.fees.maker
+      const line = {
+        ts: time.iso(o.timestamp),
+        side: o.action,
+        type: o.type,
+        symbol: this.opts.market,
+        quantity: o.quantity,
+        price: o.fillPrice || o.price,
+        //fee: utils.tradingFee(rate, (o.quantity * o.fillPrice), o.fillPrice)
+      }
+      //line.fee$ = line.fee * o.fillPrice
+      console.log('xo', line)
+      this.orderLogger.info(line)
+    })
     let [strategyState, orders] = this.strategy(this.strategyState, this.marketState, exchangeEvents)
     this.strategyState = strategyState
+    // execute new orders if necessary
     if (orders) {
       let _orders = orders.map((o) => { o.symbol = this.symbol; return o })
-      console.log('ee', _orders)
+      if (_orders.length > 0) {
+        _orders.forEach((o) => {
+          this.orderLog.push(o)
+          console.log(o)
+        })
+      }
       let res = await this.driver.execute(_orders);
     }
   }
@@ -320,7 +347,6 @@ class Trader {
 class Simulator extends Trader {
   constructor(opts) {
     super(opts)
-    this.orderLog = []
     this.initializeExecutor(opts.balance || 500000)
   }
 
