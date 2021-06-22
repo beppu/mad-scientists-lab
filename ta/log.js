@@ -20,21 +20,28 @@ const Lazy = require('lazy.js')
 const mkdirp = require('mkdirp')
 const pino = require('pino')
 const hash = require('object-hash')
+const sprintf = require('sprintf')
 
 const time = require('./time')
 const utils = require('./utils')
 
 /**
  * Return the directory a strategy's executed order logs should go.
+ * @param {DateTime} begin - DateTime where trading begins
+ * @param {DateTime} end - DateTime where trading ends
+ * @param {String} exchange - exchange to trade on
+ * @param {String} market - market to trade
  * @param {String} prefix - base log directory
  * @param {Object} config - strategy config
  * @param {Function} fn - (optional) function that transforms `config` into a path-friendly string
  * @returns {String} Return directory to store order logs
  */
-function executedOrderLogDir(prefix, config, fn) {
+function executedOrderLogDir(begin, end, exchange, market, prefix, config, fn) {
   const slugFn = fn ? fn : hash
   const [strategyName, strategyConfig] = config
-  return `${prefix}/${strategyName}/${slugFn(strategyConfig)}`
+  const _market = market.replace(/\W/g, '')
+  //return `${prefix}/${strategyName}/${slugFn(strategyConfig)}`
+  return `${prefix}/${sprintf('%d%02d%02d', begin.year, begin.month, begin.day)}.${exchange}.${_market}.${strategyName}.${slugFn(strategyConfig)}`
 }
 
 /**
@@ -70,13 +77,15 @@ function fullExecutedOrderLogName(begin, end, prefix, config, fn) {
  * Create a pino logger for a Strategy+config
  * @param {DateTime} begin - DateTime where trading begins
  * @param {DateTime} end - DateTime where trading ends
+ * @param {String} exchange - exchange to trade on
+ * @param {String} market - market to trade
  * @param {String} prefix - base log directory
  * @param {Object} config - strategy config
  * @param {Function} fn - (optional) function that transforms `config` into a path-friendly string
  * @returns {Pino} A pino logger
  */
-function createOrderLogger(begin, end, prefix, config, fn) {
-  const logDir = executedOrderLogDir(prefix, config, fn)
+function createOrderLogger(begin, end, exchange, market, prefix, config, fn) {
+  const logDir = executedOrderLogDir(begin, end, exchange, market, prefix, config, fn)
   mkdirp.sync(logDir)
   const inner = Object.assign({}, config[1])
   delete inner.logger

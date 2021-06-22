@@ -36,6 +36,7 @@ const FEES = {
   taker: 0.00075
 }
 
+// TODO - Add the ability to load strategies from arbitrary paths.
 function lookupStrategy(pr) {
   let strategy
   if (pr.research) {
@@ -143,6 +144,7 @@ async function main() {
     .option('--begin <DATETIME>', 'DateTime to begin the strategy', parseDateTime)
     .option('--end <DATETIME>', 'DateTime to end the strategy', parseDateTime)
     .option('-l, --log <LOG_DIR>', 'Directory to store logs', (id) => id, './log/backtest')
+    .option('-g, --gnuplot', 'Output marketData and orders that can be rendered by gnuplot')
     .option('-i, --interactive', 'Interactive mode')
     .option('-v, --verbose', 'Be verbose')
   program.parse(process.argv)
@@ -221,6 +223,8 @@ async function main() {
     const orderLogger = log.createOrderLogger(
       program.begin,
       program.end,
+      program.exchange,
+      program.market,
       program.log,
       [program.strategy, strategyConfig],
       Strategy.configSlug // this is allowed to be undefined
@@ -286,7 +290,7 @@ async function main() {
       }
       if (program.verbose) {
         if (time.isTimeframeBoundary('1d', time.dt(candle[0]))) {
-          // TODO - I want to show {close,positionDirection,equity,positionSize}
+          // I want to show {close,positionDirection,equity,positionSize}
           let close = candle[4]
           let equity = 0
           let entry = 0
