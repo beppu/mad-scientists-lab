@@ -10,6 +10,7 @@ const zip         = require('lodash.zip')
 const pino        = require('pino')
 const sprintf     = require('sprintf')
 const fs          = require('fs')
+const Bluebird    = require('bluebird')
 const pkg         = require('../package.json')
 const ta          = require('../index')
 const time        = require('../time')
@@ -21,6 +22,7 @@ const research    = require('../research')
 const simulator   = require('../exchanges/simulator')
 const interactive = require('../interactive')
 const log         = require('../log')
+const gnuplot     = require('../gnuplot')
 
 const {DateTime} = luxon
 
@@ -111,15 +113,15 @@ async function interactiveLoop({marketState, exchangeState, strategyState, order
       }
       if (key.name === 'h') {
         console.log(`
-              h help
-              n next (continue backtesting)
-              q quit (stop backtesting)
-              e equity
-              x exchangeState
-              s strategyState
-              m marketState (but really current close)
-              o orders and executedOrders
-              `)
+          h help
+          n next (continue backtesting)
+          q quit (stop backtesting)
+          e equity
+          x exchangeState
+          s strategyState
+          m marketState (but really current close)
+          o orders and executedOrders
+        `)
       }
       prompt()
       key = await interactive.keyPress()
@@ -144,7 +146,7 @@ async function main() {
     .option('--begin <DATETIME>', 'DateTime to begin the strategy', parseDateTime)
     .option('--end <DATETIME>', 'DateTime to end the strategy', parseDateTime)
     .option('-l, --log <LOG_DIR>', 'Directory to store logs', (id) => id, './log/backtest')
-    .option('-g, --gnuplot', 'Output marketData and orders that can be rendered by gnuplot')
+    .option('-g, --gnuplot', 'Output gnuplot data to the log directory')
     .option('-i, --interactive', 'Interactive mode')
     .option('-v, --verbose', 'Be verbose')
   program.parse(process.argv)
@@ -383,13 +385,19 @@ async function main() {
     console.log('Closing DateTime', time.iso(marketState[key].timestamp[0]))
     console.log('Equity', calculateEquity(exchangeState, close))  // XXX If the position is negative, figure out the short profit correctly.
     //console.log(allExecutedOrders)
-    /*
-    const first = marketState.imd1d.timestamp[marketState.imd1d.rsi.length - 1]
-    const timestamps = marketState.imd1d.timestamp.slice(0, marketState.imd1d.rsi.length)
-    const closes = marketState.imd1d.close.slice(0, marketState.imd1d.rsi.length)
-    const info = reverse(zip(timestamps.map(time.iso), closes, marketState.imd1d.rsi.map((r) => 100 - r)))
-    utils.dump(info, `${first}.json`)
-    */
+    //utils.dump(info, `${first}.json`)
+    if (program.gnuplot) {
+      const shouldPlot1m = false
+      const dir = orderLogger.dir
+      //console.log({dir, len1h: marketState.imd1h.timestamp.length, len1d: marketState.imd1d.timestamp.length })
+      const imdKeys = Object.keys(marketState).filter((k) => k.match(/^imd/))
+      await Bluebird.each(imdKeys, async (k) => {
+        if (k === 'imd1m' && !shouldPlot1m) return // skim imd1m for now
+        const tf = k.replace(/imd/, '')
+        const out = fs.createWriteStream(`${dir}/${tf}.data`)
+        await gnuplot.writeImd(marketState[k], out)
+      })
+    }
     process.exit(0)
   }
   catch (err) {
