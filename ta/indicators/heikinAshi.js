@@ -155,8 +155,6 @@ module.exports = function heikinAshiFn() {
   return [heikinAshiInsert, heikinAshiUpdate, ['haOpen', 'haHigh', 'haLow', 'haClose']]
 }
 
-module.exports
-
 /*
 
   md = ta.marketDataFromCandles([])
