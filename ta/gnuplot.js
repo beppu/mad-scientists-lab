@@ -43,7 +43,11 @@ function findOldestIndex(imd) {
  * @param {Number} begin - (optional) index to start writing
  * @param {Number} end - (optional) index to stop writing (default: 0)
  */
-function writeImd(imd, outputStream, begin, end=0) {
+async function writeImd(imd, outputStream, begin, end=0) {
+  const wait = new Promise((resolve, reject) => {
+    outputStream.on('close', () => resolve(true))
+    outputStream.on('error', (e) => reject(e))
+  })
   const keys = Object.keys(imd)
   const realBegin = begin ? begin : findFullKeysIndex(imd)
   // header
@@ -51,7 +55,6 @@ function writeImd(imd, outputStream, begin, end=0) {
   // data
   let i = realBegin
   while (i >= end) {
-    //console.log({i}, imd.timestamp[i])
     keys.forEach((k) => {
       if (k === 'timestamp') {
         const ts = time.isoUTC(imd.timestamp[i]).replace(/\.000Z/, '')
@@ -63,7 +66,8 @@ function writeImd(imd, outputStream, begin, end=0) {
     outputStream.write("\n")
     i--
   }
-  out.end()
+  outputStream.end()
+  return wait
 }
 
 // How to write files in node.js using streams.
