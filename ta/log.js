@@ -92,7 +92,9 @@ function createOrderLogger(begin, end, exchange, market, prefix, config, fn) {
   fs.writeFileSync(`${logDir}/config.json`, JSON.stringify(inner, undefined, '  '))
   const name = logName(begin, end)
   const logFile = `${logDir}/${name}`
-  return pino(pino.destination(logFile))
+  const logger = pino(pino.destination(logFile))
+  logger.dir = logDir
+  return logger
 }
 
 /**
