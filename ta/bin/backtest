@@ -82,6 +82,13 @@ function calculateEquity(exchangeState, price) {
   }
 }
 
+function writeOrdersSync(orders, filename) {
+  const out = orders.map((o) => {
+    return `${time.isoGP(o.timestamp)} ${o.fillPrice} ${o.quantity} ${o.action}`
+  }).join("\n") + "\n"
+  fs.writeFileSync(filename, out)
+}
+
 let firstTimeInteractive = true
 async function interactiveLoop({marketState, exchangeState, strategyState, orders, executedOrders, candle}) {
   if (breakpointExists({marketState, exchangeState, strategyState, orders, executedOrders})) {
@@ -389,14 +396,23 @@ async function main() {
     if (program.gnuplot) {
       const shouldPlot1m = false
       const dir = orderLogger.dir
+      const writtenPaths = []
       //console.log({dir, len1h: marketState.imd1h.timestamp.length, len1d: marketState.imd1d.timestamp.length })
       const imdKeys = Object.keys(marketState).filter((k) => k.match(/^imd/))
       await Bluebird.each(imdKeys, async (k) => {
         if (k === 'imd1m' && !shouldPlot1m) return // skim imd1m for now
         const tf = k.replace(/imd/, '')
-        const out = fs.createWriteStream(`${dir}/${tf}.data`)
+        const dataPath = `${dir}/${tf}.data`
+        writtenPaths.push(dataPath)
+        const out = fs.createWriteStream(dataPath)
         await gnuplot.writeImd(marketState[k], out)
       })
+      const dataPath = `${dir}/orders.data`
+      writtenPaths.push(dataPath)
+      writeOrdersSync(allExecutedOrders, dataPath)
+      if (program.verbose) {
+        console.log('Gnuplot', writtenPaths)
+      }
     }
     process.exit(0)
   }
