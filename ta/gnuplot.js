@@ -57,7 +57,7 @@ async function writeImd(imd, outputStream, begin, end=0) {
   while (i >= end) {
     keys.forEach((k) => {
       if (k === 'timestamp') {
-        const ts = time.isoUTC(imd.timestamp[i]).replace(/\.000Z/, '')
+        const ts = time.isoGP(imd.timestamp[i])
         outputStream.write(`${ts} `)
       } else {
         outputStream.write(`${imd[k][i] || '-'} `)
