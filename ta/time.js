@@ -11,7 +11,7 @@ function dt(ms) {
 }
 
 /**
- * Return date as an ISO 8601 formatted string
+ * Return milliseconds as an ISO 8601 formatted datetime string
  * @param {Number} ms - A unix time in milliseconds
  * @returns {String} ISO 8601 formatted DateTime string
  */
@@ -19,8 +19,22 @@ function iso(ms) {
   return dt(ms).toISO()
 }
 
+/**
+ * Return milliseconds as a UTC timezone ISO 8601 formatted datetime string
+ * @param {Number} ms - A unix time in milliseconds
+ * @returns {String} ISO 8601 formatted DateTime string
+ */
 function isoUTC(ms) {
   return dt(ms).setZone('UTC').toISO()
+}
+
+/**
+ * Output a datetime in a format gnuplot can read
+ * @param {Number} ms - A unix time in milliseconds
+ * @returns {String} like isoUTC without the timezone info at the end
+ */
+function isoGP(ms) {
+  return isoUTC(ms).replace(/\.000Z/, '') // for gnuplot
 }
 
 function timeframeToMinutes(timeframe) {
@@ -100,6 +114,7 @@ module.exports = {
   dt,
   iso,
   isoUTC,
+  isoGP,
   timeframeToMinutes,
   timeframeToMilliseconds,
   timestampForTimeframe,
