@@ -83,10 +83,19 @@ function calculateEquity(exchangeState, price) {
 }
 
 function writeOrdersSync(orders, filename) {
+  const header = `# 1:timestamp, 2:fillPrice, 3:quantity, 4:action\n`
   const out = orders.map((o) => {
     return `${time.isoGP(o.timestamp)} ${o.fillPrice} ${o.quantity} ${o.action}`
   }).join("\n") + "\n"
-  fs.writeFileSync(filename, out)
+  fs.writeFileSync(filename, header + out)
+}
+
+function writePnlSync(pnls, filename) {
+  const header = `# 1:timestamp, 2:equity\n`
+  const out = pnls.map((p) => {
+    return `${time.isoGP(p[0])} ${p[1]}`
+  }).join("\n") + "\n"
+  fs.writeFileSync(filename, header + out)
 }
 
 let firstTimeInteractive = true
@@ -149,6 +158,7 @@ async function main() {
     .option('-r, --research <STRATEGY>', 'Use a strategy from the research collection instead')
     .option('-c, --config <CONFIG.JSON>', 'Path to a JSON config file for the strategy')
     .option('-b, --balance <DOLLARS>', 'Amount of money to start with', parseIntB10, 100000)
+    .option('-p, --pnl-timeframe <INTERVAL>', 'Timeframe for pnl measurements (for gnuplot output)', '1d')
     .option('--start-processing-at <DATETIME>', 'Refrain from indicator calculation until the given DateTime is reached', parseDateTime)
     .option('--begin <DATETIME>', 'DateTime to begin the strategy', parseDateTime)
     .option('--end <DATETIME>', 'DateTime to end the strategy', parseDateTime)
@@ -245,6 +255,7 @@ async function main() {
 
     // Mutable Variables
     let marketState, strategyState, orders, exchangeState, executedOrders // state changes flow in this order
+    let historicalPnl = []
     let candle = await nextCandle()
     let firstTimestamp = time.dt(candle[0])
     let startProcessing
@@ -333,6 +344,7 @@ async function main() {
           console.log('equity: ', calculateEquity(exchangeState, close))
         }
         // log executedOrders
+        // TODO - track position size and whenever it's 0, record realized pnl
         executedOrders.forEach((o) => {
           const rate = o.type === 'market' ? FEES.taker : FEES.maker
           const line = {
@@ -347,6 +359,18 @@ async function main() {
           line.fee$ = line.fee * o.fillPrice
           orderLogger.info(line)
         })
+        // record pnl (but it's tricky) (maybe the simulator should do it)
+        if (time.isTimeframeBoundary(program.pnlTimeframe, time.dt(candle[0]))) {
+          const pnlImd = `imd${program.pnlTimeframe}`
+          const price = marketState[pnlImd].close[0]
+          const equity = calculateEquity(exchangeState, price)
+          historicalPnl.push([
+            candle[0], // timestamp
+            equity,    // equity
+            exchangeState.pnl,
+            exchangeState.unrealizedPnl
+          ])
+        }
       }
       candle = await nextCandle()
       // Check candle[0] for begin and end conditions
@@ -410,6 +434,10 @@ async function main() {
       const dataPath = `${dir}/orders.data`
       writtenPaths.push(dataPath)
       writeOrdersSync(allExecutedOrders, dataPath)
+      const pnlPath = `${dir}/pnl.data`
+      writtenPaths.push(pnlPath)
+      writePnlSync(historicalPnl, pnlPath)
+      // TODO - Write out pnl over time to its own file.
       if (program.verbose) {
         console.log('Gnuplot', writtenPaths)
       }
