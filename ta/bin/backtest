@@ -207,8 +207,8 @@ async function main() {
     logger = pino(pino.destination(activityLogPath))
 
     // Exchange Simulator
-    let config = { balance: program.balance, logger }
-    const exchange = simulator.create(config)
+    let simulatorConfig = { balance: program.balance, logger }
+    const exchange = simulator.create(simulatorConfig)
     const allExecutedOrders = []
 
     // Strategy
@@ -216,9 +216,9 @@ async function main() {
     if (program.config) {
       const configPath = `${process.cwd()}/${program.config}`
       const jsonConfig = require(configPath)
-      strategyConfig = merge(config, jsonConfig)
+      strategyConfig = merge({ logger }, jsonConfig) // XXX 2021-06-24 noticed that merge mutated config which was a surprise.
     } else {
-      strategyConfig = config
+      strategyConfig = { logger }
     }
     const Strategy = lookupStrategy(program)
     const strategyInit = Strategy.init
