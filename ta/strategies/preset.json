@@ -3,7 +3,6 @@
     "guppyTf": "1m",
     "rsiTf": "30m",
     "rsiThreshold": -1.5,
-    "balance": 100000,
     "sizeMode": "spot",
     "fixedPositionSize": 3.25
   }],
@@ -11,23 +10,19 @@
     "guppyTf": "1m",
     "rsiTf": "10m",
     "rsiThreshold": -2,
-    "balance": 100000,
     "sizeMode": "spot",
     "fixedPositionSize": 3.25
   }],
   "ha1d": ["HeikinAshi", {
     "trendTf": "1d",
-    "balance": 5000000,
     "fixedPositionSize": 5.00
   }],
   "ha1m": ["HeikinAshi", {
     "trendTf": "1m",
-    "balance": 5000000,
     "fixedPositionSize": 1.00
   }],
   "ha1m_c": ["HeikinAshi", {
     "trendTf": "1m",
-    "balance": 100000,
     "sizeMode": "contracts",
     "fixedPositionSize": 10
   }]
