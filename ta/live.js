@@ -407,6 +407,7 @@ class Simulator extends Trader {
       this.exchangeState = exchangeState
       this.executedOrders = executedOrders
       executedOrders.forEach((o) => {
+        this.orderLog.push(o)
         const rate = o.type === 'market' ? this.exchange.fees.taker : this.exchange.fees.maker
         const line = {
           ts: time.iso(o.timestamp),
