@@ -74,6 +74,7 @@ class Trader {
     // Instantiate strategy and get its indicatorSpecs
     const strategy = this.opts.strategy
     const options = this.opts.options
+    //console.log('xxx', strategy, this)
     const _s = findStrategy(strategy)
     if (!_s) throw(`Can't find strategy '${strategy}'`)
     let [indicatorSpecs, s] = _s.init(Object.assign({ logger: this.activityLogger }, options))
@@ -86,6 +87,8 @@ class Trader {
     this.orderLogPath = log.fullExecutedOrderLogName(
       since,
       undefined,
+      this.opts.exchange,
+      this.opts.market,
       this.opts.logDir,
       [strategy, options],
       _s.configSlug // this is allowed to be undefined
@@ -93,6 +96,8 @@ class Trader {
     this.orderLogger = log.createOrderLogger(
       since,
       undefined,
+      this.opts.exchange,
+      this.opts.market,
       this.opts.logDir,
       [strategy, options],
       _s.configSlug // this is allowed to be undefined
@@ -336,6 +341,30 @@ class Trader {
     return this.lastCandle(_tf, _n)
   }
 
+  /**
+   * Getter for this.strategyState for convenience
+   * @returns {Object} this.strategyState
+   */
+  get s() {
+    return this.strategyState
+  }
+
+  /**
+   * Getter for this.exchangeState
+   * @returns {Object} this.exchangeState
+   */
+  get e() {
+    return this.exchangeState
+  }
+
+  /**
+   * Getter for this.marketState
+   * @returns {Object} this.marketState
+   */
+  get m() {
+    return this.marketState
+  }
+
 }
 
 /*
@@ -395,6 +424,8 @@ class Simulator extends Trader {
     })
   }
 }
+
+// mainnet, testnet, and simulator provide convenience functions for instantiating Trader and Simulator instances
 
 const mainnet = {
   bybit: {
