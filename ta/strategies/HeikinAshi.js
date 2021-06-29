@@ -119,11 +119,11 @@ function init(customConfig) {
     // This means update the strategyState to reflect new order executions
     if (executedOrders && executedOrders.length) {
       executedOrders.forEach((o) => {
-        if (o.id === state.openLongId && o.status === 'filled') {
+        if (o.id && o.id === state.openLongId && o.status === 'filled') {
           state.positionBias = 'long'
           state.longFilled = true
         }
-        if (o.id === state.openShortId && o.status === 'filled') {
+        if (o.id && o.id === state.openShortId && o.status === 'filled') {
           state.positionBias = 'short'
           state.shortFilled = true
         }
