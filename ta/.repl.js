@@ -20,6 +20,7 @@ global.luxon       = require('luxon')
 global.DateTime    = global.luxon.DateTime
 global.Interval    = global.luxon.Interval
 global.kindOf      = require('kind-of')
+global.clone       = require('clone')
 
 global.ta         = require('./index')
 global.alerts     = require('./alerts')
