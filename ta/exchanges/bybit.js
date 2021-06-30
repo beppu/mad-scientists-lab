@@ -76,10 +76,13 @@ class BybitDriver {
    */
   async execute(orders) {
     const client = this.client
-    let exchangeOrder = {}
     let results = await Bluebird.map(orders, async (order) => {
+      let exchangeOrder = {}
       switch (order.type) {
       case 'market':
+        if (order.id) {
+          exchangeOrder.order_link_id = order.id
+        }
         exchangeOrder.side          = order.action === 'buy' ? 'Buy' : 'Sell';
         exchangeOrder.symbol        = this.market
         exchangeOrder.order_type    = 'Market'
@@ -127,12 +130,16 @@ class BybitDriver {
         break;
       case 'stop-market':
         if (order.action === 'cancel') {
-          exchangeOrder.order_link_id = order.id
+          if (order.id) {
+            exchangeOrder.order_link_id = order.id
+          }
           exchangeOrder.symbol = this.market
           return await client.cancelConditionalOrder(exchangeOrder)
         }
         if (order.action === 'update') {
-          exchangeOrder.order_link_id = order.id
+          if (order.id) {
+            exchangeOrder.order_link_id = order.id
+          }
           exchangeOrder.symbol = this.market
           if (order.price) {
             exchangeOrder.p_r_trigger_price = order.price
@@ -232,13 +239,17 @@ class BybitDriver {
       const orderAcks = []
       ev.data.forEach((o) => {
         this.exchangeState.orders[o.order_id] = o
-        orderAcks.push({
+        let ack = {
           type:     o.order_type.toLowerCase(),
           action:   o.side.toLowerCase(),
           quantity: o.qty,
           status:   'created',    // TODO or 'rejected'
           _id:      o.order_id    // send back the exchange generated order_id
-        })
+        }
+        if (o.order_link_id) {
+          ack.id = o.order_link_id
+        }
+        orderAcks.push(ack)
       })
       return orderAcks
       break
@@ -247,13 +258,17 @@ class BybitDriver {
       const stopOrderAcks = []
       ev.data.forEach((so) => {
         this.exchangeState.stopOrders[so.order_id] = so
-        stopOrderAcks.push({
+        let ack = {
           type:     `stop-${so.order_type.toLowerCase()}`,
           action:   so.side.toLowerCase(),
           quantity: so.qty,
           status:   'created',    // TODO or 'rejected'
           _id:      so.order_id   // send back the exchange generated order_id
-        })
+        }
+        if (so.order_link_id) {
+          ack.id = so.order_link_id
+        }
+        stopOrderAcks.push(ack)
       })
       return stopOrderAcks
       break
@@ -309,10 +324,24 @@ module.exports = {
 
 /**
 
- // Instantiate the driver
+ // Instantiate the driver for debugging `candle` and `execution` handlers
+ pino = require('pino')
+ uuid = require('uuid')
+ xlog = pino(pino.destination('x.log'))
+ xs = []
+ lastCandle = undefined
+ function candle(cs) {
+  lastCandle = cs[cs.length - 1]
+ }
+ function execution(orders) {
+  console.log('xs', orders)
+  xs.push(...orders)
+  orders.forEach((o) => xlog.info(o))
+ }
  key = process.env.TA_BYBIT_API_KEY
  secret = process.env.TA_BYBIT_API_SECRET
  livenet = false
  bb = new exchanges.bybit.Driver({ key, secret, livenet })
+ bb.connect('BTC/USD', { candle, execution })
 
  */
