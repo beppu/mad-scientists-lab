@@ -384,6 +384,14 @@ const id = {
       close,
       optInTimePeriod: period
     }
+  },
+  wma: function(marketData, period=55) {
+    return {
+      name: 'WMA',
+      startIdx: 0,
+      endIdx: marketData.close.length - 1,
+      inReal: marketData.close
+    }
   }
 }
 
