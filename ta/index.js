@@ -387,10 +387,11 @@ const id = {
   },
   wma: function(marketData, period=55) {
     return {
-      name: 'WMA',
-      startIdx: 0,
-      endIdx: marketData.close.length - 1,
-      inReal: marketData.close
+      name:            'WMA',
+      startIdx:        0,
+      endIdx:          marketData.close.length - 1,
+      inReal:          marketData.close,
+      optInTimePeriod: period
     }
   }
 }
@@ -601,5 +602,8 @@ module.exports = {
 
   // how to scan invertedMarketData for all candles where price was greater than SMA 200
   r3 = ta.scan(invertedMarketData, isPriceGtSMA200) // r3 is a list of indices in invertedMarketData
+
+  c2 = await ta.loadCandles('bybit', 'BTC/USD', '1d')
+  md = ta.marketDataFromCandles(c2)
 
 */
