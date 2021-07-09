@@ -38,6 +38,7 @@
     "sql-template-strings": "^2.2.2",
     "sqlite": "^3.0.3",
     "talib": "^1.1.2",
+    "typescript": "^4.3.5",
     "url-parse": "^1.4.7",
     "uuid": "^8.2.0",
     "ws": "^7.2.3",
