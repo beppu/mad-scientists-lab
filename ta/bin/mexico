@@ -73,8 +73,11 @@ async function main() {
   if (optionsAreMissing) {
     process.exit(-1)
   }
-  //console.log(program)
-  //process.exit(0)
+  const locked = utils.lockProcess(process, 'mexico', `${program.exchange}-${program.market.replace(/\W/g, '')}-${program.timeframe}.lock`)
+  if (!locked) {
+    console.warn(`mexico is already running for ${program.exchange} ${program.market} ${program.timeframe}.`)
+    process.exit(-2)
+  }
   try {
     const dataPath = utils.dataPath(program.data, program.exchange, program.market, program.timeframe)
     console.log(dataPath)
