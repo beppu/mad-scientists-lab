@@ -4,7 +4,8 @@
   filling a position using limit orders.  In order to ensure a fill, a
   threshold may be given after which a market order is used as a last resort.
   The fees incurred by using market orders can add up, so it'll be nice to let
-  strategies express an intent to buy and then let this code fullfill that intent.
+  strategies express an intent to buy and then let this code fullfill that intent
+  with limit orders if possible and market orders if not.
 
   I have to think this through.
   Imagine the new GuppyLimit strategy.
@@ -25,7 +26,7 @@
   Will I need them in the future?  Initially, I thought no, but what if I
   implemented ChandelierExit and needed ATR to be calculated?  Then, I would
   need indicatorSpecs. Maybe for consistency with strategy init functions, I
-  should continue returning indicatorSpecs even if their empty.
+  should continue returning indicatorSpecs even if they're empty.
 
 
   // States
@@ -108,6 +109,7 @@ function init(options) {
     ts:             undefined,                 // timestamp of last seen candle
     tf:             options.tf,                // timeframe boundary to update price of unfilled limit orders (typically '1m') :: also used for imd selection
     group:          options.group              // (optional) group id (to be used later by log analyzers to group related trades together)
+                                               // XXX - group is deprecated
   }
   const indicatorSpecs = {}                    // No special indicators needed.
 
@@ -144,8 +146,8 @@ function init(options) {
         action: ns.side,
         quantity: ns.quantity,
         price: orderPrice,
-        group: ns.group,
-        id: `limit-${ns.side}`
+        group: ns.group,        // XXX - group is deprecated and a new way will have to be found
+        id: `limit-${ns.side}`  // XXX - id should be a uuid
       }
       ns.price = orderPrice
       ns.node = 'waiting-for-fill'
@@ -157,7 +159,7 @@ function init(options) {
         const newPrice = ns.side === 'buy' ? lastPrice - ns.priceStep : lastPrice + ns.priceStep
         const updateLimitOrder = {
           action: 'update',
-          id: `limit-${ns.side}`,
+          id: `limit-${ns.side}`, // XXX - id should be a uuid
           price: newPrice
         }
         orders.push(updateLimitOrder)
@@ -167,7 +169,7 @@ function init(options) {
       if (beyondPriceThreshold(ns, lastPrice)) {
         const cancelLimitOrder = {
           action: 'cancel',
-          id: `limit-${ns.side}`
+          id: `limit-${ns.side}` // XXX - id should be a uuid
         }
         const marketOrder = {
           type: 'market',
