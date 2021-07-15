@@ -37,16 +37,30 @@ const partition = require('lodash.partition')
  */
 
 /**
+ * Acknowledge that an order was created on the exchange side
+ * @param {Object} o - an order
+ * @param {Number} timestamp - DateTime of order execution in milliseconds
+ * @returns {Object} a clone of the order with a created status
+ */
+function ackOrder(o, timestamp) {
+  const ack = clone(o)
+  ack.status = 'created'
+  ack.timestamp = timestamp
+  return ack
+}
+
+/**
  * Create a rejected order
  * @param {String} reason - why the order was rejected
  * @param {Number} timestamp - DateTime of order execution in milliseconds
+ * @returns {Object} a clone of the order with a rejected status
  */
 function rejectOrder(o, timestamp, reason) {
   const rejection = clone(o)
-  o.status = 'rejected'
-  o.reason = reason || 'unknown'
-  o.timestamp = timestamp
-  return o
+  rejection.status = 'rejected'
+  rejection.reason = reason || 'unknown'
+  rejection.timestamp = timestamp
+  return rejection
 }
 
 /**
@@ -556,30 +570,39 @@ function create(opts) {
   return async function simulator(orders, state, candle) {
     // let's get a state we can work with
     let newState = state ? clone(state) : initialState(opts.balance)
+    let timestamp = candle ? candle[0] : undefined // XXX - do this better
 
     // Run any modifications first
-    let modifiedState, modifications
+    let modifiedState
+    let modifications = []
     if (orders && orders.length) {
       [modifiedState, modifications] = executeModifyInstructions(newState, orders)
       //console.log(modifiedState, modifications.length)
       if (modifications.length) {
         newState = modifiedState
       }
-    } else {
-      modifications = []
     }
 
     // If orders were given, put them in state as appropriate
     if (orders && orders.length) {
       let limitOrders = orders.filter((o) => o.type === 'limit')
-      if (limitOrders.length)
+      if (limitOrders.length) {
         newState.limitOrders = newState.limitOrders.concat(limitOrders)
+        let limitAcks = limitOrders.map((o) => ackOrder(o, timestamp))
+        modifications.push(...limitAcks)
+      }
       let marketOrders = orders.filter((o) => o.type === 'market')
-      if (marketOrders.length)
+      if (marketOrders.length) {
         newState.marketOrders = newState.marketOrders.concat(marketOrders)
+        let marketAcks = marketOrders.map((o) => ackOrder(o, timestamp))
+        modifications.push(...marketAcks)
+      }
       let stopOrders = orders.filter((o) => o.type.match(/^stop-/))
-      if (stopOrders.length)
+      if (stopOrders.length) {
         newState.stopOrders = newState.stopOrders.concat(stopOrders)
+        let stopAcks = stopOrders.map((o) => ackOrder(o, timestamp))
+        modifications.push(...stopAcks)
+      }
     }
 
     if (candle) {
