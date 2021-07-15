@@ -178,7 +178,7 @@ function s() { return ta.createInvertedSeries() }
 /**
  * Return a loop function that consumes candles and updates indicators
  * @param {String} baseTimeframe - the timeframe of the candles being fed into the loop
- * @param {IndicatorSpec} indicatorSpecs - Parameter description.
+ * @param {IndicatorSpec} indicatorSpecs - a data structure describing what indicators need to be calculated for what timeframes
  * @returns {Function} Return description.
  */
 function mainLoopFn(baseTimeframe, indicatorSpecs) {
@@ -375,6 +375,46 @@ function aggregateCandles(timeframe, candles) {
   return results
 }
 
+/**
+ * This is a function to build up marketState for a given market with the given indicatorSpecs.
+ * @param {String} dataDir - directory where OHLCV candlestick data is organized
+ * @param {String} exchange - exchange name
+ * @param {String} market - market symbol
+ * @param {String} timeframe - timeframe of candles to load
+ * @param {IndicatorSpec} indicatorSpecs - a data structure describing what indicators need to be calculated for what timeframes
+ */
+async function _load(dataDir, exchange, market, timeframe, since, indicatorSpecs) {
+  const nextCandle = await loadCandlesFromFS(dataDir, exchange, market, timeframe, since)
+  const loop = mainLoopFn(timeframe, indicatorSpecs)
+  return runLoop(loop, nextCandle)
+}
+
+/**
+ * Return marketState for a market with the given indicatorSpecs using sane defaults.
+ * This function is intended to be used during repl exploration.
+ * @param {String} exchange - exchange name
+ * @param {String} market - market symbol ("BTC/USD")
+ * @param {IndicatorSpec} indicatorSpecs - a data structure describing what indicators need to be calculated for what timeframes
+ * @param {DateTime} since - (optional) time of earliest candle that may be loaded
+ * @returns {Object} marketState
+ */
+async function load(exchange, market, indicatorSpecs, since) {
+  const dataDir = './data'
+  const tf = '1m'
+  let start
+  if (!since) {
+    // find largest timeframe in indicatorSpecs and go 1000 candles back
+    const tfs = Object.keys(indicatorSpecs)
+    const minutes = tfs.map(time.timeframeToMinutes)
+    const biggest = Math.max(...minutes)
+    const today = DateTime.local()
+    start = today.minus({ minutes: biggest * 1000 })
+  } else {
+    start = since
+  }
+  return _load(dataDir, exchange, market, tf, start, indicatorSpecs)
+}
+
 // What's a nice API for declaring that I want stuff calculdated on various timeframes
 /*
 
@@ -420,7 +460,8 @@ module.exports = {
   mainLoopFn,
   runLoop,
   validateNextCandles,
-  aggregateCandles
+  aggregateCandles,
+  load
 }
 
 /*
