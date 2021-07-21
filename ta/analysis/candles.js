@@ -59,7 +59,7 @@ const ha = {
    */
   isIndecisive(imd, n=0) {
     return imd.haHigh[n]  > Math.max(imd.haOpen[n], imd.haClose[n]) &&
-           imd.haClose[n] < Math.min(imd.haOpen[n], imd.haClose[n])
+           imd.haLow[n] < Math.min(imd.haOpen[n], imd.haClose[n])
   },
 
   /**
