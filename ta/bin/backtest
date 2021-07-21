@@ -233,12 +233,12 @@ async function main() {
     const Strategy = lookupStrategy(program)
     const strategyInit = Strategy.init
     const [indicatorSpecs, strategy] = strategyInit(strategyConfig)
-    // force the pipeline to use the InvertedSeries data structure.
-    indicatorSpecs.inverted = true
     // force indicatorSpecs to also ask for pnlTimeframe if it isn't already there.
     if (!indicatorSpecs[program.pnlTimeframe]) {
       indicatorSpecs[program.pnlTimeframe] = []
     }
+    // force the pipeline to use the InvertedSeries data structure.
+    indicatorSpecs.inverted = true
     if (program.verbose) {
       console.log('indicatorSpecs', indicatorSpecs)
     }
@@ -342,14 +342,14 @@ async function main() {
         }
         ;[exchangeState, executedOrders] = await exchange(orders, exchangeState, candle)
         if (program.verbose && executedOrders && executedOrders.length) {
-          allExecutedOrders.push(...executedOrders)
+          const filledOrders = executedOrders.filter((o) => o.status === 'filled')
+          allExecutedOrders.push(...filledOrders)
           const key = `imd${program.timeframe}`
           const close = marketState[key].close[0]
           //console.log('executedOrders: ', executedOrders)
           console.log('equity: ', calculateEquity(exchangeState, close))
         }
         // log executedOrders
-        // TODO - track position size and whenever it's 0, record realized pnl
         executedOrders.forEach((o) => {
           const rate = o.type === 'market' ? FEES.taker : FEES.maker
           const line = {
