@@ -57,9 +57,9 @@ const ha = {
    * @param {Number} n - index into imd (default: 0)
    * @returns {Boolean} Return description.
    */
-  isIndecisive(imd, n=0) {
-    return imd.haHigh[n]  > Math.max(imd.haOpen[n], imd.haClose[n]) &&
-           imd.haLow[n] < Math.min(imd.haOpen[n], imd.haClose[n])
+  isIndecisive(imd, n=0, ) {
+    return imd.haHigh[n] > Math.max(imd.haOpen[n], imd.haClose[n]) &&
+           imd.haLow[n]  < Math.min(imd.haOpen[n], imd.haClose[n])
   },
 
   /**
