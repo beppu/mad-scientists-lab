@@ -181,10 +181,18 @@ function init(customConfig) {
     if (executedOrders && executedOrders.length) {
       executedOrders.forEach((o) => {
         if (o.id && o.id === state.openLongId && o.status === 'filled') {
-          state.name = 'long'
+          if (state.name === 'want-to-long') {
+            state.name = 'long'
+          } else {
+            state.name = 'neutral'
+          }
         }
         if (o.id && o.id === state.openShortId && o.status === 'filled') {
-          state.name = 'short'
+          if (state.name === 'want-to-short') {
+            state.name = 'short'
+          } else {
+            state.name = 'neutral'
+          }
         }
       })
     }
@@ -287,10 +295,14 @@ module.exports = {
 
    GNUPLOT
 
+   // 30m
    set xdata time
    set timefmt "%Y-%m-%dT%H:%M:%S"
    set boxwidth 0.8 relative
    plot [][30000:60000] "30m.data" using 1:7:8:9:10 title "BTC/USD Heikin Ashi" with candlesticks, "" using 1:11 title "12 EMA" with line lc rgb "green", "" using 1:12 title "26 EMA" with line lc rgb "red", "orders.data" using 1:2:(stringcolumn(4) eq "buy" ? 9 : 11) title "Orders" with points pointsize 3 pt var lc rgb "orange"
+
+   // 1d
+   plot [][30000:60000] "1d.data" using 1:7:8:9:10 title "BTC/USD Heikin Ashi" with candlesticks, "" using 1:11 title "12 EMA" with line lc rgb "green", "" using 1:12 title "26 EMA" with line lc rgb "red", "orders.data" using 1:2:(stringcolumn(4) eq "buy" ? 9 : 11) title "Orders" with points pointsize 3 pt var lc rgb "orange"
 
 
  */
