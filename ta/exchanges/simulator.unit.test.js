@@ -361,16 +361,12 @@ test("stop market orders should be able to open positions", async () => {
   expect(state.balance).toBe(balance - orders[0].price * orders[0].quantity)
 })
 
-// TODO Redo how edits work in the simulator
-// - Type 'modify' goes away.  type has to mean order-type
-// - The concept of group also goes away.  That's not the driver's job anymore.
-// - I may have to make the simulator auto-assign order_ids
 test("unexecuted orders should be editable", async () => {
   const balance = 100000
   const sx = simulator.create({ balance })
   const orders = [
     {
-      group: 'test-orders',
+      id: 'bar',
       type: 'stop-market',
       action: 'sell',
       quantity: 1,
@@ -384,14 +380,14 @@ test("unexecuted orders should be editable", async () => {
       price: 9000
     },
     {
-      group: 'test-orders',
+      id: 'bar2',
       type: 'limit',
       action: 'buy',
       quantity: 1,
       price: 1000
     },
     {
-      id: 'bar',
+      id: 'bar3',
       type: 'limit',
       action: 'buy',
       quantity: 1,
@@ -404,19 +400,25 @@ test("unexecuted orders should be editable", async () => {
   expect(s.stopOrders).toHaveLength(2)
   const edits = [
     {
-      type: 'modify',
+      type: 'stop-market',
       action: 'cancel',
       id: 'foo'
     },
     {
-      type: 'modify',
-      action: 'cancel',
-      group: 'test-orders'
-    },
-    {
-      type: 'modify',
+      type: 'stop-market',
       action: 'update',
       id: 'bar',
+      price: 9100
+    },
+    {
+      type: 'limit',
+      action: 'cancel',
+      id: 'bar2'
+    },
+    {
+      type: 'limit',
+      action: 'update',
+      id: 'bar3',
       price: 1100,
       quantity: 2
     }
@@ -424,10 +426,12 @@ test("unexecuted orders should be editable", async () => {
   // only one limit order should be left after all this, and it should be modified.
   const [s2, x2] = await sx(edits, s)
   expect(s2.limitOrders).toHaveLength(1)
-  expect(s2.stopOrders).toHaveLength(0)
+  expect(s2.stopOrders).toHaveLength(1)
   expect(x2).toHaveLength(4) // even though only 3 instructions were given, the group cancel cancelled 2 orders to bring the total number of orders changed to 4
   expect(s2.limitOrders[0].price).toBe(1100)
   expect(s2.limitOrders[0].quantity).toBe(2)
+  expect(s2.stopOrders[0].price).toBe(9100)
+  expect(s2.stopOrders[0].quantity).toBe(1)
 })
 
 // After I get up to here, I have enough to move on to strategy implementation.
