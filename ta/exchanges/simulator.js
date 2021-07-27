@@ -337,7 +337,7 @@ function executeStopAndLimitOrders(state, a, b, candle) {
     case 'stop-market':
       o.oldType = 'stop-market'
       o.type = 'market'
-      const fakeCandle = [0, o.price, o.price, o.price, o.price, 0]
+      const fakeCandle = [candle[0], o.price, o.price, o.price, o.price, 0]
       newState.marketOrders.push(o)
       const [s, x] = executeMarketOrders(newState, fakeCandle)
       newState = s
