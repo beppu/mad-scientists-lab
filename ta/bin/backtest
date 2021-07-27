@@ -136,10 +136,6 @@ async function interactiveLoop({marketState, exchangeState, strategyState, order
       if (key.name === 's') {
         console.log(strategyState)
       }
-      if (key.name === 'm') {
-        console.log(`close: ${candle[4]} // marketState dumped to ...nothing yet`)
-        global._m = marketState
-      }
       if (key.name === 'o') {
         console.log({ orders, executedOrders })
       }
@@ -152,7 +148,6 @@ async function interactiveLoop({marketState, exchangeState, strategyState, order
           e equity
           x exchangeState
           s strategyState
-          m marketState (but really current close)
           o orders and executedOrders
         `)
       }
