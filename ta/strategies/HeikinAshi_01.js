@@ -183,7 +183,6 @@ function init(customConfig) {
     const tf       = config.trendTf
     let price      = imdTrend.close[0]
 
-    const newState = clone(state)
     const orders   = []
 
     // handle executedOrders
@@ -220,13 +219,17 @@ function init(customConfig) {
         }
         if (o.id && o.id === state.stopId && o.status === 'filled') {
           state.name = 'neutral'
-          newState.stopId = undefined
+          //newState.stopId = undefined
+          logger.debug('stop loss filled')
         }
         if (o.id && o.id === state.stopid && o.status === 'cancelled') {
-          newState.stopId = undefined
+          //newState.stopId = undefined
+          logger.debug('stop loss cancelled')
         }
       })
     }
+
+    const newState = clone(state)
 
     switch (state.name) {
     case 'neutral':
@@ -257,11 +260,11 @@ function init(customConfig) {
         action:   'buy',
         quantity: longSize
       }, {
-        id:     newState.stopId,
-        type:   'stop-market',
-        action: 'sell',
-        quanity: longSize,
-        price:  imdTrend.haOpen[0]
+        id:       newState.stopId,
+        type:     'stop-market',
+        action:   'sell',
+        quantity: longSize,
+        price:    imdTrend.haOpen[0]
       })
       newState.lastSize = longSize
       break;
@@ -290,11 +293,11 @@ function init(customConfig) {
         action:   'sell',
         quantity: shortSize
       },{
-        id:      newState.stopId,
-        type:    'stop-market',
-        action:  'buy',
-        quanity: shortSize,
-        price:   imdTrend.haOpen[0]
+        id:       newState.stopId,
+        type:     'stop-market',
+        action:   'buy',
+        quantity: shortSize,
+        price:    imdTrend.haOpen[0]
       })
       newState.lastSize = shortSize
       break;
