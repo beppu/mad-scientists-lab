@@ -64,11 +64,19 @@ function parseDateTime(d) {
   return DateTime.fromISO(d)
 }
 
-function prompt() {
-  process.stdout.write('> ')
+function prompt(candle) {
+  process.stdout.write(`[${time.iso(candle[0])}][${candle[4]}]> `)
 }
 
 function breakpointExists({ marketState, exchangeState, strategyState, orders, executedOrders }) {
+  if (exchangeState && exchangeState.breakPoint) {
+    if (marketState && marketState.imd1m) {
+      let currentTime = marketState.imd1m.timestamp[0]
+      if (exchangeState.breakPoint === currentTime) {
+        return true
+      }
+    }
+  }
   return executedOrders && executedOrders.filter((o) => o.status === 'filled').length > 0
 }
 
@@ -105,11 +113,19 @@ async function interactiveLoop({marketState, exchangeState, strategyState, order
       console.log('Press "h" for help.')
       firstTimeInteractive = false
     }
-    prompt()
+    prompt(candle)
     let key = await interactive.keyPress()
     while (key.name !== 'n') { // n for next
       if (key.name === 'q') {
         process.exit(0)
+      }
+      if (key.name === 'm') {
+        if (marketState && marketState.imd1m) {
+          let currentTime = marketState.imd1m.timestamp[0]
+          exchangeState.breakPoint = currentTime + (60 * 1000)
+          console.log(time.iso(currentTime), '->', time.iso(exchangeState.breakPoint))
+          break
+        }
       }
       if (key.name === 'e') {
         console.log(calculateEquity(exchangeState, candle[4]))
@@ -130,6 +146,7 @@ async function interactiveLoop({marketState, exchangeState, strategyState, order
       if (key.name === 'h') {
         console.log(`
           h help
+          m step one minute forward
           n next (continue backtesting)
           q quit (stop backtesting)
           e equity
@@ -139,7 +156,7 @@ async function interactiveLoop({marketState, exchangeState, strategyState, order
           o orders and executedOrders
         `)
       }
-      prompt()
+      prompt(candle)
       key = await interactive.keyPress()
     }
   }
