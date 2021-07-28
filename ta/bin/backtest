@@ -454,7 +454,6 @@ async function main() {
       const pnlPath = `${dir}/pnl.data`
       writtenPaths.push(pnlPath)
       writePnlSync(historicalPnl, pnlPath)
-      // TODO - Write out pnl over time to its own file.
       if (program.verbose) {
         console.log('Gnuplot', writtenPaths)
       }
