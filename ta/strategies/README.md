@@ -43,7 +43,6 @@ This introduces the following new ideas.
 This is a copy of HeikinAshi\_00 with a few new features.
 
 * static stop losses at entry time
-* faster state switching after position close
 
 **backtest**
 
@@ -77,4 +76,5 @@ I'm going to use this limited view of 1 week of trading to develop the behaviora
 With this one, I want to add the follwing new features in addition to what HeikinAshi\_01 has.
 
 * trailing stop losses
+* faster state switching after position close
 * a more nuanced view on what counts as an indecisive heikin ashi candle.
