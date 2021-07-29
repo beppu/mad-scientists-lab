@@ -21,6 +21,19 @@ module.exports = function hmaFn(period=55) {
 
   const hmaInsert = function(md, imd, state) {
     // TODO Implement
+    // FIXME single calculation
+    const amd = ta.marketDataTakeLast(md, period) // only needs period
+    const
+      wma1 = 2 * lastWma(amd, period / 2),
+      wma2 = lastWma(amd, period),
+      hma  = lastWma((wma1 - wma2), parseInt(Math.sqrt(period)))
+
+    // beppu's pseudocode into code
+    // const settings = ta.id.wma(md, 10)
+    // const settings2 = {...settings, endIdx: 14, inReal: settings.inReal.splice(0, 5)}
+    // const r = talib.execute(settings)
+    // const r2 = talib.execute(settings2)
+
     const newState = {}
     return newState
   }
@@ -30,6 +43,14 @@ module.exports = function hmaFn(period=55) {
     const newState = hmaIterate(imd, state)
     imd[key][0] = newState.hmaValue
     return newState
+  }
+
+  // helpers
+  // ---------
+  function lastWma(md, period) {
+    const settings = ta.id.wma(md, period)
+    const wma = talib.execute(settings)
+    return wma.result.outReal.slice(wma.result.outReal.length - 1) // take only the last value
   }
 }
 
