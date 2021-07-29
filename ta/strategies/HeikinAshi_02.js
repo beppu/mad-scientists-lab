@@ -79,7 +79,7 @@ function allowedToLong(marketState, config, offset=1) {
   const haClose = imdTrend.haClose[offset]
   const ema12 = imdTrend.ema12[offset]
   const ema26 = imdTrend.ema26[offset]
-  if ((haClose > ema12) && (haClose > ema26) && (ha.color(imdTrend, offset) == 'green')) {
+  if ((haClose > ema12) && (haClose > ema26) && (ema12 >= ema26) && (ha.color(imdTrend, offset) == 'green')) {
     return true
   } else {
     return false
@@ -92,7 +92,7 @@ function allowedToShort(marketState, config, offset=1) {
   const haClose = imdTrend.haClose[offset]
   const ema12 = imdTrend.ema12[offset]
   const ema26 = imdTrend.ema26[offset]
-  if ((haClose < ema12) && (haClose < ema26) && (ha.color(imdTrend, offset) == 'red')) {
+  if ((haClose < ema12) && (haClose < ema26) && (ema12 <= ema26) && (ha.color(imdTrend, offset) == 'red')) {
     return true
   } else {
     return false
@@ -280,7 +280,7 @@ function init(customConfig) {
         type:     'stop-market',
         action:   'sell',
         quantity: longSize,
-        price:    imdTrend.haOpen[0]
+        price:    imdTrend.haOpen[1]
       })
       newState.lastSize = longSize
       break;
@@ -294,9 +294,9 @@ function init(customConfig) {
               id: state.stopId,
               type: 'stop-market',
               action: 'update',
-              price: imdTrend.haClose[2]
+              price: imdTrend.haOpen[2]
             })
-            console.log(`Long trailing stop: ${imdTrend.haClose[2]}`)
+            console.log(`Long trailing stop: ${imdTrend.haOpen[2]}`)
           }
         })
         if (shouldTakeProfit(marketState, config, 'red')) {
@@ -325,7 +325,7 @@ function init(customConfig) {
         type:     'stop-market',
         action:   'buy',
         quantity: shortSize,
-        price:    imdTrend.haOpen[0]
+        price:    imdTrend.haOpen[1]
       })
       newState.lastSize = shortSize
       break;
@@ -339,9 +339,9 @@ function init(customConfig) {
               id: state.stopId,
               type: 'stop-market',
               action: 'update',
-              price: imdTrend.haClose[2]
+              price: imdTrend.haOpen[2]
             })
-            console.log(`Short trailing stop: ${imdTrend.haClose[2]}`)
+            console.log(`Short trailing stop: ${imdTrend.haOpen[2]}`)
           }
         })
         if (shouldTakeProfit(marketState, config, 'green')) {
