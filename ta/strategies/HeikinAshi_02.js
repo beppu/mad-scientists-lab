@@ -184,7 +184,7 @@ function init(customConfig) {
     count:       0,                      // number of config.trendTf candles the position has survived
     openLongId:  undefined,              // strategy-generated order ids
     openShortId: undefined,              // same
-    openStopId:  undefined,              // same
+    stopId:      undefined,              // same
   }
 
   // On timeframe boundaries, I should check if heikin ashi changed colors.
@@ -287,7 +287,17 @@ function init(customConfig) {
     case 'long':
       // look for ways to exit the long position in profit or minimal loss
       if (candleReady(marketState, config.trendTf, 0)) {
-        oncePerCandle(config.trendTf, 'update-long-trailing-stop', () => {
+        oncePerCandle(config.trendTf, 'update-long-trailing-stop', imdEntry.timestamp[0], () => {
+          newState.count += 1
+          if (newState.count >= config.trailingStart) {
+            orders.push({
+              id: state.stopId,
+              type: 'stop-market',
+              action: 'update',
+              price: imdTrend.haClose[2]
+            })
+            console.log(`Long trailing stop: ${imdTrend.haClose[2]}`)
+          }
         })
         if (shouldTakeProfit(marketState, config, 'red')) {
           newState.openShortId = uuid.v4()
@@ -322,6 +332,18 @@ function init(customConfig) {
     case 'short':
       // look for ways to exit the short position in profit or minimal loss
       if (candleReady(marketState, config.trendTf, 0)) {
+        oncePerCandle(config.trendTf, 'update-long-trailing-stop', imdEntry.timestamp[0], () => {
+          newState.count += 1
+          if (newState.count >= config.trailingStart) {
+            orders.push({
+              id: state.stopId,
+              type: 'stop-market',
+              action: 'update',
+              price: imdTrend.haClose[2]
+            })
+            console.log(`Short trailing stop: ${imdTrend.haClose[2]}`)
+          }
+        })
         if (shouldTakeProfit(marketState, config, 'green')) {
           newState.openLongId = uuid.v4()
           orders.push({
