@@ -62,13 +62,25 @@ function timeframeToMilliseconds(timeframe) {
   return timeframeToMinutes(timeframe) * 60000
 }
 
-
+/**
+ * Given a timeframe and a timestamp, return the timestamp for the beginning of the timeframe's candle
+ * @param {String} timeframe - timeframe of candle
+ * @param {Number} ms - A unix time in milliseconds
+ * @returns {Return Type} Return description.
+ */
 function timestampForTimeframe(timeframe, ms) {
   const ints = timeframeToMinutes(timeframe) * 60 * 1000;
   const diff = ms % ints;
   return ms - diff;
 }
 
+/**
+ * Given a list of periods, translate them from one timeframe to another
+ * @param {Array<Number>} periods - Array of period lengths (usually MA lengths)
+ * @param {String} tfSrc - source timeframe
+ * @param {String} tfDst - destination timeframe
+ * @returns {Array<Number>} translated periods in destination timeframe (1h 200 SMA == 4h 50 SMA)
+ */
 function translatePeriods(periods, tfSrc, tfDst) {
   const tfDstm = timeframeToMinutes(tfDst)
   const tfSrcm = timeframeToMinutes(tfSrc)
@@ -78,7 +90,7 @@ function translatePeriods(periods, tfSrc, tfDst) {
 
 /**
  * Given a timeframe and a timestamp, is the timestamp on a timeframe boundary (aka the beginning of the timeframe block)
- * @param {String} timeframe - timeframe
+ * @param {String} timeframe - timeframe of candle
  * @param {DateTime} time - timestamp
  * @returns {Boolean} True if this timestamp at the beginning of a timeframe boundary
  */
