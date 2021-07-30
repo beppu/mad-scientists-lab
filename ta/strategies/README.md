@@ -76,5 +76,15 @@ I'm going to use this limited view of 1 week of trading to develop the behaviora
 With this one, I want to add the follwing new features in addition to what HeikinAshi\_01 has.
 
 * trailing stop losses
-* faster state switching after position close
-* a more nuanced view on what counts as an indecisive heikin ashi candle.
+
+### HeikinAshi\_03
+
+My first attempt at a trailing stop loss didn't help as much as I thought it would.  The problem
+is that it still makes too many bad trades and throws away all its gains.  I think I'm going to
+do something completely different for an exit strategy so that I can stay in good positions longer.
+I think I'll stick with similar heikin ashi based entries, but I'm going to use the EMAs to keep
+me in position until they cross.  I'm going to default to the 12 EMA and 26 EMA for now, but I may
+also make those configurable in this iteration.
+
+* hold position until EMAs cross.
+* maybe implement a trailing stop loss slightly below the slow EMA.
