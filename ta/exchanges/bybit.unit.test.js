@@ -2,8 +2,8 @@ const bybit = require('./bybit')
 const eventLog = require('../tests/fixtures/bybit.websocket.json')
 const kindOf = require('kind-of')
 const Lazy = require('lazy.js')
-
-// TODO - Use captured events as fixtures for websocket data
+const clone = require('clone')
+const uuid = require('uuid')
 
 test("bybit driver object should contain keys limits, fees, Driver", () => {
   expect(kindOf(bybit.limits)).toBe('object')
@@ -88,6 +88,33 @@ test("transformExchangeEvents should return filled stop orders on successful exe
   expect(ex.type).toBe('stop-market')
   expect(kindOf(ex._)).toBe('object') // raw event data in case you need to debug
 })
+
+test("transformExchangeEvents should return propagate id <=> order_link_id after order creation", () => {
+  // market order creation
+  const bb = new bybit.Driver({})
+  const oc = clone(eventLog[0]) // market order creation recognized
+  const id = uuid.v4()
+  oc.data[0].order_link_id = id // let's pretend we created a market order with this user-generated id
+  const r1 = bb.transformExchangeEvents(oc)
+  expect(r1).toHaveLength(1)
+  expect(r1[0].id).toBe(id)
+
+  // limit order creation
+  const oc2 = eventLog[4] // no need to clone, because it has an order_link_id already
+  const id2 = oc2.data[0].order_link_id
+  const r2 = bb.transformExchangeEvents(oc2)
+  expect(r2).toHaveLength(1)
+  expect(r2[0].id).toBe(id2)
+
+  // stop market order
+  const oc3 = eventLog[9] // no need to clone, because it has an order_link_id already
+  const id3 = oc3.data[0].order_link_id
+  const r3 = bb.transformExchangeEvents(oc3)
+  expect(r3).toHaveLength(1)
+  expect(r3[0].id).toBe(id3)
+})
+
+// TODO - What about order cancellations?
 
 /*
 

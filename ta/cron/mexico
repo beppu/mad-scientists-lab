@@ -1,3 +1,11 @@
 TA_ROOT=/mad/ta
+PATH=/path/to/node
 #  m  h  dom  mon  dow  command
- */5  *    *    *    *  cd $TA_ROOT && mexico --exchange bybit --market BTC/USD --timeframe 1m --since last --limit 200
+ */1  *    *    *    *  cd $TA_ROOT && test -e .candles && bin/mexico --exchange bybit --market BTC/USD --timeframe 1m --since last --limit 200
+ */1  *    *    *    *  cd $TA_ROOT && test -e .candles && bin/mexico --exchange bybit --market ETH/USD --timeframe 1m --since last --limit 200
+
+
+# Remember
+# PATH needs to be set so that processes run by cron can find the node executable.
+# $TA_ROOT/.candles is tested for existence before running bin/mexico.
+#   This lets you turn candle downloading on and off without editing the crontab.

@@ -1,5 +1,7 @@
 const fs = require('fs')
 const beautify = require('json-beautify')
+const xdg = require('xdg-basedir')
+const mkdirp = require('mkdirp')
 
 function isAscending(comparables) {
   let rest = comparables.slice(1)
@@ -336,6 +338,46 @@ const nullLogger = {
   error:   noop
 }
 
+/**
+ * Help prevent a process from running again if it's already running with similar settings
+ * @param {Process} process - process object to attach event handlers to
+ * @param {String} name - Name of program
+ * @param {String} key - String used as name of lockfile
+ * @returns {Boolean} false if lockfile exists, true if lockfile successfully created
+ */
+function lockProcess(process, name, key) {
+  const dir = `${xdg.cache}/${name}`
+  const lock = `${dir}/${key}`
+  let dStat, lStat
+  // make cache dir if it doesn't already exist
+  try {
+    dStat = fs.statSync(dir)
+  }
+  catch(e) {
+    mkdirp.sync(dir)
+  }
+  // make lock file if it doesn't already exist
+  try {
+    lStat = fs.statSync(lock)
+  }
+  catch(e) {
+    fs.writeFileSync(lock, process.pid.toString())
+    // setup handlers to remove lock file when process exits (gracefully or otherwise)
+    const removeLock = () => {
+      fs.unlinkSync(lock)
+    }
+    process.on('exit', removeLock)
+    process.on('uncaughtException', removeLock)
+  }
+  // if the lockfile exists, that's bad
+  // console.log(dStat, lStat)
+  if (lStat) {
+    return false
+  } else {
+    return true
+  }
+}
+
 module.exports = {
   isAscending,
   isDescending,
@@ -358,5 +400,6 @@ module.exports = {
   dump,
   _cc,
   noop,
-  nullLogger
+  nullLogger,
+  lockProcess
 }

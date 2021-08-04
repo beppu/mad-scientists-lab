@@ -8,6 +8,7 @@ function reload(module){
 global.reload   = reload
 global.rl       = reload
 global.cl       = console.log
+global.ok       = Object.keys
 
 // global.Promise     = require('bluebird')
 global.Lazy        = require('lazy.js')
@@ -20,6 +21,7 @@ global.luxon       = require('luxon')
 global.DateTime    = global.luxon.DateTime
 global.Interval    = global.luxon.Interval
 global.kindOf      = require('kind-of')
+global.clone       = require('clone')
 
 global.ta         = require('./index')
 global.alerts     = require('./alerts')
@@ -51,4 +53,4 @@ global.x = {}
 // I use this test fixture a lot
 global.candles = require('./tests/fixtures/candles.json')
 
-console.log(Object.keys(global))
+cl(ok(global))

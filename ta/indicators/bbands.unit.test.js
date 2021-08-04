@@ -19,14 +19,14 @@ test('BBANDS stream calculations should be consistent with BBANDS batch calculat
   const [bbandsInsert, bbandsUpdate] = bbands(20)
   let state
   candles.forEach((c) => {
-    md = ta.marketDataAppendCandle(md, c)
-    imd = ta.invertedAppendCandle(imd, c)
+    ta.marketDataAppendCandle(md, c) // NOTE
+    ta.invertedAppendCandle(imd, c)  // These mutate md and imd respectively, so let's not pretend otherwise.
     state = bbandsInsert(md, imd, state)
   })
 
   // batch calculation copied and adapted from bin/price
   const marketData         = ta.marketDataFromCandles(candles)
-  const indicatorSettings  = ta.id['bbands'](marketData, 20)
+  const indicatorSettings  = ta.id.bbands(marketData, 20)
   const r                  = talib.execute(indicatorSettings)
   const invertedMarketData = ta.invertedMarketData(marketData)
   ta.invertedAppend(invertedMarketData, 'upperBand',  r.result.outRealUpperBand)

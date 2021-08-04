@@ -64,13 +64,16 @@ function logName(begin, end) {
  * Concat executedOrderLogDir and logName together
  * @param {DateTime} begin - The DateTime the strategy should begin
  * @param {DateTime} end - The DateTime the strategy should end
+ * @param {String} exchange - exchange to trade on
+ * @param {String} market - market to trade
  * @param {String} prefix - base log directory
  * @param {Object} config - strategy config
  * @param {Function} fn - (optional) function that transforms `config` into a path-friendly string
  * @returns {String} Return full path of order log
  */
-function fullExecutedOrderLogName(begin, end, prefix, config, fn) {
-  return path.join(executedOrderLogDir(prefix, config, fn), logName(begin, end))
+function fullExecutedOrderLogName(begin, end, exchange, market, prefix, config, fn) {
+  // XXX don't hardcode
+  return path.join(executedOrderLogDir(begin, end, exchange, market, prefix, config, fn), logName(begin, end))
 }
 
 /**
@@ -85,6 +88,7 @@ function fullExecutedOrderLogName(begin, end, prefix, config, fn) {
  * @returns {Pino} A pino logger
  */
 function createOrderLogger(begin, end, exchange, market, prefix, config, fn) {
+  console.log('xxx', { begin, end, exchange, market, prefix, config })
   const logDir = executedOrderLogDir(begin, end, exchange, market, prefix, config, fn)
   mkdirp.sync(logDir)
   const inner = Object.assign({}, config[1])

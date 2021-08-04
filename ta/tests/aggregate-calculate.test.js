@@ -227,14 +227,13 @@ test("heikin ashi should not delete the first calculated value on aggregation", 
   // repl snippet
 
   //start = DateTime.fromMillis(1583589600000)
-  start = DateTime.fromISO("2017-08-24T17:00:00.000-07:00")
+  start = DateTime.fromISO("2018-11-24T17:00:00.000-07:00")
   indicators = [['rsi']]
   timeframes = ['1h', '4h', '1d']
   specs = {}
   timeframes.forEach((tf) => {specs[tf] = indicators.map((indi) => indi)})
   mainLoop = pipeline.mainLoopFn('1h', specs)
-  pipeline.loadCandlesFromFS('data', 'bitmex', 'BTC/USD', '1h', start).then((nc) => x.nc = nc)
-
+  pipeline.loadCandlesFromFS('data', 'bybit', 'BTC/USD', '1h', start).then((nc) => x.nc = nc)
   nextCandle = x.nc
   pipeline.runLoop(mainLoop, nextCandle).then((ms) => x.ms = ms) // ms is marketState
 

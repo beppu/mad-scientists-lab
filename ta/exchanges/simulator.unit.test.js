@@ -110,12 +110,12 @@ test("limit orders should fill when their price is reached", async () => {
     [1, 7010, 9500, 7000, 7900, 10000]
   ]
   let r = await sx(orders, undefined, candles[0])
-  expect(r[1]).toHaveLength(1)
+  expect(r[1]).toHaveLength(2)
   let r2 = await sx(limitOrders, r[0], candles[1])
   //console.log(r2)
   const newBalance = r2[0].balance
   expect(r2[0].limitOrders).toHaveLength(0)
-  expect(r2[1]).toHaveLength(2)
+  expect(r2[1]).toHaveLength(4)
   expect(newBalance).toBeGreaterThan(balance)
 })
 
@@ -146,7 +146,7 @@ test("short positions should be possible with market orders", async () => {
   let r2 = await sx(closeOrders, r[0], candles[1])
   //console.log(r2)
   expect(r2[0].balance).toBeLessThan(balance) // this trade should lose money
-  expect(r2[1]).toHaveLength(1)
+  expect(r2[1]).toHaveLength(2)
 })
 
 test("short positions should be possible with limit orders", async () => {
@@ -173,11 +173,11 @@ test("short positions should be possible with limit orders", async () => {
     [1, 9010, 9500, 7000, 7900, 10000]
   ]
   let r = await sx(shortOrders, undefined, candles[0])
-  expect(r[1]).toHaveLength(1)             // the short should be executed on this candle
+  expect(r[1]).toHaveLength(2)             // the short should be executed on this candle
   expect(r[0].limitOrders).toHaveLength(0)
   //console.log(r[0])
   let r2 = await sx(closeOrders, r[0], candles[1])
-  expect(r2[1]).toHaveLength(1) // the previous short order and the take profit order should fill in the same candle
+  expect(r2[1]).toHaveLength(2) // the previous short order and the take profit order should fill in the same candle
   expect(r2[0].balance).toBeGreaterThan(balance) // this should be a profitable short trade
   expect(r2[0].position).toBe(0) // we should have no position after all trades have executed
   //console.log(r2[0].balance, r2[0].position)
@@ -200,9 +200,9 @@ test("limit buys orders priced higher than the current price should be turned in
   ]
   // the limit buy order should turn into a market buy that fills immediately
   let r = await sx(buyOrders, undefined, candles[0])
-  expect(r[1]).toHaveLength(1)
-  expect(r[1][0].type).toBe('market')
-  expect(r[1][0].oldType).toBe('limit')
+  expect(r[1]).toHaveLength(2)
+  expect(r[1][1].type).toBe('market')
+  expect(r[1][1].oldType).toBe('limit')
 })
 
 test("limit sell orders that are lower than the current price should be turned into market sells", async () => {
@@ -223,10 +223,10 @@ test("limit sell orders that are lower than the current price should be turned i
   // the limit buy order should turn into a market buy that fills immediately
   let r = await sx(sellOrders, undefined, candles[0])
   //console.log(r)
-  expect(r[1]).toHaveLength(1)
-  expect(r[1][0].type).toBe('market')
-  expect(r[1][0].oldType).toBe('limit')
-  expect(r[1][0].fillPrice).toBeGreaterThan(0)
+  expect(r[1]).toHaveLength(2)
+  expect(r[1][1].type).toBe('market')
+  expect(r[1][1].oldType).toBe('limit')
+  expect(r[1][1].fillPrice).toBeGreaterThan(0)
 })
 
 test("all sells that increase a position should adjust the averageEntryPrice", async () => {
@@ -356,20 +356,17 @@ test("stop market orders should be able to open positions", async () => {
   ]
   const [state, executedOrders] = await sx(orders, undefined, candles[0])
   //console.log(state, executedOrders)
-  expect(executedOrders).toHaveLength(1)
+  expect(executedOrders).toHaveLength(2)
   expect(state.position).toBe(-orders[0].quantity)
   expect(state.balance).toBe(balance - orders[0].price * orders[0].quantity)
 })
 
-// TODO Redo how edits work in the simulator
-// - type 'modify' goes away.  type has to mean order-type
-// - I may have to make the simulator auto-assign order_ids
 test("unexecuted orders should be editable", async () => {
   const balance = 100000
   const sx = simulator.create({ balance })
   const orders = [
     {
-      group: 'test-orders',
+      id: 'bar',
       type: 'stop-market',
       action: 'sell',
       quantity: 1,
@@ -383,14 +380,14 @@ test("unexecuted orders should be editable", async () => {
       price: 9000
     },
     {
-      group: 'test-orders',
+      id: 'bar2',
       type: 'limit',
       action: 'buy',
       quantity: 1,
       price: 1000
     },
     {
-      id: 'bar',
+      id: 'bar3',
       type: 'limit',
       action: 'buy',
       quantity: 1,
@@ -403,19 +400,25 @@ test("unexecuted orders should be editable", async () => {
   expect(s.stopOrders).toHaveLength(2)
   const edits = [
     {
-      type: 'modify',
+      type: 'stop-market',
       action: 'cancel',
       id: 'foo'
     },
     {
-      type: 'modify',
-      action: 'cancel',
-      group: 'test-orders'
-    },
-    {
-      type: 'modify',
+      type: 'stop-market',
       action: 'update',
       id: 'bar',
+      price: 9100
+    },
+    {
+      type: 'limit',
+      action: 'cancel',
+      id: 'bar2'
+    },
+    {
+      type: 'limit',
+      action: 'update',
+      id: 'bar3',
       price: 1100,
       quantity: 2
     }
@@ -423,10 +426,12 @@ test("unexecuted orders should be editable", async () => {
   // only one limit order should be left after all this, and it should be modified.
   const [s2, x2] = await sx(edits, s)
   expect(s2.limitOrders).toHaveLength(1)
-  expect(s2.stopOrders).toHaveLength(0)
+  expect(s2.stopOrders).toHaveLength(1)
   expect(x2).toHaveLength(4) // even though only 3 instructions were given, the group cancel cancelled 2 orders to bring the total number of orders changed to 4
   expect(s2.limitOrders[0].price).toBe(1100)
   expect(s2.limitOrders[0].quantity).toBe(2)
+  expect(s2.stopOrders[0].price).toBe(9100)
+  expect(s2.stopOrders[0].quantity).toBe(1)
 })
 
 // After I get up to here, I have enough to move on to strategy implementation.

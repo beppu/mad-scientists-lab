@@ -37,16 +37,44 @@ const partition = require('lodash.partition')
  */
 
 /**
+ * Acknowledge that an order was created on the exchange side
+ * @param {Object} o - an order
+ * @param {Number} timestamp - DateTime of order execution in milliseconds
+ * @returns {Object} a clone of the order with a created status
+ */
+function ackOrder(o, timestamp) {
+  const ack = clone(o)
+  ack.status = 'created'
+  ack.timestamp = timestamp
+  return ack
+}
+
+function ackCancel(o, timestamp) {
+  const ack = clone(o)
+  ack.status = 'cancelled'
+  ack.timestamp = timestamp
+  return ack
+}
+
+function ackUpdate(o, timestamp) {
+  const ack = clone(o)
+  ack.status = 'updated'
+  ack.timestamp = timestamp
+  return ack
+}
+
+/**
  * Create a rejected order
  * @param {String} reason - why the order was rejected
  * @param {Number} timestamp - DateTime of order execution in milliseconds
+ * @returns {Object} a clone of the order with a rejected status
  */
 function rejectOrder(o, timestamp, reason) {
   const rejection = clone(o)
-  o.status = 'rejected'
-  o.reason = reason || 'unknown'
-  o.timestamp = timestamp
-  return o
+  rejection.status = 'rejected'
+  rejection.reason = reason || 'unknown'
+  rejection.timestamp = timestamp
+  return rejection
 }
 
 /**
@@ -309,7 +337,7 @@ function executeStopAndLimitOrders(state, a, b, candle) {
     case 'stop-market':
       o.oldType = 'stop-market'
       o.type = 'market'
-      const fakeCandle = [0, o.price, o.price, o.price, o.price, 0]
+      const fakeCandle = [candle[0], o.price, o.price, o.price, o.price, 0]
       newState.marketOrders.push(o)
       const [s, x] = executeMarketOrders(newState, fakeCandle)
       newState = s
@@ -356,73 +384,54 @@ function convertLateLimitOrdersToMarketOrders(state, candle) {
  * @param {Array<Object>} orders - a list of orders that may contain modify instructions
  * @returns {Array} an array of state and executedModifyInstructions
  */
-function executeModifyInstructions(state, orders) {
+function executeModifyInstructions(state, orders, timestamp) {
   let newState = clone(state)
   let executedModifyInstructions = []
-  const modifyInstructions = orders.filter((o) => o.type === 'modify')
-  modifyInstructions.forEach((m) => {
-    //console.log(m)
-    switch (m.action) {
-    case 'cancel':
-      if (m.id) {
-        let [keepLimits, cancelLimits] = partition(newState.limitOrders, (o) => o.id !== m.id)
-        let [keepStops, cancelStops] = partition(newState.stopOrders, (o) => o.id !== m.id)
-        newState.limitOrders = keepLimits
-        newState.stopOrders = keepStops
-        cancelLimits.forEach((o) => o.status = 'cancelled')
-        cancelStops.forEach((o) => o.status = 'cancelled')
-        executedModifyInstructions = executedModifyInstructions.concat(cancelLimits, cancelStops)
-      } else if (m.group) {
-        let [keepLimits, cancelLimits] = partition(newState.limitOrders, (o) => o.group !== m.group)
-        let [keepStops, cancelStops] = partition(newState.stopOrders, (o) => o.group !== m.group)
-        newState.limitOrders = keepLimits
-        newState.stopOrders = keepStops
-        cancelLimits.forEach((o) => o.status = 'cancelled')
-        cancelStops.forEach((o) => o.status = 'cancelled')
-        executedModifyInstructions = executedModifyInstructions.concat(cancelLimits, cancelStops)
+  const cancelInstructions = orders.filter((o) => o.action === 'cancel')
+  cancelInstructions.forEach((cancel) => {
+    switch (cancel.type) {
+    case 'limit':
+      let i = newState.limitOrders.findIndex((o) => o.id === cancel.id)
+      if (i !== -1) {
+        let o = newState.limitOrders[i]
+        newState.limitOrders.splice(i, 1)
+        executedModifyInstructions.push(ackCancel(o, timestamp))
       }
       break;
-    case 'update':
-      // NOTE: update is id only.  There are no group updates.
-      // TODO: Sanity check the update values to make sure there are enough funds.
-      newState.limitOrders.forEach((o) => {
-        if (o.id === m.id) {
-          const updatedOrder = clone(o)
-          updatedOrder.status = 'updated'
-          if (m.price) {
-            updatedOrder.oldPrice = o.price
-            o.price = m.price
-          }
-          if (m.quantity) {
-            updatedOrder.oldQuantity = o.quantity
-            o.quantity = m.quantity
-          }
-          if (m.limitPrice) {
-            updatedOrder.oldLimitPrice = o.limitPrice
-            o.limitPrice = m.limitPrice
-          }
-          executedModifyInstructions = executedModifyInstructions.concat(updatedOrder)
-        }
-      })
-      newState.stopOrders.forEach((o) => {
-        if (o.id === m.id) {
-          const updatedOrder = clone(o)
-          updatedOrder.status = 'updated'
-          if (m.price) {
-            updatedOrder.oldPrice = o.price
-            o.price = m.price
-          }
-          if (m.quantity) {
-            updatedOrder.oldQuantity = o.quantity
-            o.quantity = m.quantity
-          }
-          if (m.limitPrice) {
-            updatedOrder.oldLimitPrice = o.limitPrice
-            o.limitPrice = m.limitPrice
-          }
-          executedModifyInstructions = executedModifyInstructions.concat(updatedOrder)
-        }
-      })
+    case 'stop-market':
+      let j = newState.stopOrders.findIndex((o) => o.id === cancel.id)
+      if (j !== -1) {
+        let o = newState.stopOrders[j]
+        newState.stopOrders.splice(j, 1)
+        executedModifyInstructions.push(ackCancel(o, timestamp))
+      }
+      break;
+    }
+  })
+  const updateInstructions = orders.filter((o) => o.action === 'update')
+  updateInstructions.forEach((update) => {
+    switch (update.type) {
+    case 'limit':
+      let o = newState.limitOrders.find((_o) => _o.id === update.id)
+      if (o) {
+        //console.log('o', o)
+        if (update.price)
+          o.price = update.price
+        if (update.quantity)
+          o.quantity = update.quantity
+        executedModifyInstructions.push(ackUpdate(o, timestamp))
+      }
+      break;
+    case 'stop-market':
+      let so = newState.stopOrders.find((_o) => _o.id === update.id)
+      if (so) {
+        //console.log('so', so)
+        if (update.price)
+          so.price = update.price
+        if (update.quantity)
+          so.quantity = update.quantity
+        executedModifyInstructions.push(ackUpdate(so, timestamp))
+      }
       break;
     }
   })
@@ -456,7 +465,7 @@ function executeOrders(state, candle) {
   const openToHigh = high - open
   const openToLow  = open - low
 
-  // Convert limit orders that have been overtaken by price action to market orders like BitMEX
+  // Convert limit orders that have been overtaken by price action to market orders like BitMEX when not in post-only mode
   let states = []
   let tmpExecutions
   let tmpState = convertLateLimitOrdersToMarketOrders(state, candle)
@@ -556,30 +565,42 @@ function create(opts) {
   return async function simulator(orders, state, candle) {
     // let's get a state we can work with
     let newState = state ? clone(state) : initialState(opts.balance)
+    let newOrders
+    let timestamp = candle ? candle[0] : undefined // XXX - do this better
 
     // Run any modifications first
-    let modifiedState, modifications
+    let modifiedState
+    let modifications = []
     if (orders && orders.length) {
-      [modifiedState, modifications] = executeModifyInstructions(newState, orders)
+      [modifiedState, modifications] = executeModifyInstructions(newState, orders, timestamp)
       //console.log(modifiedState, modifications.length)
       if (modifications.length) {
         newState = modifiedState
       }
-    } else {
-      modifications = []
+      // mutate orders to remove cancel and update operations
+      newOrders = orders.filter((o) => o.action !== 'cancel' && o.action !== 'update')
     }
 
     // If orders were given, put them in state as appropriate
-    if (orders && orders.length) {
-      let limitOrders = orders.filter((o) => o.type === 'limit')
-      if (limitOrders.length)
+    if (newOrders && newOrders.length) {
+      let limitOrders = newOrders.filter((o) => o.type === 'limit')
+      if (limitOrders.length) {
         newState.limitOrders = newState.limitOrders.concat(limitOrders)
-      let marketOrders = orders.filter((o) => o.type === 'market')
-      if (marketOrders.length)
+        let limitAcks = limitOrders.map((o) => ackOrder(o, timestamp))
+        modifications.push(...limitAcks)
+      }
+      let marketOrders = newOrders.filter((o) => o.type === 'market')
+      if (marketOrders.length) {
         newState.marketOrders = newState.marketOrders.concat(marketOrders)
-      let stopOrders = orders.filter((o) => o.type.match(/^stop-/))
-      if (stopOrders.length)
+        let marketAcks = marketOrders.map((o) => ackOrder(o, timestamp))
+        modifications.push(...marketAcks)
+      }
+      let stopOrders = newOrders.filter((o) => o.type.match(/^stop-/))
+      if (stopOrders.length) {
         newState.stopOrders = newState.stopOrders.concat(stopOrders)
+        let stopAcks = stopOrders.map((o) => ackOrder(o, timestamp))
+        modifications.push(...stopAcks)
+      }
     }
 
     if (candle) {
