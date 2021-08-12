@@ -64,8 +64,8 @@ function parseDateTime(d) {
   return DateTime.fromISO(d)
 }
 
-function prompt(candle) {
-  process.stdout.write(`[${time.iso(candle[0])}][${candle[4]}]> `)
+function prompt(candle, exchangeState) {
+  process.stdout.write(`[${time.iso(candle[0])}][${exchangeState.position}][${candle[4]}]> `)
 }
 
 function breakpointExists({ marketState, exchangeState, strategyState, orders, executedOrders }) {
@@ -113,7 +113,7 @@ async function interactiveLoop({marketState, exchangeState, strategyState, order
       console.log('Press "h" for help.')
       firstTimeInteractive = false
     }
-    prompt(candle)
+    prompt(candle, exchangeState)
     let key = await interactive.keyPress()
     while (key.name !== 'n') { // n for next
       if (key.name === 'q') {
@@ -151,7 +151,7 @@ async function interactiveLoop({marketState, exchangeState, strategyState, order
           o orders and executedOrders
         `)
       }
-      prompt(candle)
+      prompt(candle, exchangeState)
       key = await interactive.keyPress()
     }
   }
