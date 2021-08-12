@@ -12,17 +12,21 @@ module.exports = function hmaFn(period=55) {
 
   const sqPeriod = Math.round(Math.sqrt(period))
 
+  // hma = wma(2 * wma(data, period / 2) - wma(data, period), sqrt(period))
   const hmaIterate = function(md, imd, state) {
     // single calculation
-    const amd = ta.marketDataTakeLast(md, period) // only needs period
+    const amd  = ta.marketDataTakeLast(md, period) // only needs period
     const wma1 = wma(amd, period / 2).map(w => w * 2)
     const wma2 = wma(amd, period)
     const diff = wma1.length - wma2.length
-    const wma3 = []
+    const acc  = []
     for (let i = wma2.length - 1; i >= 0; i--) {
-      wma3.unshift(wma1[i + diff] - wma2[i])
+      acc.unshift(wma1[i + diff] - wma2[i])
     }
-    return wma3
+    // until we have enough periods, wma3 is []
+    const wma3 = wma({close: acc}, sqPeriod)
+    // FIXME how can we continue accumulating values whilst periods < 55?
+    return wma3.length ? wma3 : acc
   }
 
   const hmaInsert = function(md, imd, state) {
