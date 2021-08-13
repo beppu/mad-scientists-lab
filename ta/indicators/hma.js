@@ -26,6 +26,9 @@ module.exports = function hmaFn(period=55) {
     // until we have enough periods, wma3 is []
     const wma3 = wma({close: acc}, sqPeriod)
     // FIXME how can we continue accumulating values whilst periods < 55?
+    // - key wma1, wma2 and wma3
+    // - once wma1 & wma2 have enough data, then wma3 can start
+    // - once wma3 starts, we add first hma key
     return wma3.length ? wma3 : acc
   }
 
