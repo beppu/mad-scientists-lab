@@ -12,46 +12,61 @@ module.exports = function hmaFn(period=55) {
 
   const sqPeriod = Math.round(Math.sqrt(period))
 
+  // hma = wma(2 * wma(data, period / 2) - wma(data, period), sqrt(period))
   const hmaIterate = function(md, imd, state) {
-    // TODO Implement
-    // NOTE rsi.js used md to make it easier to port the C code from talib to JS.  hma.js should be able to use imd instead.
-    const newState = {}
-    return newState
+    // single calculation
+    const amd  = ta.marketDataTakeLast(md, period) // only needs period
+    const wma1 = wma(amd, period / 2).map(w => w * 2)
+    const wma2 = wma(amd, period)
+    const diff = wma1.length - wma2.length
+    const acc  = []
+    for (let i = wma2.length - 1; i >= 0; i--) {
+      acc.unshift(wma1[i + diff] - wma2[i])
+    }
+    // until we have enough periods, wma3 is []
+    const wma3 = wma({close: acc}, sqPeriod)
+    // FIXME how can we continue accumulating values whilst periods < 55?
+    // - key wma1, wma2 and wma3
+    // - once wma1 & wma2 have enough data, then wma3 can start
+    // - once wma3 starts, we add first hma key
+    return wma3.length ? wma3 : acc
   }
 
   const hmaInsert = function(md, imd, state) {
-    // TODO Implement
-    // FIXME single calculation
-    const amd = ta.marketDataTakeLast(md, period) // only needs period
-    const
-      wma1 = 2 * lastWma(amd, period / 2),
-      wma2 = lastWma(amd, period),
-      hma  = lastWma((wma1 - wma2), parseInt(Math.sqrt(period)))
-
-    // beppu's pseudocode into code
-    // const settings = ta.id.wma(md, 10)
-    // const settings2 = {...settings, endIdx: 14, inReal: settings.inReal.splice(0, 5)}
-    // const r = talib.execute(settings)
-    // const r2 = talib.execute(settings2)
-
-    const newState = {}
-    return newState
+    // create new candle
+    // - occurs on first open
+    if (md.close.length < period) return undefined
+    const last = hmaIterate(md)
+    if (imd[key]) {
+      imd[key].unshift(last[0])
+    } else {
+      if (ta.isInvertedSeries(imd.close)) {
+        imd[key] = ta.createInvertedSeries()
+        imd[key].unshift(last[0])
+      } else {
+        imd[key] = last
+      }
+    }
+    return { timestamp: imd.timestamp[0] }
   }
 
   const hmaUpdate = function(md, imd, state) {
-    if (md.close.length < period+2) return undefined
-    const newState = hmaIterate(imd, state)
-    imd[key][0] = newState.hmaValue
-    return newState
+    // update existing candle
+    if (md.close.length < period+1) return undefined // not yet enough data
+    const last = hmaIterate(md)
+    imd[key][0] = last[0]
+    return { timestamp: imd.timestamp[0] }
   }
 
-  // helpers
-  // ---------
-  function lastWma(md, period) {
-    const settings = ta.id.wma(md, period)
-    const wma = talib.execute(settings)
-    return wma.result.outReal.slice(wma.result.outReal.length - 1) // take only the last value
-  }
+  return [hmaInsert, hmaUpdate, key]
+}
+
+// helpers
+// ---------
+function wma(md, period) {
+  const settings = ta.id.wma(md, period)
+  const wma = talib.execute(settings)
+  return wma.result.outReal
 }
 
 /**

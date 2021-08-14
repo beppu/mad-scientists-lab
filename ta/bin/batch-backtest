@@ -1,0 +1,87 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use DateTime;
+use Getopt::Long;
+use Data::Dump qw(pp);
+
+# bin/backtest --exchange bybit --market BTC/USD --timeframe 1m \                                                                                               [12:41:38]
+#   --strategy HeikinAshi --config cfg.btc-30m.json \
+#   --start-processing-at 2021-06-01 --begin 2021-07-01 --end 2021-07-31 \
+#   -v --gnuplot --balance 500000 --pnl-timeframe 4h
+
+sub date_options_monthly {
+  my ($begin, $days_back) = @_;
+  my $end = DateTime->new(year => $begin->year, month => $begin->month, day => $begin->month_length);
+  my $back = $begin->clone->subtract(days => $days_back);
+  return sprintf(qq[--start-processing-at="%s" --begin="%s" --end="%s"], $back->iso8601, $begin->iso8601, $end->iso8601);
+}
+
+sub date_options_weekly {
+  # TODO
+  return ""
+}
+
+sub backtest_command {
+  my ($exchange, $market, $strategy, $config, $dates) = @_;
+  return qq[bin/backtest --exchange "$exchange" --market "$market" --timeframe 1m --strategy "$strategy" --config "$config" $dates -v --gnuplot --balance 500000 --pnl-timeframe 4h];
+}
+
+# defaults
+$_{interval} = 'monthly';
+$_{strategy} = 'HeikinAshi_00';
+$_{config}   = 'cfg.btc-30m.json';
+$_{back}     = 14;
+
+sub help {
+print qq{Usage: batch-backtest [options]
+
+Run a series of backtests with similar parameters over various intervals of time.
+
+Options:
+  -s, --strategy <STRATEGY>   Strategy to run (Default: "$_{strategy}")
+  -b, --back <DAYS>           Number of days to go back to prefill marketData (Default: $_{back})
+  -s, --interval <INTERVAL>   "monthly" or "weekly" (Default: "$_{interval}")
+  -c, --config <CONFIG>       JSON config file for strategy (Default: "$_{config}")
+  -n, --recon                 Just print the commands without running them.
+  -h, --help
+
+Example:
+
+  # Run HeikinAshi_01 a bunch of times
+  bin/batch-backtest -s HeikinAshi_01 -c cfg.30m.json
+};
+}
+
+sub main {
+  GetOptions(
+    \%_,
+    "interval|i=s",
+    "back|b=n",
+    "strategy|s=s",
+    "config|c=s",
+    "dry-run|just-print|recon|n",
+    "help|h",
+  );
+
+  if ($_{help}) {
+    help();
+    exit 0;
+  }
+
+  my @months = qw(1 2 3 4 5 6 7);
+
+  for my $month (@months) {
+    my $begin = DateTime->new(year => 2021, month => $month, day => 1);
+    my $dates = date_options_monthly($begin, $_{back});
+    my $command = backtest_command("bybit", "BTC/USD", $_{strategy}, $_{config}, $dates);
+    print "$command\n";
+    if (! $_{"dry-run"}) {
+      system $command;
+    }
+  }
+}
+
+main();
+
+# pp(\%_)
