@@ -130,19 +130,22 @@ function calculateSizeSpot(n) {
 
 function handleExecutedOrders(state, marketState, executedOrders) {
   if (executedOrders && executedOrders.length) {
+    console.log(executedOrders)
     executedOrders.forEach((o) => {
       if (o.id && o.id === state.openLongId && o.status === 'filled') {
-        if (state.name === 'want-to-long') {
+        if (state.state === 'want-to-long') {
           state.filledLong()
-        } else {
-          state.close()
+        }
+        if (state.state === 'closing') {
+          state.finish()
         }
       }
       if (o.id && o.id === state.openShortId && o.status === 'filled') {
-        if (state.name === 'want-to-short') {
+        if (state.state === 'want-to-short') {
           state.filledShort()
-        } else {
-          state.close()
+        }
+        if (state.state === 'closing') {
+          state.finish()
         }
       }
     })
@@ -159,7 +162,8 @@ function initFSM() {
       { name: 'filledLong',  from: 'want-to-long',    to: 'long' },
       { name: 'goShort',     from: 'neutral',         to: 'want-to-short' },
       { name: 'filledShort', from: 'want-to-short',   to: 'short' },
-      { name: 'close',       from: ['long', 'short'], to: 'neutral' },
+      { name: 'close',       from: ['long', 'short'], to: 'closing' },
+      { name: 'finish',      from: 'closing',         to: 'neutral' }
     ],
     data: {
       openShortId: undefined,
@@ -172,6 +176,7 @@ function initFSM() {
     ],
     methods: {
       onWantToLong(event, price) {
+        console.log('onWantToLong')
         let longSize = calculateSize(this.config, price)
         this.openLongId = uuid.v4()
         this.orders.push({
@@ -184,11 +189,10 @@ function initFSM() {
       },
       //onBeforeLong: () => allowedToLong(marketState, config),
       onLong(event, id) {
-        // TODO go long
-        this.openLongId = id
         console.log('long')
       },
       onWantToShort(event, price) {
+        console.log('onWantToShort')
         let shortSize = calculateSize(this.config, price)
         this.openShortId = uuid.v4()
         this.orders.push({
@@ -201,12 +205,12 @@ function initFSM() {
       },
       //onBeforeShort: () => allowedToShort(marketState, config),
       onShort: function(event, id) {
-        // TODO go short
-        this.openShortId = id
-        console.long('short')
+        console.log('short')
       },
-      onClose() {
+      onClose(event) {
+        console.log(`State is ${this.state}`)
         if (this.state === 'long') {
+          console.log('wtf?')
           this.openShortId = uuid.v4()
           this.orders.push({
             id:       this.openShortId,
@@ -215,6 +219,7 @@ function initFSM() {
             quantity: this.lastSize
           })
         } else if (this.state === 'short') {
+          console.log('close short here?!!!!')
           this.openLongId = uuid.v4()
           this.orders.push({
             id:       this.openLongId,
@@ -285,30 +290,37 @@ function init(customConfig) {
           if (mayLong) {
             state.goLong(price)
           } else {
+            console.log(`go short ${state.state}`, price)
             state.goShort(price)
           }
         }
       }
       break;
     case 'long':
+      console.log('in long state')
       // look for ways to exit the long position in profit or minimal loss
       if (candleReady(marketState, config.trendTf, 0)) {
         if (shouldTakeProfit(marketState, config, 'red')) {
+          console.log('trying to close long')
           state.close()
         }
       }
       break;
     case 'short':
+      console.log('in short state')
       // look for ways to exit the short position in profit or minimal loss
       if (candleReady(marketState, config.trendTf, 0)) {
         if (shouldTakeProfit(marketState, config, 'green')) {
+          console.log('trying to close short')
           state.close()
         }
       }
       break;
     }
+    let orders = state.orders
+    state.orders = []
 
-    return [state, state.orders]
+    return [state, orders]
   }
 
   return [indicatorSpecs, strategy]
