@@ -49,9 +49,8 @@ function allowedToLong(marketState, config, offset=1) {
   const tf = config.trendTf
   const imdTrend = marketState[`imd${tf}`]
   const haClose = imdTrend.haClose[offset]
-  const ema12 = imdTrend.ema12[offset]
-  const ema26 = imdTrend.ema26[offset]
-  if ((haClose > ema12) && (haClose > ema26) && (ha.color(imdTrend, offset) == 'green')) {
+  const hma55 = imdTrend.hma55[offset]
+  if (haClose > hma55 && (ha.color(imdTrend, offset) == 'green')) {
     return true
   } else {
     return false
@@ -62,9 +61,8 @@ function allowedToShort(marketState, config, offset=1) {
   const tf = config.trendTf
   const imdTrend = marketState[`imd${tf}`]
   const haClose = imdTrend.haClose[offset]
-  const ema12 = imdTrend.ema12[offset]
-  const ema26 = imdTrend.ema26[offset]
-  if ((haClose < ema12) && (haClose < ema26) && (ha.color(imdTrend, offset) == 'red')) {
+  const hma55 = imdTrend.hma55[offset]
+  if (haClose < hma55 && (ha.color(imdTrend, offset) == 'red')) {
     return true
   } else {
     return false
@@ -208,8 +206,8 @@ function initFSM() {
         console.log('short')
       },
       onClose(event) {
-        console.log(`State is ${this.state}`)
-        if (this.state === 'long') {
+        console.log(`State is ${this.state} form ${event.from}`)
+        if (event.from === 'long') {
           console.log('wtf?')
           this.openShortId = uuid.v4()
           this.orders.push({
@@ -218,7 +216,7 @@ function initFSM() {
             action:   'sell',
             quantity: this.lastSize
           })
-        } else if (this.state === 'short') {
+        } else if (event.from === 'short') {
           console.log('close short here?!!!!')
           this.openLongId = uuid.v4()
           this.orders.push({
@@ -246,7 +244,7 @@ function init(customConfig) {
   const config = Object.assign({}, defaultConfig, customConfig)
   const logger = config.logger
 
-  const htf = [ ['heikinAshi'], ['ema', 12], ['ema', 26] ]
+  const htf = [ ['heikinAshi'], ['hma', 55] ]
   const ltf = [ ['heikinAshi'] ]
   const indicatorSpecs = {}
   indicatorSpecs[config.trendTf] = htf
@@ -267,7 +265,6 @@ function init(customConfig) {
 
   // On timeframe boundaries, I should check if heikin ashi changed colors.
   function strategy(strategyState, marketState, executedOrders) {
-    console.log('hi')
     const state    = strategyState || initFSM()
     const imdTrend = marketState[`imd${config.trendTf}`]
     const imdEntry = marketState[`imd${config.entryTf}`]
@@ -297,7 +294,6 @@ function init(customConfig) {
       }
       break;
     case 'long':
-      console.log('in long state')
       // look for ways to exit the long position in profit or minimal loss
       if (candleReady(marketState, config.trendTf, 0)) {
         if (shouldTakeProfit(marketState, config, 'red')) {
@@ -307,7 +303,6 @@ function init(customConfig) {
       }
       break;
     case 'short':
-      console.log('in short state')
       // look for ways to exit the short position in profit or minimal loss
       if (candleReady(marketState, config.trendTf, 0)) {
         if (shouldTakeProfit(marketState, config, 'green')) {
