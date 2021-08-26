@@ -6,6 +6,8 @@
 
 */
 
+const StateMachine = require('javascript-state-machine');
+const StateMachineHistory = require('javascript-state-machine/lib/history')
 const clone    = require('clone')
 const uuid     = require('uuid')
 const analysis = require('../analysis')
@@ -126,10 +128,113 @@ function calculateSizeSpot(n) {
   return n
 }
 
-// TODO Refactor order handling into its own function
-function handleExecutedOrders(strategyState, marketState, executedOrders) {
-  const newState = clone(strategyState)
-  return newState
+function handleExecutedOrders(state, marketState, executedOrders) {
+  if (executedOrders && executedOrders.length) {
+    executedOrders.forEach((o) => {
+      if (o.id && o.id === state.openLongId && o.status === 'filled') {
+        if (state.name === 'want-to-long') {
+          state.filledLong()
+        } else {
+          state.close()
+        }
+      }
+      if (o.id && o.id === state.openShortId && o.status === 'filled') {
+        if (state.name === 'want-to-short') {
+          state.filledShort()
+        } else {
+          state.close()
+        }
+      }
+    })
+  }
+}
+
+function initFSM() {
+
+  const
+  fsm = new StateMachine({
+    init: 'neutral',
+    transitions: [
+      { name: 'goLong',      from: 'neutral',         to: 'want-to-long' },
+      { name: 'filledLong',  from: 'want-to-long',    to: 'long' },
+      { name: 'goShort',     from: 'neutral',         to: 'want-to-short' },
+      { name: 'filledShort', from: 'want-to-short',   to: 'short' },
+      { name: 'close',       from: ['long', 'short'], to: 'neutral' },
+    ],
+    data: {
+      openShortId: undefined,
+      openLongId:  undefined,
+      orders:      [],
+      config:      {},
+    },
+    plugins: [
+      new StateMachineHistory()
+    ],
+    methods: {
+      onWantToLong(event, price) {
+        let longSize = calculateSize(this.config, price)
+        this.openLongId = uuid.v4()
+        this.orders.push({
+          id:       this.openLongId,
+          type:     'market',
+          action:   'buy',
+          quantity: longSize
+        })
+        this.lastSize = longSize
+      },
+      //onBeforeLong: () => allowedToLong(marketState, config),
+      onLong(event, id) {
+        // TODO go long
+        this.openLongId = id
+        console.log('long')
+      },
+      onWantToShort(event, price) {
+        let shortSize = calculateSize(this.config, price)
+        this.openShortId = uuid.v4()
+        this.orders.push({
+          id:       this.openShortId,
+          type:     'market',
+          action:   'sell',
+          quantity: shortSize
+        })
+        this.lastSize = shortSize
+      },
+      //onBeforeShort: () => allowedToShort(marketState, config),
+      onShort: function(event, id) {
+        // TODO go short
+        this.openShortId = id
+        console.long('short')
+      },
+      onClose() {
+        if (this.state === 'long') {
+          this.openShortId = uuid.v4()
+          this.orders.push({
+            id:       this.openShortId,
+            type:     'market',
+            action:   'sell',
+            quantity: this.lastSize
+          })
+        } else if (this.state === 'short') {
+          this.openLongId = uuid.v4()
+          this.orders.push({
+            id:       this.openLongId,
+            type:     'market',
+            action:   'buy',
+            quantity: this.lastSize
+          })
+        } else {
+          console.warn(`Can't ${this.state}.`)
+        }
+      },
+      onNeutral() {
+        // TODO close positions
+        console.log('neutral')
+      },
+    }
+  })
+
+  return fsm
+
 }
 
 function init(customConfig) {
@@ -157,137 +262,53 @@ function init(customConfig) {
 
   // On timeframe boundaries, I should check if heikin ashi changed colors.
   function strategy(strategyState, marketState, executedOrders) {
-    const state    = strategyState || initialState
+    console.log('hi')
+    const state    = strategyState || initFSM()
     const imdTrend = marketState[`imd${config.trendTf}`]
     const imdEntry = marketState[`imd${config.entryTf}`]
     const tf       = config.trendTf
     let price      = imdTrend.close[0]
-
-    // TODO move strategy into state machine
-    // ---------
-    const fsm = new StateMachine({
-      init: 'neutral',
-      transitions: [
-        { name: 'long',    from: 'neutral',         to: 'long'  },
-        { name: 'short',   from: 'neutral',         to: 'short' },
-        { name: 'neutral', from: ['long', 'short'], to: 'neutral' },
-      ],
-      methods: {
-        onBeforeLong: () => allowedToLong(marketState, config),
-        onLong: () => {
-          // TODO go long
-          console.log('long')
-        },
-        onBeforeShort: () => allowedToShort(marketState, config),
-        onShort: () => {
-          // TODO go short
-          console.log('short')
-        },
-        onNeutral: () => {
-          // TODO close positions
-          console.log('neutral')
-        },
-      }
-    })
-
+    state.config = config
 
     // handle executedOrders
-    // This means update the strategyState to reflect new order executions
-    if (executedOrders && executedOrders.length) {
-      executedOrders.forEach((o) => {
-        if (o.id && o.id === state.openLongId && o.status === 'filled') {
-          if (state.name === 'want-to-long') {
-            state.name = 'long'
-          } else {
-            state.name = 'neutral'
-          }
-        }
-        if (o.id && o.id === state.openShortId && o.status === 'filled') {
-          if (state.name === 'want-to-short') {
-            state.name = 'short'
-          } else {
-            state.name = 'neutral'
-          }
-        }
-      })
-    }
+    handleExecutedOrders(state, marketState, executedOrders)
 
-    const newState = clone(state)
-    const orders   = []
-    switch (state.name) {
+    switch (state.state) {
     case 'neutral':
       // determine whether we want to look for longs or shorts
       if (candleReady(marketState, config.trendTf, 0)) {
         const mayLong = allowedToLong(marketState, config)
         const mayShort = allowedToShort(marketState, config)
-        if (mayLong) {
-          newState.name = 'want-to-long'
-        }
-        if (mayShort) {
-          newState.name = 'want-to-short'
-        }
         if (mayLong && mayShort) {
           // If they're both true, the market may be in a weird place, so let's stay neutral.
-          newState.name = 'neutral'
+        } else {
+          if (mayLong) {
+            state.goLong(price)
+          } else {
+            state.goShort(price)
+          }
         }
       }
-      break;
-    case 'want-to-long':
-      // try to open a long position
-      let longSize = calculateSize(config, price)
-      newState.openLongId = uuid.v4()
-      orders.push({
-        id:       newState.openLongId,
-        type:     'market',
-        action:   'buy',
-        quantity: longSize
-      })
-      // TODO Add a stop-loss, too
-      newState.lastSize = longSize
       break;
     case 'long':
       // look for ways to exit the long position in profit or minimal loss
       if (candleReady(marketState, config.trendTf, 0)) {
         if (shouldTakeProfit(marketState, config, 'red')) {
-          newState.openShortId = uuid.v4()
-          orders.push({
-            id:       newState.openShortId,
-            type:     'market',
-            action:   'sell',
-            quantity: state.lastSize
-          })
+          state.close()
         }
       }
-      break;
-    case 'want-to-short':
-      // try to open a short position
-      let shortSize = calculateSize(config, price)
-      newState.openShortId = uuid.v4()
-      orders.push({
-        id:       newState.openShortId,
-        type:     'market',
-        action:   'sell',
-        quantity: shortSize
-      })
-      newState.lastSize = shortSize
       break;
     case 'short':
       // look for ways to exit the short position in profit or minimal loss
       if (candleReady(marketState, config.trendTf, 0)) {
         if (shouldTakeProfit(marketState, config, 'green')) {
-          newState.openLongId = uuid.v4()
-          orders.push({
-            id:       newState.openLongId,
-            type:     'market',
-            action:   'buy',
-            quantity: state.lastSize
-          })
+          state.close()
         }
       }
       break;
     }
 
-    return [newState, orders]
+    return [state, state.orders]
   }
 
   return [indicatorSpecs, strategy]
