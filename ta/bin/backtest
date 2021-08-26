@@ -461,7 +461,8 @@ async function main() {
     process.exit(0)
   }
   catch (err) {
-    console.error(err.stack)
+    console.error(err)
+    if (err.stack) console.error(err.stack)
     process.exit(-1)
   }
 }
