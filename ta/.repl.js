@@ -22,6 +22,8 @@ global.DateTime    = global.luxon.DateTime
 global.Interval    = global.luxon.Interval
 global.kindOf      = require('kind-of')
 global.clone       = require('clone')
+global.StateMachine = require('javascript-state-machine');
+global.StateMachineHistory = require('javascript-state-machine/lib/history')
 
 global.ta         = require('./index')
 global.alerts     = require('./alerts')
