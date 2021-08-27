@@ -128,7 +128,6 @@ function calculateSizeSpot(n) {
 
 function handleExecutedOrders(state, marketState, executedOrders) {
   if (executedOrders && executedOrders.length) {
-    console.log(executedOrders)
     executedOrders.forEach((o) => {
       if (o.id && o.id === state.openLongId && o.status === 'filled') {
         if (state.state === 'want-to-long') {
@@ -146,8 +145,18 @@ function handleExecutedOrders(state, marketState, executedOrders) {
           state.finish()
         }
       }
+      if (o.id && o.id === state.openStopId && o.status === 'filled') {
+        const nextState = (o.action === 'buy') ? 'short' : 'long'
+        state.confirmStop(nextState, o)
+      }
     })
   }
+}
+
+function confirmStop(nextState, o) {
+  console.log('-----', {nextState, o})
+  this.state.stopPrice = o.price
+  return nextState
 }
 
 function initFSM() {
@@ -160,12 +169,18 @@ function initFSM() {
       { name: 'filledLong',  from: 'want-to-long',    to: 'long' },
       { name: 'goShort',     from: 'neutral',         to: 'want-to-short' },
       { name: 'filledShort', from: 'want-to-short',   to: 'short' },
+      { name: 'updateStop',  from: ['long', 'short'], to: 'updating-stop' },
+      { name: 'confirmStop', from: 'updating-stop',   to: confirmStop },
       { name: 'close',       from: ['long', 'short'], to: 'closing' },
-      { name: 'finish',      from: 'closing',         to: 'neutral' }
+      { name: 'stop',        from: ['long', 'short'], to: 'stopped' },
+      { name: 'reset',       from: 'stopped',         to: 'neutral' },
+      { name: 'finish',      from: 'closing',         to: 'neutral' },
     ],
     data: {
       openShortId: undefined,
       openLongId:  undefined,
+      openStopId:  undefined,
+      stopPrice:   undefined,
       orders:      [],
       config:      {},
     },
@@ -173,33 +188,49 @@ function initFSM() {
       new StateMachineHistory()
     ],
     methods: {
-      onWantToLong(event, price) {
+      onWantToLong(event, price, stop) {
         console.log('onWantToLong')
         let longSize = calculateSize(this.config, price)
         this.openLongId = uuid.v4()
+        this.openStopId = uuid.v4()
+        this.stopPrice = stop
+        this.lastSize = longSize
         this.orders.push({
           id:       this.openLongId,
           type:     'market',
           action:   'buy',
           quantity: longSize
+        }, {
+          id:       this.openStopId,
+          type:     'stop-market',
+          action:   'sell',
+          quantity: longSize,
+          price:    stop
         })
-        this.lastSize = longSize
       },
       //onBeforeLong: () => allowedToLong(marketState, config),
       onLong(event, id) {
         console.log('long')
       },
-      onWantToShort(event, price) {
+      onWantToShort(event, price, stop) {
         console.log('onWantToShort')
         let shortSize = calculateSize(this.config, price)
         this.openShortId = uuid.v4()
+        this.openStopId = uuid.v4()
+        this.stopPrice = stop
+        this.lastSize = shortSize
         this.orders.push({
           id:       this.openShortId,
           type:     'market',
           action:   'sell',
           quantity: shortSize
+        }, {
+          id:       this.openStopId,
+          type:     'stop-market',
+          action:   'buy',
+          quantity: shortSize,
+          price:    stop
         })
-        this.lastSize = shortSize
       },
       //onBeforeShort: () => allowedToShort(marketState, config),
       onShort: function(event, id) {
@@ -229,6 +260,31 @@ function initFSM() {
           console.warn(`Can't ${this.state}.`)
         }
       },
+      onUpdateStop(event, price) {
+        if (event.from === 'long') {
+          // If the price is greater, move the stop up.
+          if (price > this.stopPrice) {
+            this.orders.push({
+              id:       this.openStopId,
+              type:     'stop-market',
+              action:   'update',
+              price:    price
+            })
+          }
+        } else if (event.from === 'short') {
+          // If the price moves down, move the stop down.
+          if (price < this.stopPrice) {
+            this.orders.push({
+              id:       this.openStopId,
+              type:     'stop-market',
+              action:   'update',
+              price:    price
+            })
+          }
+        } else {
+          console.warn(`Can't updateStop from ${event.from}.`)
+        }
+      },
       onNeutral() {
         // TODO close positions
         console.log('neutral')
@@ -244,7 +300,7 @@ function init(customConfig) {
   const config = Object.assign({}, defaultConfig, customConfig)
   const logger = config.logger
 
-  const htf = [ ['heikinAshi'], ['hma', 55] ]
+  const htf = [ ['heikinAshi'], ['hma', 55], [ 'bbands' ] ]
   const ltf = [ ['heikinAshi'] ]
   const indicatorSpecs = {}
   indicatorSpecs[config.trendTf] = htf
@@ -270,7 +326,7 @@ function init(customConfig) {
     const imdEntry = marketState[`imd${config.entryTf}`]
     const tf       = config.trendTf
     let price      = imdTrend.close[0]
-    state.config = config
+    state.config   = config
 
     // handle executedOrders
     handleExecutedOrders(state, marketState, executedOrders)
@@ -285,10 +341,10 @@ function init(customConfig) {
           // If they're both true, the market may be in a weird place, so let's stay neutral.
         } else {
           if (mayLong) {
-            state.goLong(price)
+            state.goLong(price, imdTrend.lowerBand[0])
           } else {
             console.log(`go short ${state.state}`, price)
-            state.goShort(price)
+            state.goShort(price, imdTrend.upperBand[0])
           }
         }
       }
@@ -300,6 +356,7 @@ function init(customConfig) {
           console.log('trying to close long')
           state.close()
         }
+        state.updateStop(imdTrend.lowerBand[0])
       }
       break;
     case 'short':
@@ -309,6 +366,7 @@ function init(customConfig) {
           console.log('trying to close short')
           state.close()
         }
+        state.updateStop(imdTrend.upperBand[0])
       }
       break;
     }
