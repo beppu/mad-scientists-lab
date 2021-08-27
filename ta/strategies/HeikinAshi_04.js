@@ -127,6 +127,12 @@ function calculateSizeSpot(n) {
 }
 
 function handleExecutedOrders(state, marketState, executedOrders) {
+  if (state._nextState) {
+    console.log('found _nextState', state._nextState)
+    state.confirmStop(state._nextState)
+    state._nextState = undefined
+    console.log(`state is ${state.state}`)
+  }
   if (executedOrders && executedOrders.length) {
     executedOrders.forEach((o) => {
       if (o.id && o.id === state.openLongId && o.status === 'filled') {
@@ -146,6 +152,10 @@ function handleExecutedOrders(state, marketState, executedOrders) {
         }
       }
       if (o.id && o.id === state.openStopId && o.status === 'filled') {
+        state.openStopId = undefined
+        state.reset()
+      }
+      if (o.id && o.id === state.openStopId && o.status === 'updated') {
         const nextState = (o.action === 'buy') ? 'short' : 'long'
         state.confirmStop(nextState, o)
       }
@@ -155,7 +165,7 @@ function handleExecutedOrders(state, marketState, executedOrders) {
 
 function confirmStop(nextState, o) {
   console.log('-----', {nextState, o})
-  this.state.stopPrice = o.price
+  if (o) this.state.stopPrice = o.price
   return nextState
 }
 
@@ -237,9 +247,9 @@ function initFSM() {
         console.log('short')
       },
       onClose(event) {
-        console.log(`State is ${this.state} form ${event.from}`)
+        console.log(`state is ${this.state} from ${event.from}`)
         if (event.from === 'long') {
-          console.log('wtf?')
+          console.log('closing long')
           this.openShortId = uuid.v4()
           this.orders.push({
             id:       this.openShortId,
@@ -248,7 +258,7 @@ function initFSM() {
             quantity: this.lastSize
           })
         } else if (event.from === 'short') {
-          console.log('close short here?!!!!')
+          console.log('closing short')
           this.openLongId = uuid.v4()
           this.orders.push({
             id:       this.openLongId,
@@ -261,6 +271,7 @@ function initFSM() {
         }
       },
       onUpdateStop(event, price) {
+        console.log({ price, stopPrice: this.stopPrice })
         if (event.from === 'long') {
           // If the price is greater, move the stop up.
           if (price > this.stopPrice) {
@@ -281,9 +292,10 @@ function initFSM() {
               price:    price
             })
           }
-        } else {
-          console.warn(`Can't updateStop from ${event.from}.`)
         }
+        // Since we didn't have to move the stop, we have to explicitly move to the next state.
+        console.log('setting _nextState')
+        this._nextState = event.from
       },
       onNeutral() {
         // TODO close positions
@@ -355,8 +367,9 @@ function init(customConfig) {
         if (shouldTakeProfit(marketState, config, 'red')) {
           console.log('trying to close long')
           state.close()
+        } else {
+          state.updateStop(imdTrend.lowerBand[0])
         }
-        state.updateStop(imdTrend.lowerBand[0])
       }
       break;
     case 'short':
@@ -365,8 +378,9 @@ function init(customConfig) {
         if (shouldTakeProfit(marketState, config, 'green')) {
           console.log('trying to close short')
           state.close()
+        } else {
+          state.updateStop(imdTrend.upperBand[0])
         }
-        state.updateStop(imdTrend.upperBand[0])
       }
       break;
     }
