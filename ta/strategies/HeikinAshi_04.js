@@ -127,12 +127,6 @@ function calculateSizeSpot(n) {
 }
 
 function handleExecutedOrders(state, marketState, executedOrders) {
-  if (state._nextState) {
-    console.log('found _nextState', state._nextState)
-    state.confirmStop(state._nextState)
-    state._nextState = undefined
-    console.log(`state is ${state.state}`)
-  }
   if (executedOrders && executedOrders.length) {
     executedOrders.forEach((o) => {
       if (o.id && o.id === state.openLongId && o.status === 'filled') {
@@ -256,6 +250,11 @@ function initFSM() {
             type:     'market',
             action:   'sell',
             quantity: this.lastSize
+          }, {
+            id:       this.openStopId,
+            type:     'stop-market',
+            action:   'cancel',
+            quantity: this.lastSize
           })
         } else if (event.from === 'short') {
           console.log('closing short')
@@ -265,6 +264,11 @@ function initFSM() {
             type:     'market',
             action:   'buy',
             quantity: this.lastSize
+          }, {
+            id:       this.openStopId,
+            type:     'stop-market',
+            action:   'cancel',
+            quantity: this.lastSize
           })
         } else {
           console.warn(`Can't ${this.state}.`)
@@ -273,6 +277,7 @@ function initFSM() {
       onUpdateStop(event, price) {
         console.log({ price, stopPrice: this.stopPrice })
         if (event.from === 'long') {
+          console.log('pushing stop update order')
           // If the price is greater, move the stop up.
           if (price > this.stopPrice) {
             this.orders.push({
@@ -293,9 +298,6 @@ function initFSM() {
             })
           }
         }
-        // Since we didn't have to move the stop, we have to explicitly move to the next state.
-        console.log('setting _nextState')
-        this._nextState = event.from
       },
       onNeutral() {
         // TODO close positions
@@ -368,7 +370,11 @@ function init(customConfig) {
           console.log('trying to close long')
           state.close()
         } else {
-          state.updateStop(imdTrend.lowerBand[0])
+          // Only updateStop if you have to
+          if (imdTrend.lowerBand[0] > state.stopPrice) {
+            console.log(`updating stop ${imdTrend.lowerBand[0]} > ${state.stopPrice}`)
+            state.updateStop(imdTrend.lowerBand[0])
+          }
         }
       }
       break;
@@ -379,13 +385,19 @@ function init(customConfig) {
           console.log('trying to close short')
           state.close()
         } else {
-          state.updateStop(imdTrend.upperBand[0])
+          // Only updateStop if you have to
+          if (imdTrend.upperBand[0] < state.stopPrice) {
+            state.updateStop(imdTrend.upperBand[0])
+          }
         }
       }
       break;
     }
     let orders = state.orders
     state.orders = []
+    if (state.state === 'updating-stop') {
+      console.log('orders', time.iso(imdEntry.timestamp[0]), orders)
+    }
 
     return [state, orders]
   }
