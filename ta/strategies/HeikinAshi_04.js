@@ -147,7 +147,8 @@ function handleExecutedOrders(state, marketState, executedOrders) {
       }
       if (o.id && o.id === state.openStopId && o.status === 'filled') {
         state.openStopId = undefined
-        state.reset()
+        state.stop()  // XXX stopped -> neutral is only for record keeping
+        state.reset() // XXX immediate transition back to neutral is OK here.
       }
       if (o.id && o.id === state.openStopId && o.status === 'updated') {
         const nextState = (o.action === 'buy') ? 'short' : 'long'
