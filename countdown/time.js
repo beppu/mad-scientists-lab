@@ -119,6 +119,16 @@ function isTimeframeBoundary(timeframe, time) {
   return false;
 }
 
+function normalizeMilliseconds(ms) {
+  let hours = Math.floor(ms / (60*60*1000))
+  let hr = ms % (60*60*1000)
+  let minutes = Math.floor(hr / (60*1000))
+  let mr = hr % (60*1000)
+  let seconds = Math.floor(mr / 1000)
+  let milliseconds = mr % 1000
+  return { hours, minutes, seconds, milliseconds }
+}
+
 module.exports = {
   dt,
   iso,
@@ -127,5 +137,6 @@ module.exports = {
   timestampForTimeframe,
   translatePeriods,
   isTimeframeBoundary,
+  normalizeMilliseconds,
   parseIntB10
 }

@@ -10,7 +10,7 @@ async function main() {
   program
     .version(pkg.version)
     .usage('[option] <durations>...')
-    .option('-s, --step <milliseconds>', 'step size', time.parseIntB10, 1000)
+    .option('-s, --step <milliseconds>', 'step size', time.parseIntB10, 100)
     .option('-p, --progress <style>', 'progress visualization style', 'default')
     .description('Imagine sleep(1) with progress visualization.')
   program.parse(process.argv)
@@ -35,8 +35,13 @@ async function main() {
     }
     break
   default:
+    const dt = time.normalizeMilliseconds(duration)
     onProgress = (elapsed) => {
-      process.stdout.write(`[${duration - elapsed}/${duration}]           \r`)
+      let et = time.normalizeMilliseconds(elapsed)
+      process.stdout.write(sprintf('%02d:%02d:%02d.%03d / %02d:%02d:%02d.%03d\r', 
+        et.hours, et.minutes, et.seconds, et.milliseconds,
+        dt.hours, dt.minutes, dt.seconds, dt.milliseconds
+      ))
     }
     break
   }
