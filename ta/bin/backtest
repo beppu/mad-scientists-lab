@@ -350,7 +350,8 @@ async function main() {
       if (begin) {
         ;[strategyState, orders] = strategy(strategyState, marketState, executedOrders)
         if (program.verbose && orders && orders.length) {
-          console.log('orders: ', orders)
+          const ts = marketState.imd1m.timestamp[0]
+          console.log('orders: ', time.iso(ts), orders)
         }
         ;[exchangeState, executedOrders] = await exchange(orders, exchangeState, candle)
         if (program.verbose && executedOrders && executedOrders.length) {
