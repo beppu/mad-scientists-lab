@@ -463,7 +463,7 @@ async function main() {
       if (Strategy.gnuplot) {
         const gnuplotPath = `${dir}/main.gpi`
         writtenPaths.push(gnuplotPath)
-        fs.writeFileSync(gnuplotPath, Strategy.gnuplot({ high, low, skip }))
+        fs.writeFileSync(gnuplotPath, Strategy.gnuplot({ high, low, skip, config: strategyConfig }))
       }
       if (program.verbose) {
         console.log('Gnuplot', writtenPaths)

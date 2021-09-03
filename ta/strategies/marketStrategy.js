@@ -312,7 +312,7 @@ function create(opts) {
       let orders = state.orders
       state.orders = []
       if (state.state === 'updating-stop') {
-        console.log('orders', time.iso(imdEntry.timestamp[0]), orders)
+        console.log('orders', orders)
       }
 
       return [state, orders]
