@@ -38,7 +38,7 @@ async function main() {
     const dt = time.normalizeMilliseconds(duration)
     onProgress = (elapsed) => {
       let et = time.normalizeMilliseconds(elapsed)
-      process.stdout.write(sprintf('%02d:%02d:%02d.%03d / %02d:%02d:%02d.%03d\r', 
+      process.stdout.write(sprintf('%02d:%02d:%02d.%03d / %02d:%02d:%02d.%03d\r',
         et.hours, et.minutes, et.seconds, et.milliseconds,
         dt.hours, dt.minutes, dt.seconds, dt.milliseconds
       ))
