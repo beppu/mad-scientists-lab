@@ -306,7 +306,11 @@ async function main() {
       console.log('---- while loop')
     }
 
+    // These will be used to generate a gnuplot script later.
+    let high = 0, low = Infinity, skip = 0
     while (candle && !end) {
+      if (candle[2] > high) high = candle[2]
+      if (candle[3] < low)  low  = candle[3]
 
       /*
         This is the heart of the analysis pipeline.
@@ -423,6 +427,7 @@ async function main() {
         await interactiveLoop({marketState, exchangeState, strategyState, orders, executedOrders, candle});
       }
     }
+    // end while
 
     // What's the damage?
     //utils.dump(marketState.imd4h, 'imd4h_2.json')
@@ -455,6 +460,11 @@ async function main() {
       const pnlPath = `${dir}/pnl.data`
       writtenPaths.push(pnlPath)
       writePnlSync(historicalPnl, pnlPath)
+      if (Strategy.gnuplot) {
+        const gnuplotPath = `${dir}/main.gpi`
+        writtenPaths.push(gnuplotPath)
+        fs.writeFileSync(gnuplotPath, Strategy.gnuplot({ high, low, skip }))
+      }
       if (program.verbose) {
         console.log('Gnuplot', writtenPaths)
       }

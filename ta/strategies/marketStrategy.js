@@ -1,9 +1,11 @@
-const StateMachine = require('javascript-state-machine');
+const StateMachine        = require('javascript-state-machine');
 const StateMachineHistory = require('javascript-state-machine/lib/history')
-const clone    = require('clone')
-const uuid     = require('uuid')
-const time     = require('../time')
-const utils    = require('../utils')
+const clone               = require('clone')
+const uuid                = require('uuid')
+const Handlebars          = require('handlebars')
+
+const time  = require('../time')
+const utils = require('../utils')
 
 function configSlug(config) {
   return `${config.trendTf}-${config.entryTf}`
@@ -230,9 +232,13 @@ function initFSM() {
 /**
  * Create a customized strategy object.
  * @param {Object} opts - customization
+ * @param {Array} opts.defaultSpecs - indicators for main trend timeframe (trendTf)
+ * @param {Object} opts.defaultConfig - default strategy configuration
  * @param {Function} opts.allowedToLong - function for when to go long
  * @param {Function} opts.allowedToShort - function for when to go short
- * @param {Function} opts.shouldTakeProfit - function for when to take profit
+ * @param {Function} opts.shouldTakeProfit - function for when to exit a position.
+ * @param {Function} opts.configSlug - (optional) function that makes a short string from the config to differentiate the directory name for backtested results
+ * @param {String} opts.gnuplot - (optional) mustache template for gnuplot script for visualizing results
  */
 function create(opts) {
   const {defaultSpecs, defaultConfig, allowedToLong, allowedToShort, shouldTakeProfit} = opts
@@ -313,10 +319,16 @@ function create(opts) {
     }
     return [indicatorSpecs, strategy]
   }
-  return {
-    init,
-    configSlug
+
+  // build strategy object
+  const $Strategy = { init }
+  if (opts.configSlug) {
+    $Strategy.configSlug = opts.configSlug
+  } else {
+    $Strategy.configSlug = configSlug
   }
+  if (opts.gnuplot) $Strategy.gnuplot = Handlebars.compile(opts.gnuplot)
+  return $Strategy
 }
 
 module.exports = {

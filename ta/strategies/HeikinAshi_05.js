@@ -7,6 +7,8 @@ const utils    = require('../utils')
 
 const marketStrategy = require('./marketStrategy')
 
+const defaultSpecs = [ ['heikinAshi'], ['hma', 55], [ 'bbands' ] ]
+
 const defaultConfig = {
   trendTf:           '30m',    // higher timeframe used for trend determination
   entryTf:           '1m',     // lower timeframe used for entry decisions
@@ -78,7 +80,18 @@ function shouldTakeProfit(marketState, config, condition, offset=1) {
   */
 }
 
-const defaultSpecs = [ ['heikinAshi'], ['hma', 55], [ 'bbands' ] ]
+const gnuplot = `set title "HeikinAshi 05 - Generalized State Machine"
+set grid
+set xdata time
+set xtics scale 5,1 format "%F\\n%T" rotate
+set timefmt "%Y-%m-%dT%H:%M:%S"
+set y2tics
+set boxwidth 0.7 relative
+plot [][{{low}}:{{high}}] "30m.data" skip {{skip}} using 1:7:8:9:10 title "BTC/USD Heikin Ashi" with candlesticks, \\
+  "" skip {{skip}} using 1:14 title "55 HMA" with line lw 3 lc rgb "red", \\
+  "orders.data" using 1:2:(stringcolumn(4) eq "buy" ? 9 : 11) title "Orders" with points pointsize 3 pt var lc rgb "orange", \\
+  "pnl.data" using 1:2 axes x1y2 title "Equity" with line lw 3 lc rgb "green"
+`
 
 // This is using the marketOrderStrategy
 module.exports = marketStrategy.create({
@@ -86,5 +99,6 @@ module.exports = marketStrategy.create({
   defaultConfig,
   allowedToLong,
   allowedToShort,
-  shouldTakeProfit
+  shouldTakeProfit,
+  gnuplot
 })
