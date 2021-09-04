@@ -3,6 +3,7 @@ const StateMachineHistory = require('javascript-state-machine/lib/history')
 const clone               = require('clone')
 const uuid                = require('uuid')
 const Handlebars          = require('handlebars')
+const kindOf              = require('kind-of')
 
 const time  = require('../time')
 const utils = require('../utils')
@@ -241,14 +242,19 @@ function initFSM() {
  * @param {String} opts.gnuplot - (optional) mustache template for gnuplot script for visualizing results
  */
 function create(opts) {
-  const {defaultSpecs, defaultConfig, allowedToLong, allowedToShort, shouldTakeProfit} = opts
+  const {defaultSpecs, defaultConfig, allowedToLong, allowedToShort, shouldTakeProfit, getStopPrice} = opts
   const init  = (customConfig) => {
     const config = Object.assign({}, defaultConfig, customConfig)
     const logger = config.logger
 
-    const htf = defaultSpecs
-    const indicatorSpecs = {}
-    indicatorSpecs[config.trendTf] = htf
+    let indicatorSpecs
+    if (kindOf(defaultSpecs) === 'array') {
+      const htf = defaultSpecs
+      indicatorSpecs = {}
+      indicatorSpecs[config.trendTf] = htf
+    } else if (kindOf(defaultSpecs) === 'function') {
+      indicatorSpecs = defaultSpecs(config)
+    }
 
     function strategy(strategyState, marketState, executedOrders) {
       const state    = strategyState || initFSM()
@@ -271,10 +277,10 @@ function create(opts) {
             // If they're both true, the market may be in a weird place, so let's stay neutral.
           } else {
             if (mayLong) {
-              state.goLong(price, imdTrend.lowerBand[0])
-            } else {
+              state.goLong(price, getStopPrice(config, marketState))
+            } else if (mayShort) {
               console.log(`go short ${state.state}`, price)
-              state.goShort(price, imdTrend.upperBand[0])
+              state.goShort(price, getStopPrice(config, marketState))
             }
           }
         }
@@ -287,9 +293,9 @@ function create(opts) {
             state.close()
           } else {
             // Only updateStop if you have to
-            if (imdTrend.lowerBand[0] > state.stopPrice) {
-              console.log(`updating stop ${imdTrend.lowerBand[0]} > ${state.stopPrice}`)
-              state.updateStop(imdTrend.lowerBand[0])
+            if (getStopPrice(config, marketState) > state.stopPrice) {
+              // console.log(`updating stop ${imdTrend.lowerBand[0]} > ${state.stopPrice}`)
+              state.updateStop(getStopPrice(config, marketState))
             }
           }
         }
@@ -302,8 +308,8 @@ function create(opts) {
             state.close()
           } else {
             // Only updateStop if you have to
-            if (imdTrend.upperBand[0] < state.stopPrice) {
-              state.updateStop(imdTrend.upperBand[0])
+            if (getStopPrice(config, marketState) < state.stopPrice) {
+              state.updateStop(getStopPrice(config, marketState))
             }
           }
         }
