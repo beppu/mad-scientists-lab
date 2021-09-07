@@ -393,6 +393,15 @@ const id = {
       inReal:          marketData.close,
       optInTimePeriod: period
     }
+  },
+  obv: function(marketData) {
+    return {
+      name: 'OBV',
+      startIdx: 0,
+      endIdx: marketData.close.length - 1,
+      inReal: marketData.close,
+      volume: marketData.volume
+    }
   }
 }
 
