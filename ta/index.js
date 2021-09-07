@@ -403,15 +403,19 @@ const id = {
       volume: marketData.volume
     }
   },
-  cdldoji: function(marketData) {
+  cdldoji: function(marketData, n=1) {
+    const open  = marketData.open.slice(-n)
+    const high  = marketData.high.slice(-n)
+    const low   = marketData.low.slice(-n)
+    const close = marketData.close.slice(-n)
     return {
-      name: 'CDLDOJI',
+      name:     'CDLDOJI',
       startIdx: 0,
-      endIdx: marketData.close.length,
-      open: marketData.open,
-      high: marketData.high,
-      low: marketData.low,
-      close: marketData.close,
+      endIdx:   close.length,
+      open:     open,
+      high:     high,
+      low:      low,
+      close:    close,
     }
   }
 }
