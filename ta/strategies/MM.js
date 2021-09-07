@@ -46,8 +46,8 @@ function allowedToLong(marketState, config, offset=1) {
   const imdt = marketState[`imd${config.trendTf}`]
   if (bbandBounceBottom(imdh) > 0) {
     const haClose = imdt.haClose[0]
-    console.log('bbandBounce', { haClose, hma330: imdt.hma330[0], hma440: imdt.hma440[0] })
-    if (imdt.hma330[0] < haClose && imdt.hma440[0] < haClose) {
+    //console.log('bbandBounce', { haClose, hma330: imdt.hma330[0], hma440: imdt.hma440[0] })
+    if (imdt.hma330[0] > imdt.hma440[0] && imdt.hma330[0] < haClose && imdt.hma440[0] < haClose) {
       return true
     }
   }
