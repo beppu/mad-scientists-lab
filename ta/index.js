@@ -402,6 +402,17 @@ const id = {
       inReal: marketData.close,
       volume: marketData.volume
     }
+  },
+  cdldoji: function(marketData) {
+    return {
+      name: 'CDLDOJI',
+      startIdx: 0,
+      endIdx: marketData.close.length,
+      open: marketData.open,
+      high: marketData.high,
+      low: marketData.low,
+      close: marketData.close,
+    }
   }
 }
 
