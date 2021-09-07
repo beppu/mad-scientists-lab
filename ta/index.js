@@ -393,15 +393,6 @@ const id = {
       inReal:          marketData.close,
       optInTimePeriod: period
     }
-  },
-  hma: function(marketData, period=55) {
-    return {
-      name:            'HMA',
-      startIdx:        0,
-      endIdx:          marketData.close.length - 1,
-      inReal:          marketData.close,
-      optInTimePeriod: period
-    }
   }
 }
 
