@@ -23,19 +23,25 @@ The initialization function should return an array with two values:
 1. `indicatorSpecs` - This tells the system what indicators you want on what timeframes.
 2. `strategy` - This is the initialized strategy function that will consume `marketState` and `executedOrders` and make trading decisions by returning an `orders` array.
 
+Fortunately for strategy authors, the above has become a low-level detail that you'll rarely have to worry about anymore.
+
 
 ## Using Reusable State Machines
 
 As of early September 2021, a reusable state machine was introduced that
 dramatically reduces the amount of code needed to implement a strategy. The
-first one can be found in `strategies/marketStrategy.js`, and it is a state
+first state machine can be found in `strategies/marketStrategy.js`, and it is a state
 machine that generalizes the concept of a a strategy that enters and exits
 positions using market orders. All a strategy has to do is implement a few
 functions that tell it **WHEN** to buy and sell, and the state machine will
-figure out how to execute the strategy's intent.
+figure out **HOW** to execute the strategy's intent.
+
+Note that the strategy itself knows nothing of limit orders versus market orders.
+Its main job is to give buy and sell signals, and the state machine will manage
+the details of order management.
 
 ```js
-// An example of how to marketStrategy
+// an example of how to use marketStrategy to implement a strategy
 const clone    = require('clone')
 const uuid     = require('uuid')
 const outdent  = require('outdent')
