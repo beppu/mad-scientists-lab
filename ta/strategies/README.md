@@ -88,3 +88,35 @@ also make those configurable in this iteration.
 
 * hold position until EMAs cross.
 * maybe implement a trailing stop loss slightly below the slow EMA.
+
+### HeikinAshi\_04
+
+New ideas:
+
+- Replace EMA 12 and EMA 26 with HMA 55.
+
+### HeikinAshi\_05
+
+New ideas:
+
+- Factor out the state machine into a reusable and customizable library
+
+This is a clone of HeikinAshi\_04 that uses the new reusable and customizable state machine described
+in `strategies/marketStrategy.js`.  Its behavior is exactly the same as HeikinAshi\_04, but the amount
+of code required to implement it is much less.
+
+### MM
+
+This is a completely new strategy that uses very long HMAs (330 and 440) for trend analysis while
+using a higher timeframe Bollinger Band to help with entry timing.  The default timeframes are 4h and 1d
+for trend analysis and entry timing.  This also uses the new reusable state machine as will most new
+strategies going forward.
+
+Note that in the interest of implementing something quickly, this strategy only longs and does not short.
+I might want to keep it that way so that I can be nostalgic about it later, and do refinements in a new
+strategy.
+
+New ideas:
+
+- Use long period HMAs and higher timeframe analysis together.
+- This is also the first strategy that can emit its own `main.gpi` gnuplot script along with the backtest results.
