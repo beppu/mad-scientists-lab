@@ -1,10 +1,10 @@
 const clone    = require('clone')
 const uuid     = require('uuid')
 const outdent  = require('outdent')
-const ha       = candles.ha
 const time     = require('../time')
 const utils    = require('../utils')
 const {candles, divergence} = require('../analysis')
+const ha       = candles.ha
 
 const marketStrategy = require('./marketStrategy')
 
