@@ -1,10 +1,10 @@
 const clone    = require('clone')
 const uuid     = require('uuid')
 const outdent  = require('outdent')
-const analysis = require('../analysis')
-const ha       = analysis.candles.ha
+const ha       = candles.ha
 const time     = require('../time')
 const utils    = require('../utils')
+const {candles, divergence} = require('../analysis')
 
 const marketStrategy = require('./marketStrategy')
 
@@ -22,6 +22,16 @@ const defaultConfig = {
   entryTf:           '1m',    // lower timeframe used for entry decisions
   sizeMode:          'spot',
   fixedPositionSize: 1
+}
+
+function bbandBounceTop(imd) {
+  const end = imd.upperBand.length
+  let i = 0
+  while (i < end) {
+    if (imd.haHigh[i] <= imd.upperBand[i]) return i
+    i++
+  }
+  return -1 // Didn't have enough data to bounce.
 }
 
 function bbandBounceBottom(imd) {
@@ -44,7 +54,8 @@ function bbandBounceBottom(imd) {
 function allowedToLong(marketState, config, offset=1) {
   const imdh = marketState[`imd${config.highTf}`]
   const imdt = marketState[`imd${config.trendTf}`]
-  if (bbandBounceBottom(imdh) > 0) {
+  const lastBounce = bbandBounceBottom(imdh)
+  if (lastBounce > 0 && lastBounce < 5) {
     const haClose = imdt.haClose[0]
     //console.log('bbandBounce', { haClose, hma330: imdt.hma330[0], hma440: imdt.hma440[0] })
     if (imdt.hma330[0] > imdt.hma440[0] && imdt.hma330[0] < haClose && imdt.hma440[0] < haClose) {
@@ -62,6 +73,22 @@ function allowedToLong(marketState, config, offset=1) {
  * @returns {Boolean} true if opening long positions is allowed
  */
 function allowedToShort(marketState, config, offset=1) {
+  const imdh = marketState[`imd${config.highTf}`]
+  const imdt = marketState[`imd${config.trendTf}`]
+  const divConfig = {
+    indicator: 'obvdoji',
+    ageThreshold: 3,
+    gapThreshold: [7, 30],
+    peakThreshold: 9
+  }
+  if (imdt.hma330[0] < imdt.hma440[0]) {
+    // hma has crossed, so--
+    const lastBounce = bbandBounceTop(imdh)
+    if (lastBounce > 0 && lastBounce < 5) {
+      // we bounced off the top band, so--
+      return divergence.regularBearish(imd, divConfig)
+    }
+  }
   return false
 }
 
@@ -89,7 +116,7 @@ function getStopPrice(config, marketState) {
 }
 
 const gnuplot = outdent`
-set title "HeikinAshi 05 - Generalized State Machine"
+set title "MM - Generalized State Machine"
 set grid
 set xdata time
 set xtics scale 5,1 format "%F\\n%T" rotate
