@@ -403,7 +403,7 @@ const id = {
       volume: marketData.volume
     }
   },
-  cdldoji: function(marketData, n=1) {
+  cdldoji: function(marketData, n=2) {
     const open  = marketData.open.slice(-n)
     const high  = marketData.high.slice(-n)
     const low   = marketData.low.slice(-n)
