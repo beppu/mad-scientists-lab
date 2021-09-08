@@ -6,18 +6,22 @@ const {ha} = require('../analysis/candles')
 // - should that be part of strategy or internal for ease-of-use?
 
 const keyName = anchor => `obv${anchor}`
+const isDoji = (md) => {
+  const indicatorSettings = ta.id.cdldoji(md)
+  const r                 = talib.execute(indicatorSettings)
+  return r.result.outInteger[0] === 100
+}
 
 module.exports = function obvFn(anchor='') {
   const key = keyName(anchor)
 
-  const obvIterate = function(md, imd, state) {
+  const obvIterate = function(md, imd, state={}) {
+    const anchoredValue = val => state.resetAnchor ? 0 : val || 0
     const
-      lastObv = imd[key] && imd[key][0] || 0,
-      curObv  = imd.volume[0] || 0,
-      cur     = imd.close[0]  || 0,
-      last    = imd.close[1]  || 0
-    // TODO how can we reset based on anchors?
-    // if ((anchor | peak | valley | price) % N === 0) lastObv = 0
+      lastObv = anchoredValue(imd[key] && imd[key][0]),
+      curObv  = anchoredValue(imd.volume[0]),
+      cur     = anchoredValue(imd.close[0]),
+      last    = anchoredValue(imd.close[1])
     if (cur === last) {
       // obv remains unchanged
       return lastObv
@@ -31,22 +35,28 @@ module.exports = function obvFn(anchor='') {
 
   const obvInsert = function(md, imd, state) {
     // create new candle
-    if (md.close.length < 1) return undefined // not yet enough data
-    // insert initial obv value
+    let resetAnchor = false
+    if (md.close.length < 1)
+      // not yet enough data
+      return undefined
+    // reset based on anchors
+    if (anchor === 'doji' && isDoji(md))
+      resetAnchor = true
+    // insert obv value on candle close
     const obv = obvIterate(md, imd, state)
     if (imd[key]) {
       imd[key].unshift(obv)
     } else {
       imd[key] = [obv]
     }
-    return { timestamp: imd.timestamp[0] }
+    return { timestamp: imd.timestamp[0], resetAnchor }
   }
 
   const obvUpdate = function(md, imd, state) {
     // update existing candle
-    if (md.close.length < 1) return undefined // " guard
+    if (md.close.length < 2) return undefined // " guard
     // update obv value
-    imd[key] = obvIterate(md, imd, state)
+    imd[key][0] = obvIterate(md, imd, state)
     return { timestamp: imd.timestamp[0] }
   }
 

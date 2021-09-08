@@ -11,7 +11,7 @@ const marketStrategy = require('./marketStrategy')
 const defaultSpecs = (config) => {
   const {highTf, trendTf} = config
   const specs = {}
-  specs[highTf] = [ ['heikinAshi'], ['bbands'] ]
+  specs[highTf] = [ ['heikinAshi'], ['bbands'], ['obv', 'doji'] ]
   specs[trendTf] = [ ['heikinAshi'], ['bbands'], ['hma', 330], ['hma', 440] ]
   return specs
 }
