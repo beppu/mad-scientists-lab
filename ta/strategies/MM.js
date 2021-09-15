@@ -86,8 +86,11 @@ function allowedToShort(marketState, config, offset=1) {
     const lastBounce = bbandBounceTop(imdh)
     if (lastBounce > 0 && lastBounce < 5) {
       // we bounced off the top band, so--
-      return divergence.regularBearish(imd, divConfig)
+      // TODO maybe this could become part of a confidence factor
+      console.log('!!!!!!!!! BBAND BOUNCE')
     }
+    // short if obv divergent
+    return divergence.regularBearish(imdh, divConfig)
   }
   return false
 }
