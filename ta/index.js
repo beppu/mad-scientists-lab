@@ -494,6 +494,8 @@ const invertedSeriesHandler = {
       return target.toArray.bind(target)
     case 'toJSON':
       return target.toArray.bind(target) // toArray and toJSON do the same thing
+    case 'keep':
+      return target.keep.bind(target)
     default:
       const i = invertedIndexForGet(target.series, key)
       return target.series[i]
@@ -533,6 +535,16 @@ const invertedSeriesMethods = {
       return m
     }, [])
     return reverse
+  },
+  // discard old data and keep n elements to save memory; return number or items removed
+  keep: function(n) {
+    const spliceOff = this.series.length - n
+    if (spliceOff > 0) {
+      const cut = this.series.splice(0, spliceOff)
+      return cut.length
+    } else {
+      return 0
+    }
   }
 }
 

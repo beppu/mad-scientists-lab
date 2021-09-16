@@ -117,3 +117,13 @@ test('an InvertedSeries should behave like an Array', () => {
   expect(c[3]).toBeUndefined()
   expect(c.length).toBe(ins3.length)
 })
+
+test('an InvertedSeries should be able to discard old data', () => {
+  const s = ta.createInvertedSeries()
+  for (let i = 1; i <= 6; i++) { s.unshift(i) }
+  expect(s.length).toBe(6)
+  const deleted = s.keep(2)
+  expect(deleted).toBe(4)
+  expect(s.length).toBe(2)
+  expect(s[0]).toBe(6)
+})
