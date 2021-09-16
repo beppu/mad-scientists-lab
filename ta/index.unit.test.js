@@ -127,3 +127,18 @@ test('an InvertedSeries should be able to discard old data', () => {
   expect(s.length).toBe(2)
   expect(s[0]).toBe(6)
 })
+
+test('an InvertedSeries should be able to automatically discards old data on unshift when thresholds are reached', () => {
+  // Note that threshold are optional.
+  const s = ta.createInvertedSeries(1, 3)
+  for (let i = 1; i <= 3; i++) { s.unshift(i) }
+  expect(s[0]).toBe(3)
+  expect(s.length).toBe(3)
+  s.unshift(4)
+  expect(s[0]).toBe(4)
+  expect(s.length).toBe(1)
+  s.unshift(5)
+  expect(s[0]).toBe(5)
+  expect(s[1]).toBe(4)
+  expect(s.length).toBe(2)
+})

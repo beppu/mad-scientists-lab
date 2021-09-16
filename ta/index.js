@@ -548,16 +548,57 @@ const invertedSeriesMethods = {
   }
 }
 
+// cache for memoized invertedSeriesMethods
+const ISM = {}
+
+/**
+ * Create a variation on invertedSeriesMethods that automatically discards old data on unshift
+ * @param {Number} keep - number of elements to keep after discarding old data
+ * @param {Number} after -threshold to reach for triggering discard
+ * @returns {Object<String,Function>} a variation on invertedSeriesMethods
+ */
+function createInvertedSeriesMethods(keep, after) {
+  const key = `${keep}-${after}`
+  if (ISM[key]) {
+    return ISM[key]
+  } else {
+    const ism = clone(invertedSeriesMethods)
+    function unshift(value) {
+      const r = this.series.push(value)
+      if (this.series.length > after) {
+        invertedSeriesMethods.keep.call(this, keep)
+      }
+      return r
+    }
+    ism.unshift = unshift
+    ISM[key] = ism
+    return ism
+  }
+}
+
 // For memory efficiency, is there a way to periodically drop old data that isn't being used anymore?
 // I think I could use the mutatey splice.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice
 // Do it only on unshift.
 // When a certain length threshold is reached, splice away old unused data and maybe call global.gc after all the splicing is done.
 // After I implement this, I should measure actual memory usage and compare.
-// Maybe the pipeline should be rsponsible for triggering old data deletion, because marketData (without inversion) needs periodic cleanup too.
-function createInvertedSeries() {
-  const target = Object.assign({ series: [] }, invertedSeriesMethods)
-  return new Proxy(target, invertedSeriesHandler)
+// Maybe the pipeline should be responsible for triggering old data deletion, because marketData (without inversion) needs periodic cleanup too.
+
+/**
+ * Create an InvertedSeries
+ * @param {Number} keep - (optional) number of elements to keep after discarding old data
+ * @param {Number} after -(optional) threshold to reach for triggering discard (default: keep * 16)
+ * @returns {InvertedSeries} an empty InvertedSeries
+ */
+function createInvertedSeries(keep, after) {
+  if (keep) {
+    if (!after) after = keep * 16
+    const target = Object.assign({ series: [] }, createInvertedSeriesMethods(keep, after))
+    return new Proxy(target, invertedSeriesHandler)
+  } else {
+    const target = Object.assign({ series: [] }, invertedSeriesMethods)
+    return new Proxy(target, invertedSeriesHandler)
+  }
 }
 
 /**
@@ -602,6 +643,8 @@ module.exports = {
   invertedCandles,
   scan,
   id,
+  invertedSeriesMethods,
+  ISM,
   createInvertedSeries,
   isInvertedSeries,
   _previousMd,
