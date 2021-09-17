@@ -11,6 +11,15 @@ function dt(ms) {
 }
 
 /**
+ * A wrapper around DateTime.fromISO
+ * @param {String} iso - an ISO-8601 formatted DateTime string
+ * @returns {DateTime} a DateTime object
+ */
+function dti(iso) {
+  return DateTime.fromISO(iso)
+}
+
+/**
  * Return milliseconds as an ISO 8601 formatted datetime string
  * @param {Number} ms - A unix time in milliseconds
  * @returns {String} ISO 8601 formatted DateTime string
@@ -124,6 +133,7 @@ function isTimeframeBoundary(timeframe, time) {
 
 module.exports = {
   dt,
+  dti,
   iso,
   isoUTC,
   isoGP,

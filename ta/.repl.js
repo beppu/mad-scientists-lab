@@ -41,6 +41,7 @@ global.log        = require('./log')
 global.misc       = require('./misc')
 global.gnuplot    = require('./gnuplot')
 
+global.dti = global.time.dti
 global.pnl = global.profitLoss = global.utils.profitLoss
 const ccxt = global.ccxt
 global.binance = new ccxt.binance()
