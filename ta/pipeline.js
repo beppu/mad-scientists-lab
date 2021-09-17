@@ -170,12 +170,6 @@ function aggregatorFn(desiredTimeframe) {
 }
 
 /**
- * Return a pristine InvertedSeries
- * @returns {InvertedSeries} a new InvertedSeries object
- */
-function s() { return ta.createInvertedSeries() }
-
-/**
  * Return a loop function that consumes candles and updates indicators
  * @param {String} baseTimeframe - the timeframe of the candles being fed into the loop
  * @param {IndicatorSpec} indicatorSpecs - a data structure describing what indicators need to be calculated for what timeframes
@@ -186,9 +180,15 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
   // Check for the inverted flag.
   const inverted = indicatorSpecs.inverted
   delete indicatorSpecs.inverted
+  const memory = indicatorSpecs.memory
+  delete indicatorSpecs.memory // XXX Finish this thought after lunch.
   // Automatically insert an empty baseTimeframe if no indicators for baseTimeframe exist.
   if (!indicatorSpecs[baseTimeframe]) {
     indicatorSpecs[baseTimeframe] = []
+  }
+  let s = ta.createInvertedSeries
+  if (memory) {
+    s = () => { return ta.createInvertedSeries(memory.keep, memory.after) }
   }
 
   const state = {

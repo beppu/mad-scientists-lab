@@ -171,6 +171,7 @@ async function main() {
     .option('-c, --config <CONFIG.JSON>', 'Path to a JSON config file for the strategy')
     .option('-b, --balance <DOLLARS>', 'Amount of money to start with', parseIntB10, 100000)
     .option('-p, --pnl-timeframe <INTERVAL>', 'Timeframe for pnl measurements (for gnuplot output)', '1d')
+    .option('--memory <KEEP,AFTER>', 'Limit memory usage of invertedSeries', '')
     .option('--start-processing-at <DATETIME>', 'Refrain from indicator calculation until the given DateTime is reached', parseDateTime)
     .option('--begin <DATETIME>', 'DateTime to begin the strategy', parseDateTime)
     .option('--end <DATETIME>', 'DateTime to end the strategy', parseDateTime)
@@ -251,6 +252,12 @@ async function main() {
     }
     // force the pipeline to use the InvertedSeries data structure.
     indicatorSpecs.inverted = true
+    // ask pipeline to limit its memory usage
+    if (program.memory) {
+      const memory = program.memory.split(',').map((v) => utils.parseIntB10(v))
+      indicatorSpecs.memory = { keep: memory[0], after: memory[1] }
+    }
+    // indicatorSpecs debug
     if (program.verbose) {
       console.log('indicatorSpecs', indicatorSpecs)
     }
