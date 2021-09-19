@@ -85,11 +85,30 @@ function confirmStop(nextState, o) {
   return nextState
 }
 
-function initFSM() {
+function initFSM(initial) {
+
+  let openShortId, openLongId, openStopId, stopPrice, lastSize
+  let init = 'neutral'
+  if (initial) {
+    if (initial.position) {
+      lastSize = initial.position.size
+      if (initial.position.side === 'Buy') {
+        init = 'long'
+      } else if (initial.position.side === 'Sell') {
+        init = 'short'
+      }
+    }
+    if (initial.stops) {
+      if (initial.stops.length === 1) {
+        openStopId = initial.stops[0].order_link_id
+        stopPrice = initial.stops[0].stop_px
+      }
+    }
+  }
 
   const
   fsm = new StateMachine({
-    init: 'neutral',
+    init,
     transitions: [
       { name: 'goLong',      from: 'neutral',         to: 'want-to-long' },
       { name: 'filledLong',  from: 'want-to-long',    to: 'long' },
@@ -103,10 +122,11 @@ function initFSM() {
       { name: 'finish',      from: 'closing',         to: 'neutral' },
     ],
     data: {
-      openShortId: undefined,
-      openLongId:  undefined,
-      openStopId:  undefined,
-      stopPrice:   undefined,
+      openShortId,
+      openLongId,
+      openStopId,
+      stopPrice,
+      lastSize,
       orders:      [],
       config:      {},
     },
@@ -227,6 +247,7 @@ function initFSM() {
       },
     }
   })
+  fsm.
   return fsm
 }
 
@@ -256,8 +277,8 @@ function create(opts) {
       indicatorSpecs = defaultSpecs(config)
     }
 
-    function strategy(strategyState, marketState, executedOrders) {
-      const state    = strategyState || initFSM()
+    function strategy(strategyState, marketState, executedOrders, initial={}) {
+      const state    = strategyState || initFSM(initial)
       const imdTrend = marketState[`imd${config.trendTf}`]
       const imdEntry = marketState[`imd${config.entryTf}`]
       const tf       = config.trendTf

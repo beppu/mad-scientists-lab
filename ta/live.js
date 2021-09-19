@@ -70,7 +70,7 @@ class Trader {
     this.activityLogger.info({ name: this.name(), exchange: this.opts.exchange, market: this.opts.market, strategy: this.opts.strategy })
   }
 
-  initializeStrategyAndPipeline(since) {
+  async initializeStrategyAndPipeline(since) {
     // Instantiate strategy and get its indicatorSpecs
     const strategy = this.opts.strategy
     const options = this.opts.options
@@ -79,7 +79,12 @@ class Trader {
     if (!_s) throw(`Can't find strategy '${strategy}'`)
     let [indicatorSpecs, s] = _s.init(Object.assign({ logger: this.activityLogger }, options))
     indicatorSpecs.inverted = true
+    // XXX Fill in `initial`
+    /*
+    let [strategyState] = s(undefined, undefined, undefined, initial)
     this.strategy = s
+    this.strategyState = strategyState
+    */
     this.indicatorSpecs = indicatorSpecs
     // Instantiate a pipeline with the strategy's indicatorSpecs
     this.mainLoop = pipeline.mainLoopFn(this.baseTimeframe, indicatorSpecs)
@@ -140,7 +145,7 @@ class Trader {
     this.activityLogger.info({ message: 'warming up' })
     await this.sanityCheck()
     //console.log('since', since.toISO())
-    this.initializeStrategyAndPipeline(since)
+    await this.initializeStrategyAndPipeline(since)
     // This is the same for both.
     // Load candles from the filesystem until we can't.
     const nextCandle = await pipeline.loadCandlesFromFS(this.opts.dataDir, this.opts.exchange, this.opts.market, this.baseTimeframe, since)

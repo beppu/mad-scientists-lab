@@ -190,6 +190,13 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
   if (memory) {
     s = () => { return ta.createInvertedSeries(memory.keep, memory.after) }
   }
+  /*
+  TODO Although the invertedSeries have been kept in check, the non-inverted
+  marketData arrays may still get too huge. It's especially a problem with small
+  timeframes like 1m which get stupidly large. Maybe as a stop-gap, I'll only
+  handle 1m non-inverted series here. Unlike the invertedSeries, I can't be
+  automagic with regulary JS arrays.
+  */
 
   const state = {
     baseTimeframe
