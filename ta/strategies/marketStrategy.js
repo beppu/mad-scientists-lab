@@ -247,7 +247,6 @@ function initFSM(initial) {
       },
     }
   })
-  fsm.
   return fsm
 }
 
