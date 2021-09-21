@@ -11,7 +11,7 @@ bin/repl
 Do some interesting things in the REPL
 
 ```js
-indicatorSpecs = { '30m': [['heikinAshi'], ['ema', 12], ['ema', 26]] }
+specs = { '30m': [['heikinAshi'], ['ema', 12], ['ema', 26]] }
 md = await pipeline.load('bybit', 'BTC/USD', indicatorSpecs)
 ```
 
@@ -35,9 +35,11 @@ module that you named will be freshly reloaded.
 
 Use the pipeline to populate marketData.
 
-### time.iso
+### time.iso(ms)
 
-### time.dt
+### time.dt(ms)
+
+### time.dti(isoDateString)
 
 ## Hacking
 
