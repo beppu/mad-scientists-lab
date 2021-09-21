@@ -85,8 +85,14 @@ function confirmStop(nextState, o) {
   return nextState
 }
 
+/**
+ * Initialize the state machine
+ * @param {Object} initial - exchange state used to determine initial state for FSM
+ * @param {Object} initial.position - position information from the exchange
+ * @param {Array<Object>} initial.stops - currently untriggered conditional orders on exchange
+ * @returns {StateMachine} an initialized state machine
+ */
 function initFSM(initial) {
-
   let openShortId, openLongId, openStopId, stopPrice, lastSize
   let init = 'neutral'
   if (initial) {
