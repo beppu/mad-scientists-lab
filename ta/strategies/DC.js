@@ -6,63 +6,61 @@
  * I want to encode the best me in this strategy.
  */
 
-const clone = require('clone')
-const analysis = require('../analysis')
-const time = require('../time')
+const clone          = require('clone')
+const outdent        = require('outdent')
+
+const marketStrategy = require('./marketStrategy')
+const analysis       = require('../analysis')
+const time           = require('../time')
 
 const defaultConfig = {
-  biasTf: '12h'
 }
 
-function init(customConfig) {
-  const { logger, balance } = customConfig
-  const config = Object.assign({}, defaultConfig, customConfig)
-  delete config.logger
-  const indicatorSpecs = {
-    /*
-    '3m':  [ ['rsi'], ['bbands'] ],
-    '5m':  [ ['rsi'], ['bbands'] ],
-    '10m': [ ['rsi'], ['bbands'] ],
-    '15m': [ ['rsi'], ['bbands'] ],
-    */
-    '1h':  [ ['rsi'], ['bbands'] ],
-    '2h':  [ ['rsi'], ['bbands'] ],
-    '4h':  [ ['rsi'], ['bbands'] ],
-    '6h':  [ ['rsi'], ['bbands'] ],
-    '12h': [ ['rsi'], ['bbands'] ],
-    '1d':  [ ['rsi'], ['bbands'] ],
-  }
-  const divergenceOptions = {
-    ageThreshold: 1,
-    gapThreshold: [7, 30],
-    peakThreshold: 9,
-  }
-  const initialState = {
-    marketBias: undefined
-  }
-  if (config.verbose) {
-    console.log(config)
-  }
-  function strategy(strategyState, marketState, executedOrders) {
-    let state = strategyState ? clone(strategyState) : initialState
-    let orders = []
-
-    const imdBias = marketState[`imd${config.biasTf}`]
-    const bias = analysis.bias.highLow.detect(imdBias, divergenceOptions)
-    if (state.marketBias != bias) {
-      state.marketBias = bias
-      if (config.verbose) {
-        const ts = time.iso(imdBias.timestamp[0])
-        console.log(`${ts} - ${bias}`)
-      }
-    }
-
-    return [state, orders]
-  }
-  return [indicatorSpecs, strategy]
+const defaultSpecs = function(config) {
+  return {}
 }
 
-module.exports = {
+function allowedToLong(marketState, config, offset=1) {
+}
+
+function allowedToShort(marketState, config, offset=1) {
+}
+
+function shouldCloseLong(marketState, config, offset=1) {
+  // TODO - let the functions for closing longs and closing shorts be independent
+}
+
+function shouldCloseShort(marketState, config, offset=1) {
+  // TODO - let the functions for closing longs and closing shorts be independent
+}
+
+function getStopPrice(marketState, config) {
+  // TODO - switch args order so marketState comes first like everything else.
+}
+
+const gnuplot = outdent`
+set title "DC - Divergence Confluence"
+set grid
+set xdata time
+set xtics scale 5,1 format "%F\\n%T" rotate
+set timefmt "%Y-%m-%dT%H:%M:%S"
+set y2tics
+set boxwidth 0.7 relative
+plot [][{{low}}:{{high}}] "{{config.trendTf}}.data" skip {{skip}} using 1:7:8:9:10 title "BTC/USD Heikin Ashi" with candlesticks, \\
+  "" skip 0 using 1:14 title "HMA 330" with line lw 3 lc rgb "#26c6da",  \
+  "" skip 0 using 1:15 title "HMA 440" with line lw 3 lc rgb "#64b5f6",  \
+  "" skip 0 using 1:11 title "4h upper band" with line lw 3 lc rgb "#4c51da", \
+  "1d.data" skip 0 using 1:11 title "1d upper band" with line lw 3 lc rgb "purple", \
+  "orders.data" using 1:2:(stringcolumn(4) eq "buy" ? 9 : 11) title "Orders" with points pointsize 3 pt var lc rgb "orange", \\
+  "pnl.data" using 1:2 axes x1y2 title "Equity" with line lw 3 lc rgb "green"
+`
+
+module.exports = marketStrategy.create({
   defaultConfig,
-  init
-}
+  defaultSpecs,
+  allowedToLong,
+  allowedToShort,
+  shouldCloseLong,
+  shouldCloseShort,
+  getStopPrice
+})
