@@ -55,7 +55,7 @@ plot [][{{low}}:{{high}}] "{{config.trendTf}}.data" skip {{skip}} using 1:7:8:9:
   "pnl.data" using 1:2 axes x1y2 title "Equity" with line lw 3 lc rgb "green"
 `
 
-module.exports = marketStrategy.create({
+const self = {
   defaultConfig,
   defaultSpecs,
   allowedToLong,
@@ -63,4 +63,7 @@ module.exports = marketStrategy.create({
   shouldCloseLong,
   shouldCloseShort,
   getStopPrice
-})
+}
+
+module.exports = marketStrategy.create(self)
+Object.assign(module.exports, self)
