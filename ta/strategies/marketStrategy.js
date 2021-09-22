@@ -263,12 +263,13 @@ function initFSM(initial) {
  * @param {Object} opts.defaultConfig - default strategy configuration
  * @param {Function} opts.allowedToLong - function for when to go long
  * @param {Function} opts.allowedToShort - function for when to go short
- * @param {Function} opts.shouldTakeProfit - function for when to exit a position.
+ * @param {Function} opts.shouldCloseLong - function for when to exit a position.
+ * @param {Function} opts.shouldCloseShort - function for when to exit a position.
  * @param {Function} opts.configSlug - (optional) function that makes a short string from the config to differentiate the directory name for backtested results
  * @param {String} opts.gnuplot - (optional) mustache template for gnuplot script for visualizing results
  */
 function create(opts) {
-  const {defaultSpecs, defaultConfig, allowedToLong, allowedToShort, shouldTakeProfit, getStopPrice} = opts
+  const {defaultSpecs, defaultConfig, allowedToLong, allowedToShort, shouldCloseLong, shouldCloseShort, getStopPrice} = opts
   const init  = (customConfig) => {
     const config = Object.assign({}, defaultConfig, customConfig)
     const logger = config.logger
@@ -314,7 +315,7 @@ function create(opts) {
       case 'long':
         // look for ways to exit the long position in profit or minimal loss
         if (candleReady(marketState, config.trendTf, 0)) {
-          if (shouldTakeProfit(marketState, config, 'red')) {
+          if (shouldCloseLong(marketState, config)) {
             console.log('trying to close long')
             state.close()
           } else {
@@ -329,7 +330,7 @@ function create(opts) {
       case 'short':
         // look for ways to exit the short position in profit or minimal loss
         if (candleReady(marketState, config.trendTf, 0)) {
-          if (shouldTakeProfit(marketState, config, 'green')) {
+          if (shouldCloseShort(marketState, config)) {
             console.log('trying to close short')
             state.close()
           } else {

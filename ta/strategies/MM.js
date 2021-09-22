@@ -113,6 +113,14 @@ function shouldTakeProfit(marketState, config, condition, offset=1) {
   return false
 }
 
+function shouldCloseLong(marketState, config) {
+  return shouldTakeProfit(marketState, config, 'red')
+}
+
+function shouldCloseShort(marketState, config) {
+  return shouldTakeProfit(marketState, config, 'green')
+}
+
 function getStopPrice(config, marketState) {
   const imdh = marketState[`imd${config.highTf}`]
   return imdh.lowerBand[0]
@@ -141,7 +149,8 @@ module.exports = marketStrategy.create({
   defaultConfig,
   allowedToLong,
   allowedToShort,
-  shouldTakeProfit,
+  shouldCloseLong,
+  shouldCloseShort,
   getStopPrice,
   gnuplot
 })
