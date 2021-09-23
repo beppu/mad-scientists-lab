@@ -34,8 +34,11 @@ function shouldCloseShort(marketState, config, offset=1) {
   // TODO - let the functions for closing longs and closing shorts be independent
 }
 
-function getStopPrice(marketState, config) {
+function getLongStopPrice(marketState, config) {
   // TODO - switch args order so marketState comes first like everything else.
+}
+
+function getShortStopPrice(marketState, config) {
 }
 
 const gnuplot = outdent`
@@ -62,7 +65,8 @@ const self = {
   allowedToShort,
   shouldCloseLong,
   shouldCloseShort,
-  getStopPrice
+  getLongStopPrice,
+  getShortStopPrice
 }
 
 module.exports = marketStrategy.create(self)

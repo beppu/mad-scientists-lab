@@ -12,7 +12,7 @@ const defaultSpecs = (config) => {
   const {highTf, trendTf} = config
   const specs = {}
   specs[highTf] = [ ['heikinAshi'], ['bbands'], ['obv', 'doji'] ]
-  specs[trendTf] = [ ['heikinAshi'], ['bbands'], ['hma', 330], ['hma', 440] ]
+  specs[trendTf] = [ ['heikinAshi'], ['bbands'], ['hma', 330], ['hma', 440], ['rsi'] ]
   return specs
 }
 
@@ -44,6 +44,26 @@ function bbandBounceBottom(imd) {
   return -1 // Didn't have enough data to bounce.
 }
 
+const rsiDivConfig = {
+  indicator: 'rsi',
+  ageThreshold: 3,
+  gapThreshold: [7, 30],
+  peakThreshold: 9
+}
+
+/**
+ * Have these two series crossed up within the given window
+ * @param {InvertedSeries} a - the base series
+ * @param {InvertedSeries} b - the series that crosses up over a
+ */
+function crossedUp(a, b, i=0) {
+  return b[i] > a[i]
+}
+
+function crossedDown(a, b, i=0) {
+  return crossedUp(b, a, i)
+}
+
 /**
  * Determine if the strategy is allowed to open a long position.
  * @param {MarketState} marketState - pipeline-generated collection of InvertedMarketData objects
@@ -58,7 +78,8 @@ function allowedToLong(marketState, config, offset=1) {
   if (lastBounce > 0 && lastBounce < 5) {
     const haClose = imdt.haClose[0]
     //console.log('bbandBounce', { haClose, hma330: imdt.hma330[0], hma440: imdt.hma440[0] })
-    if (imdt.hma330[0] > imdt.hma440[0] && imdt.hma330[0] < haClose && imdt.hma440[0] < haClose) {
+    //if (imdt.hma330[0] > imdt.hma440[0] && imdt.hma330[0] < haClose && imdt.hma440[0] < haClose) {
+    if (crossedUp(imdt.hma330, imdt.hma440) && bbandBounceBottom(imdh)) {
       return true
     }
   }
@@ -75,12 +96,6 @@ function allowedToLong(marketState, config, offset=1) {
 function allowedToShort(marketState, config, offset=1) {
   const imdh = marketState[`imd${config.highTf}`]
   const imdt = marketState[`imd${config.trendTf}`]
-  const divConfig = {
-    indicator: 'obvdoji',
-    ageThreshold: 3,
-    gapThreshold: [7, 30],
-    peakThreshold: 9
-  }
   if (imdt.hma330[0] < imdt.hma440[0]) {
     // hma has crossed, so--
     const lastBounce = bbandBounceTop(imdh)
@@ -89,8 +104,7 @@ function allowedToShort(marketState, config, offset=1) {
       // TODO maybe this could become part of a confidence factor
       console.log('!!!!!!!!! BBAND BOUNCE')
     }
-    // short if obv divergent
-    return divergence.regularBearish(imdh, divConfig)
+    return true
   }
   return false
 }
@@ -105,7 +119,7 @@ function allowedToShort(marketState, config, offset=1) {
 function shouldTakeProfit(marketState, config, condition, offset=1) {
   const imdh = marketState[`imd${config.highTf}`]
   const imdt = marketState[`imd${config.trendTf}`]
-  if (imdt.hma330 < imdt.hma440) {
+  if (imdt.hma330[0] < imdt.hma440[0]) {
     if (imdt.upperBand[0] <= imdt.haHigh[0]) {
       return true
     }
@@ -118,12 +132,26 @@ function shouldCloseLong(marketState, config) {
 }
 
 function shouldCloseShort(marketState, config) {
-  return shouldTakeProfit(marketState, config, 'green')
+  const imdh = marketState[`imd${config.highTf}`]
+  const imdt = marketState[`imd${config.trendTf}`]
+  if (imdt.hma330[0] > imdt.hma440[0]) {
+    if (imdt.lowerBand[0] >= imdt.haLow[0]) {
+      return true
+    }
+  }
+  return false
 }
 
-function getStopPrice(config, marketState) {
+const delta = 0.05
+
+function getLongStopPrice(marketState, config) {
   const imdh = marketState[`imd${config.highTf}`]
-  return imdh.lowerBand[0]
+  return imdh.lowerBand[0] - (imdh.lowerBand[0] * delta)
+}
+
+function getShortStopPrice(marketState, config) {
+  const imdh = marketState[`imd${config.highTf}`]
+  return imdh.upperBand[0] + (imdh.upperBand[0] * delta)
 }
 
 const gnuplot = outdent`
@@ -151,6 +179,7 @@ module.exports = marketStrategy.create({
   allowedToShort,
   shouldCloseLong,
   shouldCloseShort,
-  getStopPrice,
+  getLongStopPrice,
+  getShortStopPrice,
   gnuplot
 })

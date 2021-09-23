@@ -269,7 +269,7 @@ function initFSM(initial) {
  * @param {String} opts.gnuplot - (optional) mustache template for gnuplot script for visualizing results
  */
 function create(opts) {
-  const {defaultSpecs, defaultConfig, allowedToLong, allowedToShort, shouldCloseLong, shouldCloseShort, getStopPrice} = opts
+  const {defaultSpecs, defaultConfig, allowedToLong, allowedToShort, shouldCloseLong, shouldCloseShort, getLongStopPrice, getShortStopPrice} = opts
   const init  = (customConfig) => {
     const config = Object.assign({}, defaultConfig, customConfig)
     const logger = config.logger
@@ -304,10 +304,10 @@ function create(opts) {
             // If they're both true, the market may be in a weird place, so let's stay neutral.
           } else {
             if (mayLong) {
-              state.goLong(price, getStopPrice(config, marketState))
+              state.goLong(price, getLongStopPrice(marketState, config))
             } else if (mayShort) {
               console.log(`go short ${state.state}`, price)
-              state.goShort(price, getStopPrice(config, marketState))
+              state.goShort(price, getShortStopPrice(marketState, config))
             }
           }
         }
@@ -320,9 +320,9 @@ function create(opts) {
             state.close()
           } else {
             // Only updateStop if you have to
-            if (getStopPrice(config, marketState) > state.stopPrice) {
+            if (getLongStopPrice(marketState, config) > state.stopPrice) {
               // console.log(`updating stop ${imdTrend.lowerBand[0]} > ${state.stopPrice}`)
-              state.updateStop(getStopPrice(config, marketState))
+              state.updateStop(getLongStopPrice(marketState, config))
             }
           }
         }
@@ -335,8 +335,8 @@ function create(opts) {
             state.close()
           } else {
             // Only updateStop if you have to
-            if (getStopPrice(config, marketState) < state.stopPrice) {
-              state.updateStop(getStopPrice(config, marketState))
+            if (getShortStopPrice(marketState, config) < state.stopPrice) {
+              state.updateStop(getShortStopPrice(marketState, config))
             }
           }
         }
