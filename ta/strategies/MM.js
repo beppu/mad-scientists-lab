@@ -75,11 +75,12 @@ function allowedToLong(marketState, config, offset=1) {
   const imdh = marketState[`imd${config.highTf}`]
   const imdt = marketState[`imd${config.trendTf}`]
   const lastBounce = bbandBounceBottom(imdh)
-  if (lastBounce > 0 && lastBounce < 5) {
+  console.log('crossed up + bband bounce', crossedUp(imdt.hma330, imdt.hma440), bbandBounceBottom(imdh))
+  if (lastBounce > 0 && lastBounce < 10) {
     const haClose = imdt.haClose[0]
     //console.log('bbandBounce', { haClose, hma330: imdt.hma330[0], hma440: imdt.hma440[0] })
     //if (imdt.hma330[0] > imdt.hma440[0] && imdt.hma330[0] < haClose && imdt.hma440[0] < haClose) {
-    if (crossedUp(imdt.hma330, imdt.hma440) && bbandBounceBottom(imdh)) {
+    if (crossedUp(imdt.hma440, imdt.hma330) && bbandBounceBottom(imdh)) {
       return true
     }
   }
@@ -135,7 +136,7 @@ function shouldCloseShort(marketState, config) {
   const imdh = marketState[`imd${config.highTf}`]
   const imdt = marketState[`imd${config.trendTf}`]
   if (imdt.hma330[0] > imdt.hma440[0]) {
-    if (imdt.lowerBand[0] >= imdt.haLow[0]) {
+    if (imdh.lowerBand[0] >= imdh.haLow[0]) {
       return true
     }
   }
