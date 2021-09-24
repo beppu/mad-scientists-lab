@@ -24,16 +24,16 @@ function candleReady(marketState, timeframe, frontrun=0) {
   return time.isTimeframeBoundary(timeframe, dt)
 }
 
-function calculateSize(config, price) {
+function calculateSize(config, price, confidence=1.0) {
   switch (config.sizeMode) {
   case 'spot':
-    return calculateSizeSpot(config.fixedPositionSize)
+    return calculateSizeSpot(config.fixedPositionSize) * confidence
     break
   case 'contracts':
-    return config.fixedPositionSize
+    return config.fixedPositionSize * confidence
     break
   case 'emulateContracts':
-    return calculateSizeEmulateContracts(config.fixedPositionSize, price)
+    return calculateSizeEmulateContracts(config.fixedPositionSize, price) * confidence
     break
   default:
     throw('Fix your config')
@@ -46,6 +46,27 @@ function calculateSizeEmulateContracts(n, price) {
 
 function calculateSizeSpot(n) {
   return n
+}
+
+/**
+ * Return a number that will be used as a multiplier to calculate position size.
+ * 1.0 would mean a normal position size.
+ * 0.5 would mean half the position size.
+ * @param {Boolean|Number} may - the return value of allowedToLong or allowedToShort
+ * @returns {Number} a multiplier to be used for position sizing.
+ */
+function getConfidence(may) {
+  if (kindOf(may) === 'boolean') {
+    if (may) {
+      return 1
+    } else {
+      return 0
+    }
+  } else if (kindOf(may) === 'number') {
+    return may
+  } else {
+    return 0
+  }
 }
 
 function handleExecutedOrders(state, marketState, executedOrders) {
@@ -140,9 +161,9 @@ function initFSM(initial) {
       new StateMachineHistory()
     ],
     methods: {
-      onWantToLong(event, price, stop) {
+      onWantToLong(event, price, confidence, stop) {
         console.log('onWantToLong')
-        let longSize = calculateSize(this.config, price)
+        let longSize = calculateSize(this.config, price, confidence)
         this.openLongId = uuid.v4()
         this.openStopId = uuid.v4()
         this.stopPrice = stop
@@ -164,9 +185,9 @@ function initFSM(initial) {
       onLong(event, id) {
         console.log('long')
       },
-      onWantToShort(event, price, stop) {
+      onWantToShort(event, price, confidence, stop) {
         console.log('onWantToShort')
-        let shortSize = calculateSize(this.config, price)
+        let shortSize = calculateSize(this.config, price, confidence)
         this.openShortId = uuid.v4()
         this.openStopId = uuid.v4()
         this.stopPrice = stop
@@ -263,8 +284,10 @@ function initFSM(initial) {
  * @param {Object} opts.defaultConfig - default strategy configuration
  * @param {Function} opts.allowedToLong - function for when to go long
  * @param {Function} opts.allowedToShort - function for when to go short
- * @param {Function} opts.shouldCloseLong - function for when to exit a position.
- * @param {Function} opts.shouldCloseShort - function for when to exit a position.
+ * @param {Function} opts.shouldCloseLong - function for when to exit a position
+ * @param {Function} opts.shouldCloseShort - function for when to exit a position
+ * @param {Function} opts.getLongStopPrice - function for moving a stop price up during a long
+ * @param {Function} opts.getShortStopPrice - function for moving a stop price down during a short
  * @param {Function} opts.configSlug - (optional) function that makes a short string from the config to differentiate the directory name for backtested results
  * @param {String} opts.gnuplot - (optional) mustache template for gnuplot script for visualizing results
  */
@@ -303,11 +326,12 @@ function create(opts) {
           if (mayLong && mayShort) {
             // If they're both true, the market may be in a weird place, so let's stay neutral.
           } else {
+            // TODO - Turn mayLong and mayShort into a confidence value, and pass that to goLong and goShort so that it can calculate a position size.
             if (mayLong) {
-              state.goLong(price, getLongStopPrice(marketState, config))
+              state.goLong(price, getConfidence(mayLong), getLongStopPrice(marketState, config))
             } else if (mayShort) {
               console.log(`go short ${state.state}`, price)
-              state.goShort(price, getShortStopPrice(marketState, config))
+              state.goShort(price, getConfidence(mayShort), getShortStopPrice(marketState, config))
             }
           }
         }
