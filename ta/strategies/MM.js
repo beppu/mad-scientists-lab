@@ -65,6 +65,17 @@ function crossedDown(a, b, i=0) {
 }
 
 /**
+ * Smart Money is when volume is increasing over N candles
+ * @param {InvertedSeries} imd - any inverted market data
+ * @param {InvertedSeries} window - how many candles to look-behind for trend
+ */
+function isSmartMoney(imd, window=5) {
+  for (let i = 0; i < window; i++)
+    if (imd.volume[i] < imd.volume[i + 1]) return false
+  return true
+}
+
+/**
  * Determine if the strategy is allowed to open a long position.
  * @param {MarketState} marketState - pipeline-generated collection of InvertedMarketData objects
  * @param {Object} config - strategy configuration
