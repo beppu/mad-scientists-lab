@@ -160,6 +160,23 @@ function marketDataTakeLast(marketData, n, wantAll) {
 }
 
 /**
+ * Truncate the arrays inside marketData if they're too long.
+ * @param {MarketData} marketData - An object with OHLCV data + timestamps
+ * @param {Number} keep - number of array items to keep when truncating
+ * @param {Number} after - truncate if array length becomes greater than this value.  `after` must be greater than `keep`.
+ * @return {MarketData} a truncated MarketData structure
+ */
+function marketDataTruncate(marketData, keep, after) {
+  const keys = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
+  if (marketData.timestamp.length > after) {
+    keys.forEach((k) => {
+      marketData[k].splice(0, marketData[k].length - keep)
+    })
+  }
+  return marketData
+}
+
+/**
  * Return a pristine InvertedMarketData that uses InvertedSeries instead of arrays
  * @param {Object} opts - options for InvertedSeries
  * @returns {InvertedMarketData<InvertedSeries>} a pristine InvertedMarketData using InvertedSeries
@@ -636,6 +653,7 @@ module.exports = {
   marketDataUpdateCandle,
   marketDataTake,
   marketDataTakeLast,
+  marketDataTruncate,
   invertedMarketData,
   invertedAppend,
   invertedAppendCandle,
