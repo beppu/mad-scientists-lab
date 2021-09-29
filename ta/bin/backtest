@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node --expose-gc
 const dotenv      = require('dotenv').config()
 const luxon       = require('luxon')
 const commander   = require('commander')
