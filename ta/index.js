@@ -172,6 +172,9 @@ function marketDataTruncate(marketData, keep, after) {
     keys.forEach((k) => {
       marketData[k].splice(0, marketData[k].length - keep)
     })
+    if (global.gc) {
+      global.gc()
+    }
   }
   return marketData
 }

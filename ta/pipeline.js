@@ -23,6 +23,7 @@ async function loadOHLCV(filename) {
   return ohlcv
 }
 
+
 /**
  * Return only the filenames of the JSON files we want to process
  * @param {Array<String>} filenames - list of filenames
@@ -250,6 +251,9 @@ function mainLoopFn(baseTimeframe, indicatorSpecs) {
         if (candleForTf[0] !== imd.timestamp[0]) {
           ta.marketDataAppendCandle(md, candleForTf)
           ta.invertedAppendCandle(imd, candleForTf)
+          if (memory) {
+            ta.marketDataTruncate(md, memory.keep, memory.after)
+          }
         } else {
           ta.marketDataUpdateCandle(md, candleForTf)
           ta.invertedUpdateCandle(imd, candleForTf)
