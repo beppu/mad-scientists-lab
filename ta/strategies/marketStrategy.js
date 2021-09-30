@@ -368,9 +368,9 @@ function create(opts) {
       }
       let orders = state.orders
       state.orders = []
-      if (state.state === 'updating-stop') {
-        console.log('orders', orders)
-      }
+      // if (state.state === 'updating-stop') {
+      //   console.log('orders', orders)
+      // }
 
       return [state, orders]
     }
