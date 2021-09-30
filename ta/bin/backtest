@@ -344,6 +344,7 @@ async function main() {
           let entry = 0
           let positionDirection = '-'
           let positionSize = 0
+          let stateName = '-'
           if (exchangeState) {
             if (exchangeState.position > 0) {
               positionDirection = 'L'
@@ -354,7 +355,10 @@ async function main() {
             positionSize = Math.abs(exchangeState.position)
             entry = exchangeState.averageEntryPrice
           }
-          console.log(time.dt(candle[0]).toISO(), `close:${close} direction:${positionDirection} size:${positionSize} entry:${entry} equity:${equity}`)
+          if (strategyState) {
+            stateName = strategyState.state
+          }
+          console.log(time.dt(candle[0]).toISO(), `close:${close} state:${stateName} direction:${positionDirection} size:${positionSize} entry:${entry} equity:${equity}`)
         }
       }
       // This if-block is the heart. Strategy and exchange processing happen here.
