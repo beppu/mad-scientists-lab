@@ -244,9 +244,7 @@ function initFSM(initial) {
         }
       },
       onUpdateStop(event, price) {
-        console.log({ price, stopPrice: this.stopPrice })
         if (event.from === 'long') {
-          console.log('pushing stop update order')
           // If the price is greater, move the stop up.
           if (price > this.stopPrice) {
             this.orders.push({
