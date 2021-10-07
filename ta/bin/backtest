@@ -98,6 +98,46 @@ function writeOrdersSync(orders, filename) {
   fs.writeFileSync(filename, header + out)
 }
 
+function winLossRatio(orders) {
+  let trades = orders.reduce((m, a) => {
+    if (m.length === 0) {
+      m.push([a])
+      return m
+    } else {
+      let last = m[m.length - 1]
+      if (last.length === 1) {
+        last.push(a)
+        return m
+      } else if (last.length === 2) {
+        m.push([a])
+        return m
+      }
+    }
+  }, [])
+  const winsAndLosses = trades.reduce((m, a) => {
+    if (a.length < 2) {
+      return m
+    }
+    if (a[0].action === 'buy') {
+      if (a[0].fillPrice < a[1].fillPrice) {
+        m.wins++
+      } else {
+        m.losses++
+      }
+      return m
+    }
+    if (a[0].action === 'sell') {
+      if (a[0].fillPrice < a[1].fillPrice) {
+        m.losses++
+      } else {
+        m.wins++
+      }
+      return m
+    }
+  }, { wins: 0, losses: 0 })
+  return winsAndLosses
+}
+
 function writePnlSync(pnls, filename) {
   const header = `# 1:timestamp, 2:equity\n`
   const out = pnls.map((p) => {
@@ -375,7 +415,7 @@ async function main() {
           const key = `imd${program.timeframe}`
           const close = marketState[key].close[0]
           //console.log('executedOrders: ', executedOrders)
-          console.log('equity: ', calculateEquity(exchangeState, close))
+          //console.log('equity: ', calculateEquity(exchangeState, close))
         }
         // log executedOrders
         executedOrders.forEach((o) => {
@@ -449,6 +489,7 @@ async function main() {
     console.log('Closing Price', close)
     console.log('Closing DateTime', time.iso(marketState[key].timestamp[0]))
     console.log('Equity', calculateEquity(exchangeState, close))  // XXX If the position is negative, figure out the short profit correctly.
+    console.log('Wins and Losses', winLossRatio(allExecutedOrders))
     //console.log(allExecutedOrders)
     //utils.dump(info, `${first}.json`)
     if (program.gnuplot) {
