@@ -15,7 +15,7 @@ module.exports = function hmaFn(period=55) {
   // hma = wma(2 * wma(data, period / 2) - wma(data, period), sqrt(period))
   const hmaIterate = function(md, imd, state) {
     // single calculation
-    const amd  = ta.marketDataTakeLast(md, period * 10) // only needs period
+    const amd  = ta.marketDataTakeLast(md, period * 2) // only needs period
     const wma1 = wma(amd, period / 2).map(w => w * 2)
     const wma2 = wma(amd, period)
     const diff = wma1.length - wma2.length
