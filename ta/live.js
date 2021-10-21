@@ -238,7 +238,7 @@ class Trader {
       this.marketState = this.mainLoop(c)
       // give marketState to strategy
       let xo = []
-      let [strategyState, orders] = this.strategy(this.strategyState, this.marketState, xo)
+      let [strategyState, orders] = this.strategy(this.strategyState, this.marketState, xo, this.initialPosition)
       this.strategyState = strategyState
       if (orders) {
         let _orders = orders.map((o) => { o.symbol = this.symbol; return o })
@@ -295,11 +295,25 @@ class Trader {
   }
 
   /**
+   * Get current position and pass it to strategy
+   * @returns {Object} current position
+   */
+  async getPosition() {
+    const market = this.opts.market.replace('/', '')
+    const position = await this.driver.client.getPosition({ symbol: market })
+    const r = await this.driver.client.getConditionalOrder({ symbol: market })
+    const stops = r.result.data.filter((o) => o.stop_order_status === 'Untriggered')
+    this.initialPosition = { position, stops }
+    return this.initialPosition
+  }
+
+  /**
    * Start the strategy
    * @param {DateTime} since - datetime to start marketData calculation
    */
   async go(since) {
     // TODO Use a default since that goes back far enough to get 1000 candles for the largest requested timeframe.
+    const position = await this.getPosition()
     await this.warmUp(since)
     await this.switchToRealtime()
     this.start()
