@@ -25,5 +25,12 @@
     "trendTf": "1m",
     "sizeMode": "contracts",
     "fixedPositionSize": 10
+  }],
+  "mm4h": ["MM", {
+    "highTf": "1d",
+    "trendTf": "4h",
+    "entryTf": "1m",
+    "sizeMode": "contracts",
+    "fixedPositionSize": 10
   }]
 }
