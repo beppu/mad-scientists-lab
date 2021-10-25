@@ -2,7 +2,7 @@ const events = require('events')
 const WebSocket = require('ws')
 const {DateTime} = require('luxon')
 const kindOf = require('kind-of')
-const {RestClient, WebsocketClient} = require('bybit-api')
+const {InverseClient, WebsocketClient} = require('bybit-api')
 const Bluebird = require('bluebird')
 const utils = require('../utils')
 
@@ -16,7 +16,7 @@ class BybitDriver {
    */
   constructor(opts) {
     this.exchangeState = { orders: {}, stopOrders: {} }
-    this.client = new RestClient(opts.key, opts.secret, opts.livenet)
+    this.client = new InverseClient(opts.key, opts.secret, opts.livenet)
     this.opts = opts
     this.handlers = {}
   }
