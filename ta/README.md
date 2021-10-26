@@ -24,6 +24,10 @@ parameters in common to make them work together consistently.
 
 `TA_TIMEFRAME` - The candlestick duration for the market data.
 
+`BYBIT_BASE_URL` - The base URL for REST API calls, eg. https://api.bybit.com
+
+`BYBIT_WS_URL` - The URL for websocket calls, eg. wss://stream.bytick.com/realtime
+
 If a `.env` file exists, it will be honored and loaded into the environment.
 
 ### Common Command Line Options

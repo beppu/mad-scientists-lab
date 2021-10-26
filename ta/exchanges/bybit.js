@@ -15,8 +15,16 @@ class BybitDriver {
    * @param {boolean} opts.livenet true to use real exchange, false to use testnet exchange.
    */
   constructor(opts) {
+    const
+      baseUrl = process.env.BYBIT_BASE_URL,
+      reqOpts = baseUrl ? { baseUrl } : {}
     this.exchangeState = { orders: {}, stopOrders: {} }
-    this.client = new InverseClient(opts.key, opts.secret, opts.livenet)
+    this.client = new InverseClient(
+      opts.key,
+      opts.secret,
+      opts.livenet,
+      reqOpts, // rest client
+      reqOpts) // axios
     this.opts = opts
     this.handlers = {}
   }
@@ -33,7 +41,9 @@ class BybitDriver {
     this.handlers.execution = handlers.execution
     const events = ['open', 'reconnected', 'update', 'response', 'close', 'reconnect', 'error']
     this.market = market.replace(/\//, '')
-    this.ws = new WebsocketClient({ key: this.opts.key, secret: this.opts.secret, livenet: this.opts.livenet }, utils.nullLogger)
+    const wsOpts = { key: this.opts.key, secret: this.opts.secret, livenet: this.opts.livenet }
+    if (process.env.BYBIT_WS_URL) wsOpts.wsUrl = process.env.BYBIT_WS_URL
+    this.ws = new WebsocketClient(wsOpts, utils.nullLogger)
     // Raw event handlers that come straight from the exchange
     events.forEach((ev) => {
       if (handlers[ev]) {
