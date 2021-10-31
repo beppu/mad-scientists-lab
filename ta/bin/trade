@@ -1,0 +1,71 @@
+#!/usr/bin/env -S node --expose-gc --experimental-repl-await
+const fs          = require('fs')
+const repl        = require('repl')
+const dotenv      = require('dotenv').config()
+const luxon       = require('luxon')
+const commander   = require('commander')
+const pino        = require('pino')
+const sprintf     = require('sprintf')
+const Bluebird    = require('bluebird')
+const pkg         = require('../package.json')
+const ta          = require('../index')
+const time        = require('../time')
+const utils       = require('../utils')
+const pipeline    = require('../pipeline')
+const live        = require('../live')
+const strategies  = require('../strategies') // TODO minimize memory usage by only loading one strategy into memory
+const DateTime    = luxon.DateTime
+
+const DEFAULT_STRATEGY = 'MM'
+
+// TODO - Log to only one location for live trading.
+// That's what I should have done for backtesting too.
+// Having too many log files with different paths makes them difficult to work with.
+// Remember the ELK stack?
+// ElasticSearch, LogStash, Kibana
+// That's how logs should be handled.
+
+async function main() {
+  const program = new commander.Command()
+  program
+    .version(pkg.version)
+    .description('Run a live trading algorithm on the given exchange and market')
+    .option('-x, --exchange <NAME>', 'Exchange to pull data from', process.env.TA_EXCHANGE)
+    .option('-m, --market <SYMBOL>', 'Market in exchange to pull data from', process.env.TA_MARKET)
+    .option('-d, --data <PATH>', 'Directory to store candlestick data in', './data')
+    .option('-s, --strategy <STRATEGY>', 'Name of trading strategy to use', DEFAULT_STRATEGY)
+    .option('-c, --config <CONFIG.JSON>', 'Path to a JSON config file for the strategy')
+    .option('--memory <KEEP,AFTER>', 'Limit memory usage of invertedSeries', '')
+    .option('--start-processing-at <DATETIME>', 'Refrain from indicator calculation until the given DateTime is reached', DateTime.fromISO)
+    .option('-l, --log <LOG_DIR>', 'Directory to store logs', (id) => id, './log/trade')
+  program.parse(process.argv)
+
+  // start repl
+  const r = repl.start({ prompt: '> ' })
+  // provide context
+  Object.assign(r.context, {
+    luxon,
+    DateTime: luxon.DateTime,
+    Duration: luxon.Duration,
+    commander,
+    sprintf,
+    Bluebird,
+    pkg,
+    ta,
+    time,
+    utils,
+    pipeline,
+    live,
+    strategies
+  })
+  // TODO start strategy
+  // TODO add strategy to context also
+}
+
+if (require.main === module) {
+  main()
+}
+
+module.exports = {
+  main
+}
