@@ -1,20 +1,21 @@
 #!/usr/bin/env -S node --expose-gc --experimental-repl-await
-const fs          = require('fs')
-const repl        = require('repl')
-const dotenv      = require('dotenv').config()
-const luxon       = require('luxon')
-const commander   = require('commander')
-const pino        = require('pino')
-const sprintf     = require('sprintf')
-const Bluebird    = require('bluebird')
-const pkg         = require('../package.json')
-const ta          = require('../index')
-const time        = require('../time')
-const utils       = require('../utils')
-const pipeline    = require('../pipeline')
-const live        = require('../live')
-const strategies  = require('../strategies') // TODO minimize memory usage by only loading one strategy into memory
-const DateTime    = luxon.DateTime
+const fs = require('fs')
+const repl = require('repl')
+const dotenv = require('dotenv').config()
+const luxon = require('luxon')
+const commander = require('commander')
+const pino = require('pino')
+const sprintf = require('sprintf')
+const Bluebird = require('bluebird')
+const pkg = require('../package.json')
+const ta = require('../index')
+const time = require('../time')
+const utils = require('../utils')
+const pipeline = require('../pipeline')
+const live = require('../live')
+const strategies = require('../strategies') // TODO minimize memory usage by only loading one strategy into memory
+const DateTime = luxon.DateTime
+const SocksProxyAgent = require('socks-proxy-agent')
 
 const DEFAULT_STRATEGY = 'MM'
 
@@ -60,6 +61,7 @@ async function main() {
   })
   // TODO start strategy
   // TODO add strategy to context also
+  // TODO agent = new SocksProxyAgent('socks://127.0.0.1:8123')
 }
 
 if (require.main === module) {
