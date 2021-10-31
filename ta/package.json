@@ -37,6 +37,7 @@
     "query-string": "^6.13.1",
     "request-promise": "^4.2.4",
     "require-directory": "^2.1.1",
+    "socks-proxy-agent": "^6.1.0",
     "sprintf": "^0.1.5",
     "sql-template-strings": "^2.2.2",
     "sqlite": "^4.0.23",
