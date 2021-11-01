@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# Start a SOCKS proxy (to my server in Singapore by default).
+
+# Usage:
+#   # Start a socks proxy with default settings
+#   socks
+#
+#   # Start a socks proxy with custom settings
+#   user=u host=trader0 port=22 socks
+#
+#   # Stop a running socks proxy
+#   socks off
+
+# The following variables can be overridden by the caller of this script.
+socks=${socks:-8123}          # socks port
+user=${user:-$USER}           # remote server user
+host=${host:-socksproxy}      # remote server name or ip address
+port=${port:-12287}           # ssh port
+pid_file=~/.socks.pid
+
+socks_sanity_check() {
+  # does a pid file exist?
+  # if so, does the process it refers to exist?
+  # if so, fail, else succeed
+  if [ -f $pid_file ] ; then
+    if [ -d "/proc/$(cat $pid_file)" ] ; then
+      return 1
+    else
+      return 0
+    fi
+  else
+    return 0
+  fi
+}
+
+socks_write_pid() {
+  ps aux | grep ssh | grep $socks | awk '{ print $2 }' > $pid_file
+}
+
+socks_start() {
+  ssh -D $socks -C -q -N $user@$host -p $port -f #-vvv -E /tmp/socks.log
+  socks_write_pid
+}
+
+socks_stop() {
+  [ -f ~/.socks.pid ] && {
+    kill -9 $(cat $pid_file)
+  }
+}
+
+# main
+if [ -z "$1" ] ; then
+  socks_sanity_check && socks_start || {
+    >&2 echo "SOCKS proxy already running on PID $(cat $pid_file)"
+  }
+else
+  # for now, any paramter after socks is a way to turn it off
+  socks_stop
+fi
+
+# Lessons Learned
+#   How to setup a SOCKS proxy to a server you can log in to:
+#     https://www.digitalocean.com/community/tutorials/how-to-route-web-traffic-securely-without-a-vpn-using-a-socks-tunnel
+#   How to echo to STDERR from a shell script:
+#     https://stackoverflow.com/questions/2990414/echo-that-outputs-to-stderr
