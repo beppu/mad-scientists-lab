@@ -7,12 +7,14 @@ const commander = require('commander')
 const pino = require('pino')
 const sprintf = require('sprintf')
 const Bluebird = require('bluebird')
+const merge = require('lodash.merge')
 const pkg = require('../package.json')
 const ta = require('../index')
 const time = require('../time')
 const utils = require('../utils')
 const pipeline = require('../pipeline')
 const live = require('../live')
+const exchanges = require('../exchanges')
 const strategies = require('../strategies') // TODO minimize memory usage by only loading one strategy into memory
 const DateTime = luxon.DateTime
 const SocksProxyAgent = require('socks-proxy-agent')
@@ -38,8 +40,28 @@ async function main() {
     .option('-c, --config <CONFIG.JSON>', 'Path to a JSON config file for the strategy')
     .option('--memory <KEEP,AFTER>', 'Limit memory usage of invertedSeries', '')
     .option('--start-processing-at <DATETIME>', 'Refrain from indicator calculation until the given DateTime is reached', DateTime.fromISO)
-    .option('-l, --log <LOG_DIR>', 'Directory to store logs', (id) => id, './log/trade')
+    .option('-l, --log <LOG_FILE>', 'File to store activity logs', (id) => id, './log/trade.log')
+    .option('-S, --socks <URL>', 'A URL for a SOCKS proxy')
   program.parse(process.argv)
+
+  // TODO Sanity Check
+  if (!program.exchange) {
+    // The exchange must exist in the list of supported exchanges for trading
+    process.exit(-1)
+  }
+  if (program.exchange) {
+    if (!exchanges[program.exchange]) {
+      console.error(`${program.exchange} is not supported for trading.`)
+      process.exit(-1)
+    }
+  }
+
+  // Initialize Logger
+  const logger = pino(pino.destination(program.log))
+
+  // Initialize SocksProxyAgent if --socks is specified
+  let agent
+  if (program.socks) agent = new SocksProxyAgent(program.socks)
 
   // start repl
   const r = repl.start({ prompt: '> ' })
@@ -57,11 +79,44 @@ async function main() {
     utils,
     pipeline,
     live,
-    strategies
+    strategies,
+    agent
   })
-  // TODO start strategy
+
+  // Construct Config
+  let strategyConfig
+  if (program.config) {
+    const configPath = `${process.cwd()}/${program.config}`
+    const jsonConfig = require(configPath)
+    strategyConfig = merge({ logger }, jsonConfig) // XXX 2021-06-24 noticed that merge mutated config which was a surprise.
+  } else {
+    strategyConfig = { logger }
+  }
+
+  // TODO initialize strategy
+  const Strategy = strategies[program.strategy]
+  if (!Strategy) {
+    console.error(`Strategy ${program.strategy} not found`)
+    process.exit(-1)
+  }
+  const [indicatorSpecs, strategy] = Strategy.init(strategyConfig)
+  indicatorSpecs.inverted = true
+  if (program.memory) {
+    const memory = program.memory.split(',').map((v) => utils.parseIntB10(v))
+    indicatorSpecs.memory = { keep: memory[0], after: memory[1] }
+  }
+
   // TODO add strategy to context also
-  // TODO agent = new SocksProxyAgent('socks://127.0.0.1:8123')
+  r.context.strategyConfig = strategyConfig // I don't like that logger makes this hard to read.
+  r.context.strategy = strategy
+  r.context.indicatorSpecs = indicatorSpecs
+
+  // TODO warm up marketData
+  const timeframe = '1m'
+  const iterate = pipeline.mainLoopFn(timeframe, indicatorSpecs)
+  const nextCandle = await pipeline.loadCandlesFromFS(program.data, program.exchange, program.market, timeframe, program.startProcessingAt)
+
+
 }
 
 if (require.main === module) {
