@@ -7,7 +7,7 @@
   "dependencies": {
     "@rauschma/stringio": "^1.4.0",
     "bluebird": "^3.5.5",
-    "bybit-api": "^2.0.5",
+    "bybit-api": "DimensionSoftware/bybit-api",
     "cache-all": "^2.0.4",
     "ccxt": "^1.24.89",
     "clone": "^2.1.2",
@@ -40,7 +40,7 @@
     "sprintf": "^0.1.5",
     "sql-template-strings": "^2.2.2",
     "sqlite": "^4.0.23",
-    "talib": "^1.1.2",
+    "talib": "^1.1.4",
     "typescript": "^4.3.5",
     "url-parse": "^1.4.7",
     "uuid": "^8.2.0",
