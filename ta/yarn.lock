@@ -800,9 +800,10 @@ buffer-from@^1.0.0:
   resolved "https://registry.yarnpkg.com/buffer-from/-/buffer-from-1.1.1.tgz"
   integrity sha512-MQcXEUbCKtEo7bhqEs6560Hyd4XaovZlO/k9V3hjVUF/zwW7KBVdSK4gIt/bzwS9MbR5qob+F5jusZsb0YQK2A==
 
-bybit-api@DimensionSoftware/bybit-api:
-  version "2.1.3"
-  resolved "https://codeload.github.com/DimensionSoftware/bybit-api/tar.gz/a5463fc612337ddf9bd7a73b77c0fd2dad981081"
+bybit-api@^2.1.5:
+  version "2.1.5"
+  resolved "https://registry.yarnpkg.com/bybit-api/-/bybit-api-2.1.5.tgz#0c3c52b4022b441e405fc951af1a0e3d228bf113"
+  integrity sha512-bcRot6BwtpougrvGE4E4apCBfBl2y3ce07I4j/kZ3s4duDHn3WRR8ijxezrqQbA3C3+s/1+2uBkmDz+5vWoWnQ==
   dependencies:
     axios "^0.21.0"
     isomorphic-ws "^4.0.1"
