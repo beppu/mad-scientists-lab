@@ -117,7 +117,7 @@ async function main() {
   options.secret = process.env.TA_BYBIT_API_SECRET
   options.livenet = true
   // TODO change logDir to be a file
-  const trader = new Trader({ dataDir: program.data, logDir: program.log, exchange: program.exchange, market: program.market, strategy, options })
+  const trader = new live.Trader({ dataDir: program.data, logDir: program.log, exchange: program.exchange, market: program.market, strategy, options })
   // go live
   const since = program.startProcessAt || DateTime.local().minus({ months: 2 })
   trader.go(since)
