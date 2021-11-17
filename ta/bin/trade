@@ -106,17 +106,21 @@ async function main() {
     indicatorSpecs.memory = { keep: memory[0], after: memory[1] }
   }
 
-  // TODO add strategy to context also
+  // add strategy to context also
   r.context.strategyConfig = strategyConfig // I don't like that logger makes this hard to read.
   r.context.strategy = strategy
   r.context.indicatorSpecs = indicatorSpecs
 
-  // TODO warm up marketData
-  const timeframe = '1m'
-  const iterate = pipeline.mainLoopFn(timeframe, indicatorSpecs)
-  const nextCandle = await pipeline.loadCandlesFromFS(program.data, program.exchange, program.market, timeframe, program.startProcessingAt)
 
-
+  const options = {}
+  options.key = process.env.TA_BYBIT_API_KEY
+  options.secret = process.env.TA_BYBIT_API_SECRET
+  options.livenet = true
+  // TODO change logDir to be a file
+  const trader = new Trader({ dataDir: program.data, logDir: program.log, exchange: program.exchange, market: program.market, strategy, options })
+  // go live
+  const since = program.startProcessAt || DateTime.local().minus({ months: 2 })
+  trader.go(since)
 }
 
 if (require.main === module) {
