@@ -11,6 +11,6 @@
   "dependencies": {
     "commander": "^5.0.0",
     "jimp": "^0.9.5",
-    "minimist": "^1.2.5"
+    "minimist": "^1.2.6"
   }
 }
