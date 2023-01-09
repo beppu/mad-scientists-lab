@@ -7,7 +7,7 @@
   "license": "MIT",
   "dependencies": {
     "commander": "^7.1.0",
-    "luxon": "^1.26.0",
+    "luxon": "^1.28.1",
     "sprintf": "^0.1.5"
   }
 }
